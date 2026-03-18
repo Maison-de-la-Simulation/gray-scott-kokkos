@@ -1,7 +1,7 @@
 
 ## Presentation
 
-This a Kokkos adapted version of the existing demonstrator code make by David CHAMONT for the Gray Scott School [<GrayScottSyclBench>](<https://gitlab.in2p3.fr/CodeursIntensifs/grayscott/GrayScottSyclBench>). In this version we have adapted the original Sycl verion to Kokkos keeping the same code structure.  
+This a Kokkos adapted version of the existing demonstrator code make by David CHAMONT for the Gray Scott School [GrayScottSyclBench](https://gitlab.in2p3.fr/CodeursIntensifs/grayscott/GrayScottSyclBench). In this version we have adapted the original Sycl verion to Kokkos keeping the same code structure.  
 
 ## Repository structure
 
