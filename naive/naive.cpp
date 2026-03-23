@@ -163,6 +163,8 @@ void add_drop(const View &u, const View &v) {
  * @brief Compute the Gray-Scott equation for one iteration.
  * @param u U field.
  * @param v V field.
+ * @param u_temp U temporary field.
+ * @param v_temp V temporary field.
  */
 void compute(const View &u, const View &v, const View &u_temp,
              const View &v_temp) {
@@ -172,7 +174,8 @@ void compute(const View &u, const View &v, const View &u_temp,
     Kokkos::parallel_for(
         "compute",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-            {1, 1}, {n_rows_ext - 1, n_columns_ext - 1}),
+            {1, 1},
+            {n_rows_ext - 1, n_columns_ext - 1}),  // do not iterate on the halo
         KOKKOS_LAMBDA(const int i, const int j) {
             double u_full = 0;
             double v_full = 0;
