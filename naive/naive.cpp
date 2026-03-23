@@ -119,14 +119,14 @@ View::value_type print_checksum(const View &field, const int iteration) {
         "check fields",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
             {0, 0}, {field.extent(0), field.extent(1)}),
-        KOKKOS_LAMBDA(const int i, const int j, double &checksum_local) {
+        KOKKOS_LAMBDA(const int i, const int j,
+                      View::value_type &checksum_local) {
             checksum_local += field(i, j);
         },
         checksum);
 
-    Kokkos::printf("checksum field %s at iteration %d: %3.2f\n", field.label().c_str(),
-            iteration,
-                   checksum);
+    Kokkos::printf("checksum field %s at iteration %d: %3.2f\n",
+                   field.label().c_str(), iteration, checksum);
 
     return checksum;
 }
@@ -196,7 +196,8 @@ void compute(const View &u, const View &v, const View &u_temp,
         });
 }
 
-void describe(const int n_rows, const int n_columns, const int n_iterations, const int images_interval) {
+void describe(const int n_rows, const int n_columns, const int n_iterations,
+              const int images_interval) {
     Kokkos::printf("Number of rows: %d\n", n_rows);
     Kokkos::printf("Number of columns: %d\n", n_columns);
     Kokkos::printf("Number of rows with halo: %d\n", n_rows + 2);
