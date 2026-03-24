@@ -6,22 +6,23 @@
 
 #include <Kokkos_Core.hpp>
 #include <filesystem>
+#include <memory>
+
+// data type
+using real = double;
 
 namespace constants {
 
-constexpr double kill_rate{0.054};
-constexpr double feed_rate{0.014};
-constexpr double dt{1.0};
-constexpr double diffusion_rate_u{0.1};
-constexpr double diffusion_rate_v{0.05};
-
-// data type in views
-const auto real_hdf5{H5::PredType::NATIVE_DOUBLE};
+constexpr real kill_rate{0.054};
+constexpr real feed_rate{0.014};
+constexpr real dt{1.0};
+constexpr real diffusion_rate_u{0.1};
+constexpr real diffusion_rate_v{0.05};
 
 }  // namespace constants
 
 // views type
-using View = Kokkos::View<double **>;
+using View = Kokkos::View<real **>;
 
 /**
  * @brief HDF5 file writer.
@@ -31,6 +32,7 @@ class OutputWriter {
     H5::DataSpace space_3d;
     H5::DataSet dataset;
     H5::H5File file;
+    std::unique_ptr<H5::PredType> real_type;
     hsize_t current_image_id{0};
 
    public:
@@ -43,6 +45,18 @@ class OutputWriter {
     void prepare(const char *filename, const int n_images, const View &field) {
         const int n_rows = field.extent(0);
         const int n_columns = field.extent(1);
+
+        // set real type
+        if constexpr (std::is_same_v<real, double>) {
+            this->real_type =
+                std::make_unique<H5::PredType>(H5::PredType::NATIVE_DOUBLE);
+        } else if constexpr (std::is_same_v<real, float>) {
+            this->real_type =
+                std::make_unique<H5::PredType>(H5::PredType::NATIVE_FLOAT);
+        } else {
+            // I'd like to have it crash at compile time
+            Kokkos::abort("Unexpected real type");
+        }
 
         // add attributes on how to manipulate the file
         H5::FileAccPropList fapl;
@@ -66,7 +80,7 @@ class OutputWriter {
 
         // create dataset
         this->dataset =
-            file.createDataSet("matrix", constants::real_hdf5, space_3d);
+            file.createDataSet("matrix", *this->real_type, this->space_3d);
     }
 
     /**
@@ -83,7 +97,7 @@ class OutputWriter {
         this->space_3d.selectHyperslab(H5S_SELECT_SET, count, start);
 
         // write data to file
-        this->dataset.write(field.data(), constants::real_hdf5, this->space_2d,
+        this->dataset.write(field.data(), *this->real_type, this->space_2d,
                             this->space_3d);
 
         // update current image
@@ -177,8 +191,8 @@ void compute(const View &u, const View &v, const View &u_temp,
             {1, 1},
             {n_rows_ext - 1, n_columns_ext - 1}),  // do not iterate on the halo
         KOKKOS_LAMBDA(const int i, const int j) {
-            double u_full = 0;
-            double v_full = 0;
+            real u_full = 0;
+            real v_full = 0;
             for (int k = -1; k <= 1; k++) {
                 for (int l = -1; l <= 1; l++) {
                     u_full += u(i + k, j + l) - u(i, j);
@@ -186,11 +200,11 @@ void compute(const View &u, const View &v, const View &u_temp,
                 }
             }
 
-            const double uvv = u(i, j) * u(i, j) * v(i, j);
+            const real uvv = u(i, j) * u(i, j) * v(i, j);
 
-            const double u_delta = constants::diffusion_rate_u * u_full - uvv +
-                                   constants::feed_rate * (1 - u(i, j));
-            const double v_delta =
+            const real u_delta = constants::diffusion_rate_u * u_full - uvv +
+                                 constants::feed_rate * (1 - u(i, j));
+            const real v_delta =
                 constants::diffusion_rate_v * v_full + uvv -
                 (constants::feed_rate + constants::kill_rate) * v(i, j);
 
