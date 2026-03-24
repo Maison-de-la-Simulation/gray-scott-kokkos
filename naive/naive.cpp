@@ -5,7 +5,6 @@
 #include <H5PredType.h>
 
 #include <Kokkos_Core.hpp>
-#include <filesystem>
 #include <memory>
 
 // data type
@@ -37,25 +36,42 @@ class OutputWriter {
 
    public:
     /**
-     * @brief Prepare the output file in HDF5 format.
+     * @brief Create the output writer without preparing it.
+     */
+    OutputWriter() = default;
+
+    /**
+     * @brief Create and prepare the output writer in HDF5 format.
      * @param filename Name of the file.
      * @param n_images Number of images to store.
      * @param field Field that will be outputed.
+     * @see `prepare` method.
+     */
+    OutputWriter(const char *filename, const int n_images, const View &field) {
+        this->prepare(filename, n_images, field);
+    }
+
+    /**
+     * @brief Prepare the output writer in HDF5 format.
+     * @param filename Name of the file.
+     * @param n_images Number of images to store.
+     * @param field Field that will be outputed. Only the shape of the view is
+     * used at this step.
      */
     void prepare(const char *filename, const int n_images, const View &field) {
         const int n_rows = field.extent(0);
         const int n_columns = field.extent(1);
 
         // set real type
+        static_assert(
+            std::is_same_v<real, double> or std::is_same_v<real, float>,
+            "Unexpected real type");
         if constexpr (std::is_same_v<real, double>) {
             this->real_type =
                 std::make_unique<H5::PredType>(H5::PredType::NATIVE_DOUBLE);
-        } else if constexpr (std::is_same_v<real, float>) {
+        } else {
             this->real_type =
                 std::make_unique<H5::PredType>(H5::PredType::NATIVE_FLOAT);
-        } else {
-            // I'd like to have it crash at compile time
-            Kokkos::abort("Unexpected real type");
         }
 
         // add attributes on how to manipulate the file
@@ -63,10 +79,8 @@ class OutputWriter {
         fapl.setFcloseDegree(H5F_CLOSE_STRONG);  // Ensure immediate flush
         fapl.setCache(0, 0, 0, 0.0);  // Optional: Set chunk cache size to 0
 
-        // create file
-        const std::filesystem::path filepath =
-            std::filesystem::current_path() / filename;
-        this->file = H5::H5File(filepath, H5F_ACC_TRUNC,
+        // create file in current working directory
+        this->file = H5::H5File(filename, H5F_ACC_TRUNC,
                                 H5::FileCreatPropList::DEFAULT, fapl);
 
         // create spaces
@@ -86,8 +100,14 @@ class OutputWriter {
     /**
      * @brief Write an image.
      * @param field The field to output.
+     * @note `prepare` must have been called beforehand.
      */
     void write(const View &field) {
+        // check `prepare` was called
+        if (this->file.getId() == -1) {
+            throw std::runtime_error("OutputWriter is not prepared");
+        }
+
         Kokkos::printf("Writing image %d\n", this->current_image_id);
 
         // set the amount of data to write
@@ -100,7 +120,7 @@ class OutputWriter {
         this->dataset.write(field.data(), *this->real_type, this->space_2d,
                             this->space_3d);
 
-        // update current image
+        // update current image index
         this->current_image_id++;
     }
 };
@@ -247,8 +267,7 @@ int main(int argc, char *argv[]) {
     View v("v", n_rows_ext, n_columns_ext);
 
     // create writer
-    OutputWriter writer;
-    writer.prepare("gray_scott.h5", n_iterations / images_interval, v);
+    OutputWriter writer("gray_scott.h5", n_iterations / images_interval, v);
 
     // initialize fields
     Kokkos::deep_copy(u, 1);
