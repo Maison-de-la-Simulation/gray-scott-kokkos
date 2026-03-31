@@ -91,7 +91,7 @@ void compute(const View &u, const View &v, const View &u_temp,
 int main(int argc, char *argv[]) {
     Kokkos::ScopeGuard kokkos(argc, argv);
 
-    Parameters parameters;
+    Parameters parameters{argc, argv};
     parameters.describe();
 
     // fields (with halo)

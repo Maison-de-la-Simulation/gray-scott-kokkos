@@ -24,6 +24,11 @@ class OutputWriter {
 
    public:
     /**
+     * @brief Default constructor.
+     */
+    OutputWriter() = default;
+
+    /**
      * @brief Create and prepare the output writer in HDF5 format.
      * @param filename Name of the file.
      * @param n_images Number of images to store.

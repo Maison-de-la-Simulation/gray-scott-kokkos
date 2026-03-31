@@ -11,8 +11,8 @@ namespace helpers {
  */
 template <typename View>
 void print_field(const View &field, const int iteration) {
-    std::cout << std::format("field {:s} at iteration {}:\n",
-                             field.label().c_str(), iteration);
+    std::cout << std::format("Field {:s} at iteration {}:\n", field.label(),
+                             iteration);
     for (int i = 0; i < field.extent(0); i++) {
         for (int j = 0; j < field.extent(1); j++) {
             std::cout << std::format("{:3.2f} ", field(i, j));
@@ -40,8 +40,8 @@ View::value_type print_checksum(const View &field, const int iteration) {
         },
         checksum);
 
-    std::cout << std::format("checksum field {:s} at iteration {}: {:3.2f}\n",
-                             field.label().c_str(), iteration, checksum);
+    std::cout << std::format("Checksum field {:s} at iteration {}: {:3.2f}\n",
+                             field.label(), iteration, checksum);
 
     return checksum;
 }

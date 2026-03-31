@@ -22,6 +22,8 @@ endif()
 
 find_package(HDF5 1.10 REQUIRED COMPONENTS CXX)
 
+find_package(CLI11 2.4 REQUIRED)
+
 add_executable(naive_cpu)
 
 target_sources(
@@ -35,4 +37,5 @@ target_link_libraries(
     PRIVATE
         Kokkos::kokkos
         HDF5::HDF5
+        CLI11::CLI11
 )
