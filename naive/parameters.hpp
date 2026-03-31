@@ -18,15 +18,15 @@ struct Parameters {
     bool display_fields = true;
 
     void describe() const {
-        std::cout << std::format("Number of rows: %d\n", n_rows);
-        std::cout << std::format("Number of columns: %d\n", n_columns);
-        std::cout << std::format("Number of rows with halo: %d\n", n_rows + 2);
-        std::cout << std::format("Number of columns with halo: %d\n",
+        std::cout << std::format("Number of rows: {}\n", n_rows);
+        std::cout << std::format("Number of columns: {}\n", n_columns);
+        std::cout << std::format("Number of rows with halo: {}\n", n_rows + 2);
+        std::cout << std::format("Number of columns with halo: {}\n",
                                  n_columns_ext);
-        std::cout << std::format("Number of elements: %d\n",
+        std::cout << std::format("Number of elements: {}\n",
                                  (n_rows_ext) * (n_columns_ext));
-        std::cout << std::format("Number of iterations: %d\n", n_iterations);
-        std::cout << std::format("Number of images: %d\n",
+        std::cout << std::format("Number of iterations: {}\n", n_iterations);
+        std::cout << std::format("Number of images: {}\n",
                                  n_iterations / images_interval);
     }
 };

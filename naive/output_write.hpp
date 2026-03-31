@@ -4,7 +4,8 @@
 #include <H5File.h>
 #include <H5PredType.h>
 
-#include <Kokkos_Core.hpp>
+#include <format>
+#include <iostream>
 #include <memory>
 
 /**
@@ -90,7 +91,8 @@ class OutputWriter {
             throw std::runtime_error("OutputWriter is not prepared");
         }
 
-        Kokkos::printf("Writing image %d\n", this->current_image_id);
+        std::cout << std::format("Writing image {}\n",
+                                 this->current_image_id);
 
         // set the amount of data to write
         hsize_t start[3]{this->current_image_id, 0, 0};

@@ -1,5 +1,6 @@
 #include <Kokkos_Core.hpp>
 
+#include "helpers.hpp"
 #include "output_write.hpp"
 #include "parameters.hpp"
 
@@ -18,46 +19,6 @@ constexpr real diffusion_rate_v{0.05};
 
 // views type
 using View = Kokkos::View<real **>;
-
-/**
- * @brief Display a view on screen.
- * @param field Field to display.
- * @param iteration Current iteration number.
- */
-void print_field(const View &field, const int iteration) {
-    Kokkos::printf("field %s at iteration %d:\n", field.label().c_str(),
-                   iteration);
-    for (int i = 0; i < field.extent(0); i++) {
-        for (int j = 0; j < field.extent(1); j++) {
-            Kokkos::printf("%3.2f ", field(i, j));
-        }
-        Kokkos::printf("\n");
-    }
-}
-
-/**
- * @brief Compute and print the checksum of an array.
- * @param field Field to compute the checksum of.
- * @param iteration Current iteration.
- * @return Checksum value.
- */
-View::value_type print_checksum(const View &field, const int iteration) {
-    View::value_type checksum;
-    Kokkos::parallel_reduce(
-        "check fields",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-            {0, 0}, {field.extent(0), field.extent(1)}),
-        KOKKOS_LAMBDA(const int i, const int j,
-                      View::value_type &checksum_local) {
-            checksum_local += field(i, j);
-        },
-        checksum);
-
-    Kokkos::printf("checksum field %s at iteration %d: %3.2f\n",
-                   field.label().c_str(), iteration, checksum);
-
-    return checksum;
-}
 
 /**
  * @brief Add a drop at the center of the fields.
@@ -151,8 +112,8 @@ int main(int argc, char *argv[]) {
 
     if (parameters.display_fields) {
         // print init
-        print_field(u, 0);
-        print_field(v, 0);
+        helpers::print_field(u, 0);
+        helpers::print_field(v, 0);
     }
 
     // write init
@@ -174,12 +135,12 @@ int main(int argc, char *argv[]) {
     }
 
     // checksum
-    print_checksum(u, parameters.n_iterations);
-    print_checksum(v, parameters.n_iterations);
+    helpers::print_checksum(u, parameters.n_iterations);
+    helpers::print_checksum(v, parameters.n_iterations);
 
     if (parameters.display_fields) {
         // print last
-        print_field(u, parameters.n_iterations);
-        print_field(v, parameters.n_iterations);
+        helpers::print_field(u, parameters.n_iterations);
+        helpers::print_field(v, parameters.n_iterations);
     }
 }
