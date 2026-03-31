@@ -10,7 +10,7 @@ namespace helpers {
  * @param iteration Current iteration number.
  */
 template <typename View>
-void print_field(const View &field, const int iteration) {
+void print_field(const View &field, const std::size_t iteration) {
     std::cout << std::format("Field {:s} at iteration {}:\n", field.label(),
                              iteration);
     for (int i = 0; i < field.extent(0); i++) {
@@ -28,7 +28,7 @@ void print_field(const View &field, const int iteration) {
  * @return Checksum value.
  */
 template <typename View>
-View::value_type print_checksum(const View &field, const int iteration) {
+View::value_type print_checksum(const View &field, const std::size_t iteration) {
     typename View::value_type checksum;
     Kokkos::parallel_reduce(
         "check fields",

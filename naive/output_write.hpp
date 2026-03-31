@@ -35,7 +35,7 @@ class OutputWriter {
      * @param field Field that will be outputed.
      * @see `prepare` method.
      */
-    OutputWriter(const char *filename, const int n_images, const View &field) {
+    OutputWriter(const char *filename, const std::size_t n_images, const View &field) {
         this->prepare(filename, n_images, field);
     }
 
@@ -46,9 +46,9 @@ class OutputWriter {
      * @param field Field that will be outputed. Only the shape of the view is
      * used at this step.
      */
-    void prepare(const char *filename, const int n_images, const View &field) {
-        const int n_rows = field.extent(0);
-        const int n_columns = field.extent(1);
+    void prepare(const char *filename, const std::size_t n_images, const View &field) {
+        const std::size_t n_rows = field.extent(0);
+        const std::size_t n_columns = field.extent(1);
 
         // set real type dependenig on the given view
         static_assert(std::is_same_v<typename View::value_type, double> or
