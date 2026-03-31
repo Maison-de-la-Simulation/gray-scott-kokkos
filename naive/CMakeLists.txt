@@ -39,3 +39,19 @@ target_link_libraries(
         HDF5::HDF5
         CLI11::CLI11
 )
+
+add_executable(naive_gpu)
+
+target_sources(
+    naive_gpu
+    PRIVATE
+        naive_gpu.cpp
+)
+
+target_link_libraries(
+    naive_gpu
+    PRIVATE
+        Kokkos::kokkos
+        HDF5::HDF5
+        CLI11::CLI11
+)
