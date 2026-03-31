@@ -22,25 +22,17 @@ endif()
 
 find_package(HDF5 1.10 REQUIRED COMPONENTS CXX)
 
-option(ENABLE_PRINT "Enable printing arrays on screen (debug purpose)" OFF)
-
-add_executable(naive)
+add_executable(naive_cpu)
 
 target_sources(
-    naive
+    naive_cpu
     PRIVATE
-        naive.cpp
+        naive_cpu.cpp
 )
 
 target_link_libraries(
-    naive
+    naive_cpu
     PRIVATE
         Kokkos::kokkos
         HDF5::HDF5
-)
-
-target_compile_definitions(
-    naive
-    PRIVATE
-        $<$<BOOL:${ENABLE_PRINT}>:ENABLE_PRINT>
 )

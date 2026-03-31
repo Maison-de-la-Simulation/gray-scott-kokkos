@@ -127,7 +127,6 @@ void compute(const View &u, const View &v, const View &u_temp,
         });
 }
 
-
 int main(int argc, char *argv[]) {
     Kokkos::ScopeGuard kokkos(argc, argv);
 
@@ -139,7 +138,9 @@ int main(int argc, char *argv[]) {
     View v("v", parameters.n_rows_ext, parameters.n_columns_ext);
 
     // create writer
-    OutputWriter writer("gray_scott.h5", parameters.n_iterations / parameters.images_interval, v);
+    OutputWriter writer("gray_scott.h5",
+                        parameters.n_iterations / parameters.images_interval,
+                        v);
 
     // initialize fields
     Kokkos::deep_copy(u, 1);
