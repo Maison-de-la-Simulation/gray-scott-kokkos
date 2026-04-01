@@ -7,8 +7,8 @@
 void Parameters::describe() const {
     std::cout << std::format("Number of rows: {}\n", n_rows);
     std::cout << std::format("Number of columns: {}\n", n_columns);
-    std::cout << std::format("Number of rows with halo: {}\n", n_rows + 2);
-    std::cout << std::format("Number of columns with halo: {}\n",
+    std::cout << std::format("Number of rows (with halo): {}\n", n_rows + 2);
+    std::cout << std::format("Number of columns (with halo): {}\n",
                              n_columns_ext);
     std::cout << std::format("Number of elements: {}\n",
                              (n_rows_ext) * (n_columns_ext));
