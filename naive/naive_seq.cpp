@@ -1,0 +1,156 @@
+#include <cstddef>
+
+#include "helpers_pod.hpp"
+#include "macros_pod.hpp"
+#include "output_writer_pod.hpp"
+#include "parameters.hpp"
+
+// data type
+using real = double;
+
+namespace constants {
+
+constexpr real kill_rate{0.054};
+constexpr real feed_rate{0.014};
+constexpr real dt{1.0};
+constexpr real diffusion_rate_u{0.1};
+constexpr real diffusion_rate_v{0.05};
+
+}  // namespace constants
+
+/**
+ * @brief Add a drop at the center of the fields.
+ * @param u U field.
+ * @param v V field.
+ */
+void add_drop(real* u, real* v, const std::size_t n_rows_ext,
+              const std::size_t n_columns_ext) {
+    // find drop location
+    // central cell + 1
+    const int i_center = n_rows_ext / 2;
+    const int j_center = n_columns_ext / 2;
+    const int i_drop_first = i_center - 1;
+    const int i_drop_last = i_center + 1;
+    const int j_drop_first = j_center - 1;
+    const int j_drop_last = j_center + 1;
+
+    for (std::size_t i = i_drop_first; i < i_drop_last; i++) {
+        for (std::size_t j = j_drop_first; j < j_drop_last; j++) {
+            u[ACCESS(i, j)] = 0;
+            v[ACCESS(i, j)] = 1;
+        }
+    }
+}
+
+/**
+ * @brief Compute the Gray-Scott equation for one iteration.
+ * @param u U field.
+ * @param v V field.
+ * @param u_temp U temporary field.
+ * @param v_temp V temporary field.
+ */
+void compute(real* u, real* v, real* u_temp, real* v_temp,
+             const std::size_t n_rows_ext, const std::size_t n_columns_ext) {
+    for (std::size_t i = 1; i < n_rows_ext - 1; i++) {
+        for (std::size_t j = 1; j < n_columns_ext - 1; j++) {
+            real u_full = 0;
+            real v_full = 0;
+            for (int k = -1; k <= 1; k++) {
+                for (int l = -1; l <= 1; l++) {
+                    u_full += u[ACCESS(i + k, j + l)] - u[ACCESS(i, j)];
+                    v_full += v[ACCESS(i + k, j + l)] - v[ACCESS(i, j)];
+                }
+            }
+
+            const real uvv =
+                u[ACCESS(i, j)] * u[ACCESS(i, j)] * v[ACCESS(i, j)];
+
+            const real u_delta = constants::diffusion_rate_u * u_full - uvv +
+                                 constants::feed_rate * (1 - u[ACCESS(i, j)]);
+            const real v_delta =
+                constants::diffusion_rate_v * v_full + uvv -
+                (constants::feed_rate + constants::kill_rate) * v[ACCESS(i, j)];
+
+            u_temp[ACCESS(i, j)] = u[ACCESS(i, j)] + u_delta * constants::dt;
+            v_temp[ACCESS(i, j)] = v[ACCESS(i, j)] + v_delta * constants::dt;
+        }
+    }
+}
+
+void initialize(real* u, real* v, const std::size_t n_rows_ext,
+                const std::size_t n_columns_ext) {
+    for (std::size_t i = 0; i < n_rows_ext * n_columns_ext; i++) {
+        u[i] = 1;
+        v[i] = 0;
+    }
+}
+
+int main(int argc, char* argv[]) {
+    Parameters parameters{argc, argv};
+    parameters.describe();
+
+    // fields (with halo)
+    real* u = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+    real* v = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+
+    // create writer
+    OutputWriterPOD<real> writer(
+        "gray_scott.h5", parameters.n_iterations / parameters.images_interval,
+        parameters.n_rows_ext, parameters.n_columns_ext);
+
+    // initialize fields
+    initialize(u, v, parameters.n_rows_ext, parameters.n_columns_ext);
+
+    // add a drop at the center of the domain
+    add_drop(u, v, parameters.n_rows_ext, parameters.n_columns_ext);
+
+    if (parameters.display_fields) {
+        // print init
+        helpers_pod::print_field(u, "u", parameters.n_rows_ext,
+                                 parameters.n_columns_ext, 0);
+        helpers_pod::print_field(v, "v", parameters.n_rows_ext,
+                                 parameters.n_columns_ext, 0);
+    }
+
+    // write init
+    writer.write(v, parameters.n_rows_ext, parameters.n_columns_ext);
+
+    // temporary fields (with halo)
+    real* u_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+    real* v_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+
+    // time loop
+    for (int iteration = 0; iteration < parameters.n_iterations; iteration++) {
+        compute(u, v, u_temp, v_temp, parameters.n_rows_ext,
+                parameters.n_columns_ext);
+        std::swap(u, u_temp);
+        std::swap(v, v_temp);
+
+        if (iteration % parameters.images_interval == 0) {
+            writer.write(v, parameters.n_rows_ext, parameters.n_columns_ext);
+        }
+    }
+
+    // checksum
+    helpers_pod::print_checksum(u, "u", parameters.n_rows_ext,
+                                parameters.n_columns_ext,
+                                parameters.n_iterations);
+    helpers_pod::print_checksum(v, "v", parameters.n_rows_ext,
+                                parameters.n_columns_ext,
+                                parameters.n_iterations);
+
+    if (parameters.display_fields) {
+        // print last
+        helpers_pod::print_field(u, "u", parameters.n_rows_ext,
+                                 parameters.n_columns_ext,
+                                 parameters.n_iterations);
+        helpers_pod::print_field(v, "v", parameters.n_rows_ext,
+                                 parameters.n_columns_ext,
+                                 parameters.n_iterations);
+    }
+
+    delete[] u;
+    delete[] v;
+    delete[] u_temp;
+    delete[] v_temp;
+}

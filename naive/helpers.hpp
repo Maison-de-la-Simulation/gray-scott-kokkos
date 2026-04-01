@@ -6,6 +6,7 @@ namespace helpers {
 
 /**
  * @brief Display a view on screen.
+ * @tparam View Type of view.
  * @param field Field to display.
  * @param iteration Current iteration number.
  */
@@ -23,12 +24,14 @@ void print_field(const View &field, const std::size_t iteration) {
 
 /**
  * @brief Compute and print the checksum of an array.
+ * @tparam View Type of view.
  * @param field Field to compute the checksum of.
  * @param iteration Current iteration.
  * @return Checksum value.
  */
 template <typename View>
-View::value_type print_checksum(const View &field, const std::size_t iteration) {
+View::value_type print_checksum(const View &field,
+                                const std::size_t iteration) {
     typename View::value_type checksum;
     Kokkos::parallel_reduce(
         "check fields",

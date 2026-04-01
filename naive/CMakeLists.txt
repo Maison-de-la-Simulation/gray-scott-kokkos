@@ -24,6 +24,22 @@ find_package(HDF5 1.10 REQUIRED COMPONENTS CXX)
 
 find_package(CLI11 2.4 REQUIRED)
 
+add_executable(naive_seq)
+
+target_sources(
+    naive_seq
+    PRIVATE
+        naive_seq.cpp
+)
+
+target_link_libraries(
+    naive_seq
+    PRIVATE
+        Kokkos::kokkos
+        HDF5::HDF5
+        CLI11::CLI11
+)
+
 add_executable(naive_cpu)
 
 target_sources(
