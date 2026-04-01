@@ -2,7 +2,7 @@
 
 #include "helpers_pod.hpp"
 #include "macros_pod.hpp"
-#include "output_writer_pod.hpp"
+#include "output_writer.hpp"
 #include "parameters.hpp"
 
 // data type
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
     real* v = new real[parameters.n_rows_ext * parameters.n_columns_ext];
 
     // create writer
-    OutputWriterPOD<real> writer(
+    OutputWriter<real> writer(
         "gray_scott.h5", parameters.n_iterations / parameters.images_interval,
         parameters.n_rows_ext, parameters.n_columns_ext);
 
@@ -116,7 +116,7 @@ int main(int argc, char* argv[]) {
     }
 
     // write init
-    writer.write(v, parameters.n_rows_ext, parameters.n_columns_ext);
+    writer.write(v);
 
     // temporary fields (with halo)
     real* u_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
@@ -132,7 +132,7 @@ int main(int argc, char* argv[]) {
 
         // write image every images_interval iterations
         if (iteration % parameters.images_interval == 0) {
-            writer.write(v, parameters.n_rows_ext, parameters.n_columns_ext);
+            writer.write(v);
         }
     }
 

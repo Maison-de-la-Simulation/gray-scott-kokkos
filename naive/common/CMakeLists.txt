@@ -29,7 +29,6 @@ target_sources(
         FILE_SET HEADERS
         FILES
             helpers_pod.hpp
-            output_writer_pod.hpp
 )
 
 target_link_libraries(
