@@ -1,7 +1,7 @@
 #include <Kokkos_Core.hpp>
 
 #include "helpers.hpp"
-#include "output_write.hpp"
+#include "output_writer.hpp"
 #include "parameters.hpp"
 
 // data type
