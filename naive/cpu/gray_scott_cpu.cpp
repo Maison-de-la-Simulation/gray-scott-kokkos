@@ -75,7 +75,7 @@ void compute(const View &u, const View &v, const View &u_temp,
                 }
             }
 
-            const real uvv = u(i, j) * u(i, j) * v(i, j);
+            const real uvv = u(i, j) * v(i, j) * v(i, j);
 
             const real u_delta = constants::diffusion_rate_u * u_full - uvv +
                                  constants::feed_rate * (1 - u(i, j));

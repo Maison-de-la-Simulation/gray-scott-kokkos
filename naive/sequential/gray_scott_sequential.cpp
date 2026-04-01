@@ -63,7 +63,7 @@ void compute(real* u, real* v, real* u_temp, real* v_temp,
             }
 
             const real uvv =
-                u[ACCESS(i, j)] * u[ACCESS(i, j)] * v[ACCESS(i, j)];
+                u[ACCESS(i, j)] * v[ACCESS(i, j)] * v[ACCESS(i, j)];
 
             const real u_delta = constants::diffusion_rate_u * u_full - uvv +
                                  constants::feed_rate * (1 - u[ACCESS(i, j)]);
