@@ -1,6 +1,14 @@
 include_guard()
 
-find_package(Kokkos 5.0.0 QUIET)
+# option to prevent to download kokkos
+option(ENABLE_KOKKOS_DOWNLOAD_FALLBACK "Enable to download Kokkos if it is not found" OFF)
+
+if(NOT ENABLE_KOKKOS_DOWNLOAD_FALLBACK)
+    # stop if Kokkos not found
+    find_package(Kokkos 5.0 REQUIRED)
+else()
+    find_package(Kokkos 5.0 QUIET)
+endif()
 
 # download Kokkos if not found
 if(NOT Kokkos_FOUND)
