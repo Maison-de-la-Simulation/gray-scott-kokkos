@@ -145,13 +145,13 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // transfer fields
-    Kokkos::deep_copy(u_h, u);
-    Kokkos::deep_copy(v_h, v);
-
     // checksum
     helpers::print_checksum(u, parameters.n_iterations);
     helpers::print_checksum(v, parameters.n_iterations);
+
+    // transfer fields
+    Kokkos::deep_copy(u_h, u);
+    Kokkos::deep_copy(v_h, v);
 
     if (parameters.display_fields) {
         // print last
