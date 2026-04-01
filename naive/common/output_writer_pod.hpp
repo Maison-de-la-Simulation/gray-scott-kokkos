@@ -11,7 +11,8 @@
 
 /**
  * @brief HDF5 file writer for POD data.
- * @tparam real Type of data to store.
+ * @tparam real Type of data to store. This is required to set HDF5 variable
+ * type.
  */
 template <typename real>
 class OutputWriterPOD {
@@ -73,6 +74,8 @@ class OutputWriterPOD {
                                 H5::FileCreatPropList::DEFAULT, fapl);
 
         // create spaces
+        // NOTE This gives wrong ordering when the file is opened with
+        // HDFCompass
         hsize_t dims_3d[3] = {static_cast<hsize_t>(n_images + 1),
                               static_cast<hsize_t>(n_rows_ext),
                               static_cast<hsize_t>(n_columns_ext)};
@@ -101,6 +104,8 @@ class OutputWriterPOD {
         std::cout << std::format("Writing image {}\n", this->current_image_id);
 
         // set the amount of data to write
+        // NOTE This gives wrong ordering when the file is opened with
+        // HDFCompass
         hsize_t start[3]{this->current_image_id, 0, 0};
         hsize_t count[3]{1, static_cast<hsize_t>(n_rows_ext),
                          static_cast<hsize_t>(n_columns_ext)};

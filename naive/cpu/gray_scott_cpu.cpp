@@ -7,6 +7,9 @@
 // data type
 using real = double;
 
+/**
+ * @brief Constants for the Gray-Scott equation.
+ */
 namespace constants {
 
 constexpr real kill_rate{0.054};
@@ -26,17 +29,17 @@ using View = Kokkos::View<real **>;
  * @param v V field.
  */
 void add_drop(const View &u, const View &v) {
-    const int n_rows_ext = u.extent(0);
-    const int n_columns_ext = u.extent(1);
+    const std::size_t n_rows_ext = u.extent(0);
+    const std::size_t n_columns_ext = u.extent(1);
 
     // find drop location
     // central cell + 1
-    const int i_center = n_rows_ext / 2;
-    const int j_center = n_columns_ext / 2;
-    const int i_drop_first = i_center - 1;
-    const int i_drop_last = i_center + 1;
-    const int j_drop_first = j_center - 1;
-    const int j_drop_last = j_center + 1;
+    const std::size_t i_center = n_rows_ext / 2;
+    const std::size_t j_center = n_columns_ext / 2;
+    const std::size_t i_drop_first = i_center - 1;
+    const std::size_t i_drop_last = i_center + 1;
+    const std::size_t j_drop_first = j_center - 1;
+    const std::size_t j_drop_last = j_center + 1;
 
     Kokkos::parallel_for(
         "add drop",
@@ -57,8 +60,8 @@ void add_drop(const View &u, const View &v) {
  */
 void compute(const View &u, const View &v, const View &u_temp,
              const View &v_temp) {
-    const int n_rows_ext = u.extent(0);
-    const int n_columns_ext = u.extent(1);
+    const std::size_t n_rows_ext = u.extent(0);
+    const std::size_t n_columns_ext = u.extent(1);
 
     Kokkos::parallel_for(
         "compute",
@@ -89,7 +92,7 @@ void compute(const View &u, const View &v, const View &u_temp,
 }
 
 int main(int argc, char *argv[]) {
-    Kokkos::ScopeGuard kokkos(argc, argv);
+    Kokkos::ScopeGuard kokkos{argc, argv};
 
     Parameters parameters{argc, argv};
     parameters.describe();
@@ -110,8 +113,8 @@ int main(int argc, char *argv[]) {
     // add a drop at the center of the domain
     add_drop(u, v);
 
+    // print init if requested
     if (parameters.display_fields) {
-        // print init
         helpers::print_field(u, 0);
         helpers::print_field(v, 0);
     }
@@ -129,6 +132,7 @@ int main(int argc, char *argv[]) {
         Kokkos::kokkos_swap(u, u_temp);
         Kokkos::kokkos_swap(v, v_temp);
 
+        // write image every images_interval iterations
         if (iteration % parameters.images_interval == 0) {
             writer.write(v);
         }
@@ -138,8 +142,8 @@ int main(int argc, char *argv[]) {
     helpers::print_checksum(u, parameters.n_iterations);
     helpers::print_checksum(v, parameters.n_iterations);
 
+    // print last if requested
     if (parameters.display_fields) {
-        // print last
         helpers::print_field(u, parameters.n_iterations);
         helpers::print_field(v, parameters.n_iterations);
     }

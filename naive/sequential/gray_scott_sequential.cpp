@@ -8,6 +8,9 @@
 // data type
 using real = double;
 
+/**
+ * @brief Constants for the Gray-Scott equation.
+ */
 namespace constants {
 
 constexpr real kill_rate{0.054};
@@ -22,17 +25,19 @@ constexpr real diffusion_rate_v{0.05};
  * @brief Add a drop at the center of the fields.
  * @param u U field.
  * @param v V field.
+ * @param n_rows_ext Number of rows + halo.
+ * @param n_columns_ext Number of columens + halo.
  */
 void add_drop(real* u, real* v, const std::size_t n_rows_ext,
               const std::size_t n_columns_ext) {
     // find drop location
     // central cell + 1
-    const int i_center = n_rows_ext / 2;
-    const int j_center = n_columns_ext / 2;
-    const int i_drop_first = i_center - 1;
-    const int i_drop_last = i_center + 1;
-    const int j_drop_first = j_center - 1;
-    const int j_drop_last = j_center + 1;
+    const std::size_t i_center = n_rows_ext / 2;
+    const std::size_t j_center = n_columns_ext / 2;
+    const std::size_t i_drop_first = i_center - 1;
+    const std::size_t i_drop_last = i_center + 1;
+    const std::size_t j_drop_first = j_center - 1;
+    const std::size_t j_drop_last = j_center + 1;
 
     for (std::size_t i = i_drop_first; i < i_drop_last; i++) {
         for (std::size_t j = j_drop_first; j < j_drop_last; j++) {
@@ -48,8 +53,10 @@ void add_drop(real* u, real* v, const std::size_t n_rows_ext,
  * @param v V field.
  * @param u_temp U temporary field.
  * @param v_temp V temporary field.
+ * @param n_rows_ext Number of rows + halo.
+ * @param n_columns_ext Number of columens + halo.
  */
-void compute(real* u, real* v, real* u_temp, real* v_temp,
+void compute(real const* u, real const* v, real* u_temp, real* v_temp,
              const std::size_t n_rows_ext, const std::size_t n_columns_ext) {
     for (std::size_t i = 1; i < n_rows_ext - 1; i++) {
         for (std::size_t j = 1; j < n_columns_ext - 1; j++) {
@@ -77,14 +84,6 @@ void compute(real* u, real* v, real* u_temp, real* v_temp,
     }
 }
 
-void initialize(real* u, real* v, const std::size_t n_rows_ext,
-                const std::size_t n_columns_ext) {
-    for (std::size_t i = 0; i < n_rows_ext * n_columns_ext; i++) {
-        u[i] = 1;
-        v[i] = 0;
-    }
-}
-
 int main(int argc, char* argv[]) {
     Parameters parameters{argc, argv};
     parameters.describe();
@@ -99,13 +98,17 @@ int main(int argc, char* argv[]) {
         parameters.n_rows_ext, parameters.n_columns_ext);
 
     // initialize fields
-    initialize(u, v, parameters.n_rows_ext, parameters.n_columns_ext);
+    for (std::size_t i = 0;
+         i < parameters.n_rows_ext * parameters.n_columns_ext; i++) {
+        u[i] = 1;
+        v[i] = 0;
+    }
 
     // add a drop at the center of the domain
     add_drop(u, v, parameters.n_rows_ext, parameters.n_columns_ext);
 
+    // print init if requested
     if (parameters.display_fields) {
-        // print init
         helpers_pod::print_field(u, "u", parameters.n_rows_ext,
                                  parameters.n_columns_ext, 0);
         helpers_pod::print_field(v, "v", parameters.n_rows_ext,
@@ -120,12 +123,14 @@ int main(int argc, char* argv[]) {
     real* v_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
 
     // time loop
-    for (int iteration = 0; iteration < parameters.n_iterations; iteration++) {
+    for (std::size_t iteration = 0; iteration < parameters.n_iterations;
+         iteration++) {
         compute(u, v, u_temp, v_temp, parameters.n_rows_ext,
                 parameters.n_columns_ext);
         std::swap(u, u_temp);
         std::swap(v, v_temp);
 
+        // write image every images_interval iterations
         if (iteration % parameters.images_interval == 0) {
             writer.write(v, parameters.n_rows_ext, parameters.n_columns_ext);
         }
@@ -139,8 +144,8 @@ int main(int argc, char* argv[]) {
                                 parameters.n_columns_ext,
                                 parameters.n_iterations);
 
+    // print last if requested
     if (parameters.display_fields) {
-        // print last
         helpers_pod::print_field(u, "u", parameters.n_rows_ext,
                                  parameters.n_columns_ext,
                                  parameters.n_iterations);
@@ -149,6 +154,7 @@ int main(int argc, char* argv[]) {
                                  parameters.n_iterations);
     }
 
+    // free memory
     delete[] u;
     delete[] v;
     delete[] u_temp;
