@@ -1,3 +1,5 @@
+#pragma once
+
 #include <H5Cpp.h>
 #include <H5DataSet.h>
 #include <H5DataSpace.h>
