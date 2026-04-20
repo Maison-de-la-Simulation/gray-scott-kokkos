@@ -1,20 +1,17 @@
 #include "parameters.hpp"
 
+#include <fmt/format.h>
+
 #include <CLI/CLI.hpp>
-#include <format>
-#include <iostream>
 
 void Parameters::describe() const {
-    std::cout << std::format("Number of rows: {}\n", n_rows);
-    std::cout << std::format("Number of columns: {}\n", n_columns);
-    std::cout << std::format("Number of rows (with halo): {}\n", n_rows + 2);
-    std::cout << std::format("Number of columns (with halo): {}\n",
-                             n_columns_ext);
-    std::cout << std::format("Number of elements: {}\n",
-                             (n_rows_ext) * (n_columns_ext));
-    std::cout << std::format("Number of iterations: {}\n", n_iterations);
-    std::cout << std::format("Number of images: {}\n",
-                             n_iterations / images_interval);
+    fmt::print("Number of rows: {}\n", n_rows);
+    fmt::print("Number of columns: {}\n", n_columns);
+    fmt::print("Number of rows (with halo): {}\n", n_rows + 2);
+    fmt::print("Number of columns (with halo): {}\n", n_columns_ext);
+    fmt::print("Number of elements: {}\n", (n_rows_ext) * (n_columns_ext));
+    fmt::print("Number of iterations: {}\n", n_iterations);
+    fmt::print("Number of images: {}\n", n_iterations / images_interval);
 }
 
 void Parameters::parse(int argc, char *argv[]) {

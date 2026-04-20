@@ -19,6 +19,7 @@ target_link_libraries(
         HDF5::HDF5
     PRIVATE
         CLI11::CLI11
+        fmt::fmt
 )
 
 add_library(common_pod INTERFACE)
