@@ -69,14 +69,15 @@ void compute(const View &u, const View &v, const View &u_temp,
             {1, 1},
             {n_rows_ext - 1, n_columns_ext - 1}),  // do not iterate on the halo
         KOKKOS_LAMBDA(const int i, const int j) {
-            real u_full = 0;
-            real v_full = 0;
-            for (int k = -1; k <= 1; k++) {
-                for (int l = -1; l <= 1; l++) {
-                    u_full += u(i + k, j + l) - u(i, j);
-                    v_full += v(i + k, j + l) - v(i, j);
-                }
-            }
+            // clang-format off
+            real u_full = u(i - 1, j - 1) +     u(i - 1, j) + u(i - 1, j + 1) +
+                          u(i    , j - 1) - 8 * u(i    , j) + u(i    , j + 1) +
+                          u(i + 1, j - 1) +     u(i + 1, j) + u(i + 1, j + 1);
+
+            real v_full = v(i - 1, j - 1) +     v(i - 1, j) + v(i - 1, j + 1) +
+                          v(i    , j - 1) - 8 * v(i    , j) + v(i    , j + 1) +
+                          v(i + 1, j - 1) +     v(i + 1, j) + v(i + 1, j + 1);
+            // clang-format on
 
             const real uvv = u(i, j) * v(i, j) * v(i, j);
 

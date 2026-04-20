@@ -60,14 +60,15 @@ void compute(real const* u, real const* v, real* u_temp, real* v_temp,
              const std::size_t n_rows_ext, const std::size_t n_columns_ext) {
     for (std::size_t i = 1; i < n_rows_ext - 1; i++) {
         for (std::size_t j = 1; j < n_columns_ext - 1; j++) {
-            real u_full = 0;
-            real v_full = 0;
-            for (int k = -1; k <= 1; k++) {
-                for (int l = -1; l <= 1; l++) {
-                    u_full += u[ACCESS(i + k, j + l)] - u[ACCESS(i, j)];
-                    v_full += v[ACCESS(i + k, j + l)] - v[ACCESS(i, j)];
-                }
-            }
+            // clang-format off
+            real u_full = u[ACCESS(i - 1, j - 1)] +     u[ACCESS(i - 1, j)] + u[ACCESS(i - 1, j + 1)] +
+                          u[ACCESS(i    , j - 1)] - 8 * u[ACCESS(i    , j)] + u[ACCESS(i    , j + 1)] +
+                          u[ACCESS(i + 1, j - 1)] +     u[ACCESS(i + 1, j)] + u[ACCESS(i + 1, j + 1)];
+
+            real v_full = v[ACCESS(i - 1, j - 1)] +     v[ACCESS(i - 1, j)] + v[ACCESS(i - 1, j + 1)] +
+                          v[ACCESS(i    , j - 1)] - 8 * v[ACCESS(i    , j)] + v[ACCESS(i    , j + 1)] +
+                          v[ACCESS(i + 1, j - 1)] +     v[ACCESS(i + 1, j)] + v[ACCESS(i + 1, j + 1)];
+            // clang-format on
 
             const real uvv =
                 u[ACCESS(i, j)] * v[ACCESS(i, j)] * v[ACCESS(i, j)];
