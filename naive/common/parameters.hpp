@@ -7,16 +7,16 @@
  */
 struct Parameters {
     // problem size
-    std::size_t n_rows = 10;
-    std::size_t n_columns = 10;
+    std::size_t n_rows{10};
+    std::size_t n_columns{10};
 
     // iterations
-    std::size_t n_iterations = 100;
-    std::size_t images_interval = 10;
+    std::size_t n_iterations{100};
+    std::size_t images_interval{10};
 
     // problem size including ghost cells
-    std::size_t n_rows_ext = n_rows + 2;
-    std::size_t n_columns_ext = n_columns + 2;
+    std::size_t n_rows_ext{n_rows + 2};
+    std::size_t n_columns_ext{n_columns + 2};
 
     // debug
     bool display_fields = false;
