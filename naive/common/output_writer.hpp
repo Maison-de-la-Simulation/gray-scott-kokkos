@@ -3,10 +3,9 @@
 #include <H5DataSpace.h>
 #include <H5File.h>
 #include <H5PredType.h>
+#include <fmt/format.h>
 
 #include <cstddef>
-#include <format>
-#include <iostream>
 #include <memory>
 
 /**
@@ -105,7 +104,7 @@ class OutputWriter {
             throw std::runtime_error("OutputWriter is not prepared");
         }
 
-        std::cout << std::format("Writing image {}\n", this->current_image_id);
+        fmt::print("Writing image {}\n", this->current_image_id);
 
         // set the amount of data to write
         // NOTE This gives wrong ordering when the file is opened with

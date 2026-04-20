@@ -1,5 +1,4 @@
-#include <format>
-#include <iostream>
+#include <fmt/format.h>
 
 #include "macros_pod.hpp"
 
@@ -17,12 +16,12 @@ namespace helpers_pod {
 template <typename real>
 void print_field(real *field, char const *label, const std::size_t n_rows_ext,
                  const std::size_t n_columns_ext, const int iteration) {
-    std::cout << std::format("Field {:s} at iteration {}:\n", label, iteration);
+    fmt::print("Field {:s} at iteration {}:\n", label, iteration);
     for (int i = 0; i < n_rows_ext; i++) {
         for (int j = 0; j < n_columns_ext; j++) {
-            std::cout << std::format("{:3.2f} ", field[ACCESS(i, j)]);
+            fmt::print("{:3.2f} ", field[ACCESS(i, j)]);
         }
-        std::cout << std::endl;
+        fmt::print("\n");
     }
 }
 
@@ -48,8 +47,8 @@ real print_checksum(const real *field, char const *label,
         }
     }
 
-    std::cout << std::format("Checksum field {:s} at iteration {}: {:3.2f}\n",
-                             label, iteration, checksum);
+    fmt::print("Checksum field {:s} at iteration {}: {:3.2f}\n", label,
+               iteration, checksum);
 
     return checksum;
 }

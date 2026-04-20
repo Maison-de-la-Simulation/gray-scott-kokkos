@@ -1,5 +1,9 @@
 include_guard()
 
+##
+# Kokkos
+#
+
 # option to prevent to download kokkos
 option(ENABLE_KOKKOS_DOWNLOAD_FALLBACK "Enable to download Kokkos if it is not found" OFF)
 
@@ -22,6 +26,20 @@ if(NOT Kokkos_FOUND)
     FetchContent_MakeAvailable(Kokkos)
 endif()
 
+##
+# HDF5
+#
+
 find_package(HDF5 1.10 REQUIRED COMPONENTS CXX)
 
+##
+# CLI11
+#
+
 find_package(CLI11 2.4 REQUIRED)
+
+##
+# fmt
+#
+
+find_package(fmt 9.0 REQUIRED)

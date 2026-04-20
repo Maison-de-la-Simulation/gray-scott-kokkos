@@ -1,6 +1,5 @@
+#include <fmt/format.h>
 #include <Kokkos_Core.hpp>
-#include <format>
-#include <iostream>
 
 namespace helpers {
 
@@ -12,13 +11,12 @@ namespace helpers {
  */
 template <typename View>
 void print_field(const View &field, const std::size_t iteration) {
-    std::cout << std::format("Field {:s} at iteration {}:\n", field.label(),
-                             iteration);
+    fmt::print("Field {:s} at iteration {}:\n", field.label(), iteration);
     for (int i = 0; i < field.extent(0); i++) {
         for (int j = 0; j < field.extent(1); j++) {
-            std::cout << std::format("{:3.2f} ", field(i, j));
+            fmt::print("{:3.2f} ", field(i, j));
         }
-        std::cout << std::endl;
+        fmt::print("\n");
     }
 }
 
@@ -43,8 +41,8 @@ View::value_type print_checksum(const View &field,
         },
         checksum);
 
-    std::cout << std::format("Checksum field {:s} at iteration {}: {:3.2f}\n",
-                             field.label(), iteration, checksum);
+    fmt::print("Checksum field {:s} at iteration {}: {:3.2f}\n", field.label(),
+               iteration, checksum);
 
     return checksum;
 }
