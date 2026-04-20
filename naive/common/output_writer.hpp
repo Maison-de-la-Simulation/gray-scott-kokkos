@@ -23,8 +23,8 @@ class OutputWriter {
     H5::H5File file;
     std::unique_ptr<H5::PredType> real_type;
     hsize_t current_image_id{0};
-    std::size_t n_rows_ext;
-    std::size_t n_columns_ext;
+    std::size_t n_rows_ext{0};
+    std::size_t n_columns_ext{0};
 
    public:
     /**
