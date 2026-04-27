@@ -85,7 +85,13 @@ void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
           {1, 0}, {n_rows - 1, n_blocks}),
 
       KOKKOS_LAMBDA(const int i, const int j_block) {
+        // starting column of SIMD lane block (contiguous j-dimension segment)
+        // j0 points to the first element of the SIMD block and advances in
+        // steps of simd_width
         const int j0 = j_block * simd_width + start;
+
+        // flattened 2D index using the row stride of the LayoutRight view
+        // corresponds to the grid cell at position (i, j0)
         const int base_center = i_stride * i + j0;
 
         // Load SIMD registers for 3x3 stencil
