@@ -1,6 +1,5 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_SIMD.hpp>
-#include <decl/Kokkos_Declare_SERIAL.hpp>
 
 #include "helpers.hpp"
 #include "output_writer.hpp"
@@ -78,11 +77,14 @@ void compute_simd_kernal(const View &u, const View &v, const View &u_temp,
 
   int const n_blocks = (end - start) / simd_width;
 
-  int const i_stride = n_cols;
+  int strides[2];
+  u.stride(strides);
+  int const i_stride = strides[0];
 
   Kokkos::parallel_for(
       "compute_simd",
-      Kokkos::MDRangePolicy<Kokkos::Rank<2>>({1, 0}, {n_rows - 1, n_blocks}),
+      Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Right>>(
+          {1, 0}, {n_rows - 1, n_blocks}),
 
       KOKKOS_LAMBDA(const int i, const int j_block) {
         const int j0 = j_block * simd_width + start;
