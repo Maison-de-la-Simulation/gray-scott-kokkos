@@ -66,7 +66,7 @@ void add_drop(const View &u, const View &v) {
  * @param end End index (exclusive).
  */
 template <typename SimdType>
-void compute_simd_kernal(const View &u, const View &v, const View &u_temp,
+void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
                          const View &v_temp, int start, int end) {
   namespace KE = Kokkos::Experimental;
 
@@ -77,9 +77,7 @@ void compute_simd_kernal(const View &u, const View &v, const View &u_temp,
 
   int const n_blocks = (end - start) / simd_width;
 
-  int strides[2];
-  u.stride(strides);
-  int const i_stride = strides[0];
+  int const i_stride = u.stride(0);
 
   Kokkos::parallel_for(
       "compute_simd",
@@ -184,11 +182,11 @@ void compute(const View &u, const View &v, const View &u_temp,
   const int vec_end = j_begin + (interior / simd_width) * simd_width;
 
   // SIMD
-  compute_simd_kernal<simd_t>(u, v, u_temp, v_temp, j_begin, vec_end);
+  compute_simd_kernel<simd_t>(u, v, u_temp, v_temp, j_begin, vec_end);
 
   // Scalar tail
   if (vec_end < n_cols - 1) {
-    compute_simd_kernal<simd_scalar_t>(u, v, u_temp, v_temp, vec_end,
+    compute_simd_kernel<simd_scalar_t>(u, v, u_temp, v_temp, vec_end,
                                        n_cols - 1);
   }
 }
