@@ -109,25 +109,17 @@ void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
         SimdType v_up(v.data() + base_up, KE::simd_flag_default);
         SimdType v_down(v.data() + base_down, KE::simd_flag_default);
 
-        // Left Corners
-        const int base_down_left = base_down - 1;
-        const int base_up_left = base_up - 1;
-
-        // Right Corners
-        const int base_down_right = base_down + 1;
-        const int base_up_right = base_up + 1;
-
         // Corners u
-        SimdType u_ul(u.data() + base_up_left, KE::simd_flag_default);
-        SimdType u_ur(u.data() + base_up_right, KE::simd_flag_default);
-        SimdType u_dl(u.data() + base_down_left, KE::simd_flag_default);
-        SimdType u_dr(u.data() + base_down_right, KE::simd_flag_default);
+        SimdType u_ul(u.data() + base_up - 1, KE::simd_flag_default);
+        SimdType u_ur(u.data() + base_up + 1, KE::simd_flag_default);
+        SimdType u_dl(u.data() + base_down - 1, KE::simd_flag_default);
+        SimdType u_dr(u.data() + base_down + 1, KE::simd_flag_default);
 
         // Corners v
-        SimdType v_ul(v.data() + base_up_left, KE::simd_flag_default);
-        SimdType v_ur(v.data() + base_up_right, KE::simd_flag_default);
-        SimdType v_dl(v.data() + base_down_left, KE::simd_flag_default);
-        SimdType v_dr(v.data() + base_down_right, KE::simd_flag_default);
+        SimdType v_ul(v.data() + base_up - 1, KE::simd_flag_default);
+        SimdType v_ur(v.data() + base_up + 1, KE::simd_flag_default);
+        SimdType v_dl(v.data() + base_down - 1, KE::simd_flag_default);
+        SimdType v_dr(v.data() + base_down + 1, KE::simd_flag_default);
 
         // Compute stencil
         SimdType u_full =
