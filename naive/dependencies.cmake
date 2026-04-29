@@ -37,9 +37,9 @@ find_package(HDF5 1.10 REQUIRED COMPONENTS CXX)
 #
 
 if(NOT ENABLE_DOWNLOAD_FALLBACK)
-    find_package(CLI11 2.6 REQUIRED)
+    find_package(CLI11 2.4 REQUIRED)
 else()
-    find_package(CLI11 2.6 QUIET)
+    find_package(CLI11 2.4 QUIET)
 
     # download CLI11 if not found
     if(NOT CLI11_FOUND)
