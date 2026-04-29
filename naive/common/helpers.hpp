@@ -1,7 +1,8 @@
 #pragma once
 
-#include <fmt/format.h>
 #include <Kokkos_Core.hpp>
+#include <iomanip>
+#include <iostream>
 
 namespace helpers {
 
@@ -13,13 +14,22 @@ namespace helpers {
  */
 template <typename View>
 void print_field(const View &field, const std::size_t iteration) {
-    fmt::print("Field {:s} at iteration {}:\n", field.label(), iteration);
+    std::cout << "Field " << field.label() << " at iteration " << iteration
+              << std::endl;
+
+    // set precision
+    const auto default_precision{std::cout.precision()};
+    std::cout << std::setprecision(2) << std::fixed;
+
     for (int i = 0; i < field.extent(0); i++) {
         for (int j = 0; j < field.extent(1); j++) {
-            fmt::print("{:3.2f} ", field(i, j));
+            std::cout << field(i, j);
         }
-        fmt::print("\n");
+        std::cout << std::endl;
     }
+
+    // reset precision
+    std::cout << std::setprecision(default_precision);
 }
 
 /**
@@ -43,8 +53,15 @@ View::value_type print_checksum(const View &field,
         },
         checksum);
 
-    fmt::print("Checksum field {:s} at iteration {}: {:3.2f}\n", field.label(),
-               iteration, checksum);
+    // set precision
+    const auto default_precision{std::cout.precision()};
+    std::cout << std::setprecision(2) << std::fixed;
+
+    std::cout << "Checksum field " << field.label() << " at iteration "
+              << iteration << ": " << checksum << std::endl;
+
+    // reset precision
+    std::cout << std::setprecision(default_precision);
 
     return checksum;
 }
