@@ -1,29 +1,29 @@
 include_guard()
 
+include(FetchContent)
+
+# option to prevent to download dependencies
+option(ENABLE_DOWNLOAD_FALLBACK "Enable to download dependencies if they are not found" OFF)
+
 ##
 # Kokkos
 #
 
-# option to prevent to download kokkos
-option(ENABLE_KOKKOS_DOWNLOAD_FALLBACK "Enable to download Kokkos if it is not found" OFF)
-
-if(NOT ENABLE_KOKKOS_DOWNLOAD_FALLBACK)
-    # stop if Kokkos not found
+if(NOT ENABLE_DOWNLOAD_FALLBACK)
     find_package(Kokkos 5.0 REQUIRED)
 else()
     find_package(Kokkos 5.0 QUIET)
-endif()
 
-# download Kokkos if not found
-if(NOT Kokkos_FOUND)
-    include(FetchContent)
-    message(STATUS "Downloading Kokkos from the repository")
-    FetchContent_Declare(
-        Kokkos
-        URL https://github.com/kokkos/kokkos/releases/download/5.0.2/kokkos-5.0.2.zip
-        URL_HASH SHA256=c4ec42b952a0c8474d370cf0aac025adeed81326c78c23ecdfc98c18818a575a
-    )
-    FetchContent_MakeAvailable(Kokkos)
+    # download Kokkos if not found
+    if(NOT Kokkos_FOUND)
+        message(STATUS "Downloading Kokkos from the repository")
+        FetchContent_Declare(
+            Kokkos
+            URL https://github.com/kokkos/kokkos/releases/download/5.0.2/kokkos-5.0.2.zip
+            URL_HASH SHA256=c4ec42b952a0c8474d370cf0aac025adeed81326c78c23ecdfc98c18818a575a
+        )
+        FetchContent_MakeAvailable(Kokkos)
+    endif()
 endif()
 
 ##
@@ -36,4 +36,19 @@ find_package(HDF5 1.10 REQUIRED COMPONENTS CXX)
 # CLI11
 #
 
-find_package(CLI11 2.4 REQUIRED)
+if(NOT ENABLE_DOWNLOAD_FALLBACK)
+    find_package(CLI11 2.6 REQUIRED)
+else()
+    find_package(CLI11 2.6 QUIET)
+
+    # download CLI11 if not found
+    if(NOT CLI11_FOUND)
+        message(STATUS "Downloading CLI11 from the repository")
+        FetchContent_Declare(
+            cli11
+            URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.4.2.zip
+            URL_HASH SHA256=43e650d5e1a3acaaf419d1e61a81f77b408d0696f472be0599ddf877d40984b0
+        )
+        FetchContent_MakeAvailable(cli11)
+    endif()
+endif()
