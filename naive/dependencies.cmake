@@ -37,9 +37,3 @@ find_package(HDF5 1.10 REQUIRED COMPONENTS CXX)
 #
 
 find_package(CLI11 2.4 REQUIRED)
-
-##
-# fmt
-#
-
-find_package(fmt 9.0 REQUIRED)

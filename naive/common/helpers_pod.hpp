@@ -1,6 +1,7 @@
 #pragma once
 
-#include <fmt/format.h>
+#include <iomanip>
+#include <iostream>
 
 #include "macros_pod.hpp"
 
@@ -18,13 +19,22 @@ namespace helpers_pod {
 template <typename real>
 void print_field(real *field, char const *label, const std::size_t n_rows_ext,
                  const std::size_t n_columns_ext, const int iteration) {
-    fmt::print("Field {:s} at iteration {}:\n", label, iteration);
+    std::cout << "Field " << label << " at iteration " << iteration
+              << std::endl;
+
+    // set precision
+    const auto default_precision{std::cout.precision()};
+    std::cout << std::setprecision(2) << std::fixed;
+
     for (int i = 0; i < n_rows_ext; i++) {
         for (int j = 0; j < n_columns_ext; j++) {
-            fmt::print("{:3.2f} ", field[ACCESS(i, j)]);
+            std::cout << field[ACCESS(i, j)];
         }
-        fmt::print("\n");
+        std::cout << std::endl;
     }
+
+    // reset precision
+    std::cout << std::setprecision(default_precision);
 }
 
 /**
@@ -49,8 +59,15 @@ real print_checksum(const real *field, char const *label,
         }
     }
 
-    fmt::print("Checksum field {:s} at iteration {}: {:3.2f}\n", label,
-               iteration, checksum);
+    // set precision
+    const auto default_precision{std::cout.precision()};
+    std::cout << std::setprecision(2) << std::fixed;
+
+    std::cout << "Checksum field " << label << " at iteration " << iteration
+              << ": " << checksum << std::endl;
+
+    // reset precision
+    std::cout << std::setprecision(default_precision);
 
     return checksum;
 }
