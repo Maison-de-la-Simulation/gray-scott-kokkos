@@ -96,45 +96,58 @@ void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
 
             // Load SIMD registers for 3x3 stencil
 
+            // west-east u
             SimdType u_center(u.data() + base_center, KE::simd_flag_default);
+            SimdType u_west(u.data() + base_center - 1, KE::simd_flag_default);
+            SimdType u_east(u.data() + base_center + 1, KE::simd_flag_default);
+
+            // west-east v
             SimdType v_center(v.data() + base_center, KE::simd_flag_default);
+            SimdType v_west(v.data() + base_center - 1, KE::simd_flag_default);
+            SimdType v_east(v.data() + base_center + 1, KE::simd_flag_default);
 
-            SimdType u_left(u.data() + base_center - 1, KE::simd_flag_default);
-            SimdType u_right(u.data() + base_center + 1, KE::simd_flag_default);
+            // north and south Center
+            const int base_north = base_center - i_stride;
+            const int base_south = base_center + i_stride;
 
-            SimdType v_left(v.data() + base_center - 1, KE::simd_flag_default);
-            SimdType v_right(v.data() + base_center + 1, KE::simd_flag_default);
+            // north-south u
+            SimdType u_north(u.data() + base_north, KE::simd_flag_default);
+            SimdType u_south(u.data() + base_south, KE::simd_flag_default);
 
-            // Up and Down Center
-            const int base_up = base_center - i_stride;
-            const int base_down = base_center + i_stride;
+            // north-south v
+            SimdType v_north(v.data() + base_north, KE::simd_flag_default);
+            SimdType v_south(v.data() + base_south, KE::simd_flag_default);
 
-            SimdType u_up(u.data() + base_up, KE::simd_flag_default);
-            SimdType u_down(u.data() + base_down, KE::simd_flag_default);
+            // corners u
+            SimdType u_north_west(u.data() + base_north - 1,
+                                  KE::simd_flag_default);
+            SimdType u_north_east(u.data() + base_north + 1,
+                                  KE::simd_flag_default);
+            SimdType u_south_west(u.data() + base_south - 1,
+                                  KE::simd_flag_default);
+            SimdType u_south_east(u.data() + base_south + 1,
+                                  KE::simd_flag_default);
 
-            SimdType v_up(v.data() + base_up, KE::simd_flag_default);
-            SimdType v_down(v.data() + base_down, KE::simd_flag_default);
+            // corners v
+            SimdType v_north_west(v.data() + base_north - 1,
+                                  KE::simd_flag_default);
+            SimdType v_north_east(v.data() + base_north + 1,
+                                  KE::simd_flag_default);
+            SimdType v_south_west(v.data() + base_south - 1,
+                                  KE::simd_flag_default);
+            SimdType v_south_east(v.data() + base_south + 1,
+                                  KE::simd_flag_default);
 
-            // Corners u
-            SimdType u_ul(u.data() + base_up - 1, KE::simd_flag_default);
-            SimdType u_ur(u.data() + base_up + 1, KE::simd_flag_default);
-            SimdType u_dl(u.data() + base_down - 1, KE::simd_flag_default);
-            SimdType u_dr(u.data() + base_down + 1, KE::simd_flag_default);
+            // compute stencil
+            // clang-format off
+            SimdType u_full = u_north_west +     u_north  + u_north_east +
+                              u_west       - 8 * u_center + u_east +
+                              u_south_west +     u_south  + u_south_east;
 
-            // Corners v
-            SimdType v_ul(v.data() + base_up - 1, KE::simd_flag_default);
-            SimdType v_ur(v.data() + base_up + 1, KE::simd_flag_default);
-            SimdType v_dl(v.data() + base_down - 1, KE::simd_flag_default);
-            SimdType v_dr(v.data() + base_down + 1, KE::simd_flag_default);
-
-            // Compute stencil
-            SimdType u_full =
-                (u_left + u_right + u_up + u_down + u_ul + u_ur + u_dl + u_dr) -
-                8 * u_center;
-
-            SimdType v_full =
-                (v_left + v_right + v_up + v_down + v_ul + v_ur + v_dl + v_dr) -
-                8 * v_center;
+            SimdType v_full = v_north_west +     v_north  + v_north_east +
+                              v_west       - 8 * v_center + v_east +
+                              v_south_west +     v_south  + v_south_east;
+            // clang-format on
 
             SimdType uvv = u_center * v_center * v_center;
 
