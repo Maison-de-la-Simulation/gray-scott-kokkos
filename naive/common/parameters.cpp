@@ -1,17 +1,19 @@
 #include "parameters.hpp"
 
-#include <iostream>
-
 #include <CLI/CLI.hpp>
+#include <iostream>
 
 void Parameters::describe() const {
     std::cout << "Number of rows: " << n_rows << std::endl;
     std::cout << "Number of columns: " << n_columns << std::endl;
     std::cout << "Number of rows (with halo): " << n_rows + 2 << std::endl;
-    std::cout << "Number of columns (with halo): " << n_columns_ext << std::endl;
-    std::cout << "Number of elements: " << n_rows_ext * n_columns_ext << std::endl;
+    std::cout << "Number of columns (with halo): " << n_columns_ext
+              << std::endl;
+    std::cout << "Number of elements: " << n_rows_ext * n_columns_ext
+              << std::endl;
     std::cout << "Number of iterations: " << n_iterations << std::endl;
-    std::cout << "Number of images: " << n_iterations / images_interval << std::endl;
+    std::cout << "Number of images: " << n_iterations / images_interval
+              << std::endl;
 }
 
 void Parameters::parse(int argc, char *argv[]) {

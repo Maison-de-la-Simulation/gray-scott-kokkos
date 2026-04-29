@@ -28,7 +28,7 @@ constexpr real diffusion_rate_v{0.05};
  * @param n_rows_ext Number of rows + halo.
  * @param n_columns_ext Number of columens + halo.
  */
-void add_drop(real* u, real* v, const std::size_t n_rows_ext,
+void add_drop(real *u, real *v, const std::size_t n_rows_ext,
               const std::size_t n_columns_ext) {
     // find drop location
     // central cell + 1
@@ -56,7 +56,7 @@ void add_drop(real* u, real* v, const std::size_t n_rows_ext,
  * @param n_rows_ext Number of rows + halo.
  * @param n_columns_ext Number of columens + halo.
  */
-void compute(real const* u, real const* v, real* u_temp, real* v_temp,
+void compute(real const *u, real const *v, real *u_temp, real *v_temp,
              const std::size_t n_rows_ext, const std::size_t n_columns_ext) {
     for (std::size_t i = 1; i < n_rows_ext - 1; i++) {
         for (std::size_t j = 1; j < n_columns_ext - 1; j++) {
@@ -85,13 +85,13 @@ void compute(real const* u, real const* v, real* u_temp, real* v_temp,
     }
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     Parameters parameters{argc, argv};
     parameters.describe();
 
     // fields (with halo)
-    real* u = new real[parameters.n_rows_ext * parameters.n_columns_ext];
-    real* v = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+    real *u = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+    real *v = new real[parameters.n_rows_ext * parameters.n_columns_ext];
 
     // create writer
     OutputWriter<real> writer(
@@ -120,8 +120,8 @@ int main(int argc, char* argv[]) {
     writer.write(v);
 
     // temporary fields (with halo)
-    real* u_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
-    real* v_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+    real *u_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+    real *v_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
 
     // time loop
     for (std::size_t iteration = 0; iteration < parameters.n_iterations;

@@ -124,4 +124,3 @@ class OutputWriter {
         this->current_image_id++;
     }
 };
-
