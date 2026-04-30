@@ -13,6 +13,8 @@ add_executable(gray_scott_gpu_graph)
 
 target_sources(
     gray_scott_gpu_graph
+    PUBLIC
+        captures.hpp
     PRIVATE
         gray_scott_gpu_graph.cpp
 )

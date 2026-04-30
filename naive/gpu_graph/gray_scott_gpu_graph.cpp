@@ -1,6 +1,7 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Graph.hpp>
 
+#include "captures.hpp"
 #include "helpers.hpp"
 #include "output_writer.hpp"
 #include "parameters.hpp"
@@ -54,7 +55,7 @@ void add_drop(const View &u, const View &v) {
 
 /**
  * @brief Compute the Gray-Scott equation for one iteration.
- * @param root Parent node.
+ * @param node Parent node.
  * @param u U field.
  * @param v V field.
  * @param u_temp U temporary field.
@@ -62,12 +63,12 @@ void add_drop(const View &u, const View &v) {
  * @returns Child node.
  */
 Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> compute(
-    Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> root,
+    Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> node,
     const View &u, const View &v, const View &u_temp, const View &v_temp) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
-    return root.then_parallel_for(
+    return node.then_parallel_for(
         "compute",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
             {1, 1},
@@ -95,20 +96,6 @@ Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> compute(
             v_temp(i, j) = v(i, j) + v_delta * constants::dt;
         });
 }
-
-#ifdef KOKKOS_ENABLE_CUDA
-template <typename DstViewType, typename SrcViewType>
-struct DeepCopy {
-    DstViewType dst;
-    SrcViewType src;
-
-    void operator()(const Kokkos::Cuda &exec) const {
-        cudaMemcpyAsync(dst.data(), src.data(),
-                        src.size() * sizeof(typename SrcViewType::value_type),
-                        cudaMemcpyDeviceToHost, exec.cuda_stream());
-    }
-};
-#endif
 
 int main(int argc, char *argv[]) {
     Kokkos::ScopeGuard kokkos{argc, argv};
@@ -150,21 +137,33 @@ int main(int argc, char *argv[]) {
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
+    // out field (with halo)
+    View v_out("v_out", parameters.n_rows_ext, parameters.n_columns_ext);
+
     auto compute_image =
         [&](Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace>
                 node) {
+            [[maybe_unused]] Kokkos::Experimental::GraphNodeRef<
+                Kokkos::DefaultExecutionSpace>
+                node_data;
             for (int iteration = 0; iteration < parameters.images_interval;
                  iteration++) {
                 node = compute(node, u, v, u_temp, v_temp);
                 Kokkos::kokkos_swap(u, u_temp);
                 Kokkos::kokkos_swap(v, v_temp);
             }
-#ifdef KOKKOS_ENABLE_CUDA
-            node = node.cuda_capture(
-                Kokkos::DefaultExecutionSpace{},
-                DeepCopy{v_h, v});
+#if defined(KOKKOS_ENABLE_CUDA)
+            node = node.cuda_capture(Kokkos::DefaultExecutionSpace{},
+                                     SynchronizeDeviceToDevice{v_out, v});
+            node_data = node.cuda_capture(Kokkos::DefaultExecutionSpace{},
+                                          SynchronizeDeviceToHost{v_h, v_out});
+#elif defined(KOKKOS_ENABLE_HIP)
+#error "not implemented"
+#else
+            node_data =
+                node.then_host("", [&]() { Kokkos::deep_copy(v_h, v_out); });
 #endif
-            node.then_host("", [&]() {
+            node_data.then_host("", [&]() {
                 writer.write(v_h.data());
             });
             return node;
@@ -172,11 +171,11 @@ int main(int argc, char *argv[]) {
 
     auto graph = Kokkos::Experimental::create_graph(
         [&](Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace>
-                root) {
+                node) {
             for (int image = 0;
                  image < (parameters.n_iterations / parameters.images_interval);
                  image++) {
-                root = compute_image(root);
+                node = compute_image(node);
             }
         });
 
