@@ -59,8 +59,9 @@ void add_drop(const View &u, const View &v) {
  * @param u_temp U temporary field.
  * @param v_temp V temporary field.
  */
-Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> compute(Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> root, const View &u, const View &v, const View &u_temp,
-             const View &v_temp) {
+Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> compute(
+    Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> root,
+    const View &u, const View &v, const View &u_temp, const View &v_temp) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
@@ -91,6 +92,20 @@ Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> compute(Kokkos
             v_temp(i, j) = v(i, j) + v_delta * constants::dt;
         });
 }
+
+#ifdef KOKKOS_ENABLE_CUDA
+template <typename DstViewType, typename SrcViewType>
+struct DeepCopy {
+    DstViewType dst;
+    SrcViewType src;
+
+    void operator()(const Kokkos::Cuda &exec) const {
+        cudaMemcpyAsync(dst.data(), src.data(),
+                        src.size() * sizeof(typename SrcViewType::value_type),
+                        cudaMemcpyDeviceToHost, exec.cuda_stream());
+    }
+};
+#endif
 
 int main(int argc, char *argv[]) {
     Kokkos::ScopeGuard kokkos{argc, argv};
@@ -132,26 +147,35 @@ int main(int argc, char *argv[]) {
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
-    auto compute_image = [&](Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> node) {
-        for (int iteration = 0; iteration < parameters.images_interval; iteration++) {
-            node = compute(node, u, v, u_temp, v_temp);
-            Kokkos::kokkos_swap(u, u_temp);
-            Kokkos::kokkos_swap(v, v_temp);
-        }
-        node = node.then("", [&](){
-            Kokkos::deep_copy(Kokkos::DefaultExecutionSpace(), v_h, v);}
-        );
-        node.then_host("", [&](){
-                    writer.write(v_h.data());
-        });
-        return node;
-    };
+    auto compute_image =
+        [&](Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace>
+                node) {
+            for (int iteration = 0; iteration < parameters.images_interval;
+                 iteration++) {
+                node = compute(node, u, v, u_temp, v_temp);
+                Kokkos::kokkos_swap(u, u_temp);
+                Kokkos::kokkos_swap(v, v_temp);
+            }
+#ifdef KOKKOS_ENABLE_CUDA
+            node = node.cuda_capture(
+                Kokkos::DefaultExecutionSpace{},
+                DeepCopy{v_h, v});
+#endif
+            node.then_host("", [&]() {
+                writer.write(v_h.data());
+            });
+            return node;
+        };
 
-    auto graph = Kokkos::Experimental::create_graph(Kokkos::DefaultExecutionSpace(), [&](Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace> root) {
-        for (int image = 0; image < (parameters.n_iterations / parameters.images_interval); image++) {
-            root = compute_image(root);
-        }
-    });
+    auto graph = Kokkos::Experimental::create_graph(
+        [&](Kokkos::Experimental::GraphNodeRef<Kokkos::DefaultExecutionSpace>
+                root) {
+            for (int image = 0;
+                 image < (parameters.n_iterations / parameters.images_interval);
+                 image++) {
+                root = compute_image(root);
+            }
+        });
 
     graph.instantiate();
     graph.submit();
