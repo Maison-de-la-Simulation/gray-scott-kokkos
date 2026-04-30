@@ -28,7 +28,7 @@ void print_field(real *field, char const *label, const std::size_t n_rows_ext,
 
     for (int i = 0; i < n_rows_ext; i++) {
         for (int j = 0; j < n_columns_ext; j++) {
-            std::cout << field[ACCESS(i, j)];
+            std::cout << field[ACCESS(i, j)] << " ";
         }
         std::cout << std::endl;
     }
