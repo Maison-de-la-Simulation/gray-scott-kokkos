@@ -23,7 +23,7 @@ void print_field(const View &field, const std::size_t iteration) {
 
     for (int i = 0; i < field.extent(0); i++) {
         for (int j = 0; j < field.extent(1); j++) {
-            std::cout << field(i, j);
+            std::cout << field(i, j) << " ";
         }
         std::cout << std::endl;
     }
