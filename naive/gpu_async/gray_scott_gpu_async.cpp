@@ -97,6 +97,8 @@ int main(int argc, char *argv[]) {
 
     Parameters parameters{argc, argv};
     parameters.describe();
+    const std::size_t n_images =
+        parameters.n_iterations / parameters.images_interval;
 
     // fields (with halo)
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);
@@ -107,9 +109,8 @@ int main(int argc, char *argv[]) {
     auto v_h = Kokkos::create_mirror_view(v);
 
     // create writer
-    OutputWriter<real> writer(
-        "gray_scott.h5", parameters.n_iterations / parameters.images_interval,
-        parameters.n_rows_ext, parameters.n_columns_ext);
+    OutputWriter<real> writer("gray_scott.h5", n_images, parameters.n_rows_ext,
+                              parameters.n_columns_ext);
 
     // initialize fields
     Kokkos::deep_copy(u, 1);
@@ -132,20 +133,25 @@ int main(int argc, char *argv[]) {
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
-    // time loop
-    for (int image = 0; image < (parameters.n_iterations / parameters.images_interval); image++) {
-        // write image every images_interval iterations
+    // images loop
+    for (int image = 0; image < n_images; image++) {
+        // start deep-copy (blocking)
         Kokkos::deep_copy(v_h, v);
 
-        for (int iteration = 0; iteration < parameters.images_interval; iteration++) {
+        // time loop for the current image
+        for (int iteration = 0; iteration < parameters.images_interval;
+             iteration++) {
+            // then a batch of compute for image n (non-blocking)
             compute(u, v, u_temp, v_temp);
             Kokkos::kokkos_swap(u, u_temp);
             Kokkos::kokkos_swap(v, v_temp);
         }
 
+        // finally write image n - 1 (blocking)
         writer.write(v_h.data());
     }
 
+    // write final image
     Kokkos::deep_copy(v_h, v);
     writer.write(v_h.data());
 
