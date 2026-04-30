@@ -80,11 +80,11 @@ class OutputWriter {
                                 H5::FileCreatPropList::DEFAULT, fapl);
 
         // create spaces
-        // NOTE This gives wrong ordering when the file is opened with
-        // HDFCompass
-        hsize_t dims_3d[3] = {static_cast<hsize_t>(n_images + 1),
-                              static_cast<hsize_t>(n_rows_ext),
-                              static_cast<hsize_t>(n_columns_ext)};
+        hsize_t dims_3d[3] = {
+            static_cast<hsize_t>(n_rows_ext),
+            static_cast<hsize_t>(n_columns_ext),
+            static_cast<hsize_t>(n_images + 1),
+        };
         hsize_t dims_2d[2] = {static_cast<hsize_t>(n_rows_ext),
                               static_cast<hsize_t>(n_columns_ext)};
         this->space_3d = H5::DataSpace(3, dims_3d);
@@ -109,11 +109,9 @@ class OutputWriter {
         std::cout << "Writing image " << this->current_image_id << std::endl;
 
         // set the amount of data to write
-        // NOTE This gives wrong ordering when the file is opened with
-        // HDFCompass
-        hsize_t start[3]{this->current_image_id, 0, 0};
-        hsize_t count[3]{1, static_cast<hsize_t>(this->n_rows_ext),
-                         static_cast<hsize_t>(this->n_columns_ext)};
+        hsize_t start[3]{0, 0, this->current_image_id};
+        hsize_t count[3]{static_cast<hsize_t>(this->n_rows_ext),
+                         static_cast<hsize_t>(this->n_columns_ext), 1};
         this->space_3d.selectHyperslab(H5S_SELECT_SET, count, start);
 
         // write data to file
