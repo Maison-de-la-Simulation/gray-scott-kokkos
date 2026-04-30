@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <iostream>
 #include <memory>
+#include <filesystem>
 
 /**
  * @brief HDF5 file writer.
@@ -74,6 +75,11 @@ class OutputWriter {
         H5::FileAccPropList fapl;
         fapl.setFcloseDegree(H5F_CLOSE_STRONG);  // Ensure immediate flush
         fapl.setCache(0, 0, 0, 0.0);  // Optional: Set chunk cache size to 0
+
+        // remove file if it already exists
+        if (std::filesystem::exists(filename)) {
+            std::filesystem::remove(filename);
+        }
 
         // create file in current working directory
         this->file = H5::H5File(filename, H5F_ACC_TRUNC,
