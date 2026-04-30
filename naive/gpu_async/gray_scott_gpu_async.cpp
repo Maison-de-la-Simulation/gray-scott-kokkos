@@ -59,15 +59,15 @@ void add_drop(const View &u, const View &v) {
  * @param u_temp U temporary field.
  * @param v_temp V temporary field.
  */
-void compute(const View &u, const View &v, const View &u_temp,
-             const View &v_temp) {
+void compute(Kokkos::DefaultExecutionSpace const &space, const View &u,
+             const View &v, const View &u_temp, const View &v_temp) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
     Kokkos::parallel_for(
         "compute",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-            {1, 1},
+            space, {1, 1},
             {n_rows_ext - 1, n_columns_ext - 1}),  // do not iterate on the halo
         KOKKOS_LAMBDA(const int i, const int j) {
             real u_full = 0;
@@ -133,19 +133,29 @@ int main(int argc, char *argv[]) {
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
+    // output fields (with halo)
+    View v_out("v_out", parameters.n_rows_ext, parameters.n_columns_ext);
+
+    // create one space for compute, and one for data
+    auto [space_compute, space_data] = Kokkos::Experimental::partition_space(
+        Kokkos::DefaultExecutionSpace{}, 1, 1);
+
     // images loop
     for (int image = 0; image < n_images; image++) {
-        // start deep-copy (blocking)
-        Kokkos::deep_copy(v_h, v);
+        // start duplicate image n - 1 in the device (blocking for everybody)
+        Kokkos::deep_copy(v_out, v);
 
-        // time loop for the current image
+        // then batch compute image n (non-blocking)
         for (int iteration = 0; iteration < parameters.images_interval;
              iteration++) {
-            // then a batch of compute for image n (non-blocking)
-            compute(u, v, u_temp, v_temp);
+            compute(space_compute, u, v, u_temp, v_temp);
             Kokkos::kokkos_swap(u, u_temp);
             Kokkos::kokkos_swap(v, v_temp);
         }
+
+        // then synchronize image n - 1 (blocking, but in its own space)
+        Kokkos::deep_copy(space_data, v_h, v_out);
+        space_data.fence("waiting for deep_copy");
 
         // finally write image n - 1 (blocking)
         writer.write(v_h.data());
