@@ -94,49 +94,51 @@ void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
             // corresponds to the grid cell at position (i, j0)
             const int base_center = i_stride * i + j0;
 
+            // center u pointer
+            const auto u_center_ptr = u.data() + base_center;
+
+            // center v pointer
+            const auto v_center_ptr = v.data() + base_center;
+
             // Load SIMD registers for 3x3 stencil
 
             // west-east u
-            SimdType u_center(u.data() + base_center, KE::simd_flag_default);
-            SimdType u_west(u.data() + base_center - 1, KE::simd_flag_default);
-            SimdType u_east(u.data() + base_center + 1, KE::simd_flag_default);
+            SimdType u_center(u_center_ptr, KE::simd_flag_default);
+            SimdType u_west(u_center_ptr - 1, KE::simd_flag_default);
+            SimdType u_east(u_center_ptr + 1, KE::simd_flag_default);
 
             // west-east v
-            SimdType v_center(v.data() + base_center, KE::simd_flag_default);
-            SimdType v_west(v.data() + base_center - 1, KE::simd_flag_default);
-            SimdType v_east(v.data() + base_center + 1, KE::simd_flag_default);
+            SimdType v_center(v_center_ptr, KE::simd_flag_default);
+            SimdType v_west(v_center_ptr - 1, KE::simd_flag_default);
+            SimdType v_east(v_center_ptr + 1, KE::simd_flag_default);
 
-            // north and south Center
-            const int base_north = base_center - i_stride;
-            const int base_south = base_center + i_stride;
+            // north-south u pointers
+            const auto u_north_ptr = u_center_ptr - i_stride;
+            const auto u_south_ptr = u_center_ptr + i_stride;
+
+            // north-south v pointers
+            const auto v_north_ptr = v_center_ptr - i_stride;
+            const auto v_south_ptr = v_center_ptr + i_stride;
 
             // north-south u
-            SimdType u_north(u.data() + base_north, KE::simd_flag_default);
-            SimdType u_south(u.data() + base_south, KE::simd_flag_default);
+            SimdType u_north(u_north_ptr, KE::simd_flag_default);
+            SimdType u_south(u_south_ptr, KE::simd_flag_default);
 
             // north-south v
-            SimdType v_north(v.data() + base_north, KE::simd_flag_default);
-            SimdType v_south(v.data() + base_south, KE::simd_flag_default);
+            SimdType v_north(v_north_ptr, KE::simd_flag_default);
+            SimdType v_south(v_south_ptr, KE::simd_flag_default);
 
             // corners u
-            SimdType u_north_west(u.data() + base_north - 1,
-                                  KE::simd_flag_default);
-            SimdType u_north_east(u.data() + base_north + 1,
-                                  KE::simd_flag_default);
-            SimdType u_south_west(u.data() + base_south - 1,
-                                  KE::simd_flag_default);
-            SimdType u_south_east(u.data() + base_south + 1,
-                                  KE::simd_flag_default);
+            SimdType u_north_west(u_north_ptr - 1, KE::simd_flag_default);
+            SimdType u_north_east(u_north_ptr + 1, KE::simd_flag_default);
+            SimdType u_south_west(u_south_ptr - 1, KE::simd_flag_default);
+            SimdType u_south_east(u_south_ptr + 1, KE::simd_flag_default);
 
             // corners v
-            SimdType v_north_west(v.data() + base_north - 1,
-                                  KE::simd_flag_default);
-            SimdType v_north_east(v.data() + base_north + 1,
-                                  KE::simd_flag_default);
-            SimdType v_south_west(v.data() + base_south - 1,
-                                  KE::simd_flag_default);
-            SimdType v_south_east(v.data() + base_south + 1,
-                                  KE::simd_flag_default);
+            SimdType v_north_west(v_north_ptr - 1, KE::simd_flag_default);
+            SimdType v_north_east(v_north_ptr + 1, KE::simd_flag_default);
+            SimdType v_south_west(v_south_ptr - 1, KE::simd_flag_default);
+            SimdType v_south_east(v_south_ptr + 1, KE::simd_flag_default);
 
             // compute stencil
             // clang-format off
