@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
-    // images loop
+    // loop on images
     for (int image = 0; image < n_images; image++) {
         // start duplicate image n - 1 on the host (blocking)
         Kokkos::deep_copy(v_h, v);

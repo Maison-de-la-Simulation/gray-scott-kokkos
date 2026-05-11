@@ -142,9 +142,9 @@ int main(int argc, char *argv[]) {
     auto [space_compute, space_data] = Kokkos::Experimental::partition_space(
         Kokkos::DefaultExecutionSpace{}, 1, 1);
 
-    // images loop
+    // loop on images
     for (int image = 0; image < n_images; image++) {
-        // start duplicate image n - 1 in the device (blocking for everybody)
+        // start duplicate image n - 1 on the device (blocking for everybody)
         Kokkos::deep_copy(v_out, v);
 
         // then batch compute image n (non-blocking)
@@ -155,7 +155,8 @@ int main(int argc, char *argv[]) {
             Kokkos::kokkos_swap(v, v_temp);
         }
 
-        // then synchronize image n - 1 (blocking, but in its own space)
+        // then synchronize image n - 1 (blocking in its own space and for the
+        // host)
         Kokkos::deep_copy(space_data, v_h, v_out);
         space_data.fence("waiting for deep_copy");
 
