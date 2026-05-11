@@ -1,3 +1,4 @@
-*/build-gpu/*
-*/results/*
-build/
+build*/
+*.qdstrm
+*.nsys-rep
+*.h5
