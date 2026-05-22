@@ -11,5 +11,7 @@ include(common.cmake)
 
 add_subdirectory(sequential)
 add_subdirectory(cpu)
-add_subdirectory(gpu)
 add_subdirectory(simd)
+add_subdirectory(gpu)
+add_subdirectory(gpu_async)
+add_subdirectory(gpu_async_more)
