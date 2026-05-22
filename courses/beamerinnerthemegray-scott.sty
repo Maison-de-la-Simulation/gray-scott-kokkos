@@ -1,0 +1,44 @@
+\mode<presentation>
+
+% Background
+\setbeamertemplate{background}{
+    \begin{tikzpicture}[overlay, remember picture]
+        \node[inner sep=0pt,outer sep=0pt,anchor=north east] at (current page.north east) {
+                \includegraphics[width=\the\paperwidth,height=\the\paperheight]{gray_scott.jpg}
+        };
+        % first page
+        \ifnum\thepage=1\relax%
+        % other pages
+        \else
+            \fill[color=white] (0em, -2em) rectangle (\the\paperwidth, -\the\paperheight + 1.5em);
+        \fi
+    \end{tikzpicture}
+}
+
+% Title page
+\defbeamertemplate*{title page}{gray-scott}[1][]
+{
+    \vskip2cm%
+    \begin{beamercolorbox}[center]{title page header}
+        \usebeamerfont{title page header}\inserttitle%
+    \end{beamercolorbox}%
+    \vskip0.1cm%
+    \begin{beamercolorbox}[center]{title page subtitle}
+        \usebeamerfont{title page subtitle}\insertsubtitle%
+    \end{beamercolorbox}%
+    \vskip0.3cm%
+    \begin{beamercolorbox}[center]{author}
+        \usebeamerfont{author}\insertauthor%
+    \end{beamercolorbox}%
+    \vskip0.1cm%
+    \begin{beamercolorbox}[center]{institute}
+    \usebeamerfont{author}\insertinstitute%
+    \end{beamercolorbox}
+    \vskip0.2cm%
+    \begin{beamercolorbox}[center]{date}
+        \usebeamerfont{author}\insertdate%
+    \end{beamercolorbox}
+    \vfill
+}
+
+\mode<all>

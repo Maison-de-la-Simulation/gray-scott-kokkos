@@ -5,13 +5,9 @@
 ]{beamer}
 
 \usepackage{minted}
-\usepackage{xcolor}
-\usepackage{tcolorbox}
-\usepackage{graphicx}
-\usepackage[no-math]{fontspec}
-\usepackage{tabularray}
-\UseTblrLibrary{diagbox}
 \usepackage{todonotes}
+
+\usetheme{gray-scott}
 
 \AtBeginSection{
     \begin{frame}{Outline}
@@ -29,22 +25,10 @@
     breaklines,
 }
 
-\colorlet{lightmain}{blue} % change me!
-
 \usemintedstyle[text]{vim}
 \setminted[text]{
     bgcolor=lightgray,
     fontsize=\scriptsize,
-}
-
-\NewTblrTheme{kokkostable}{
-    \SetTblrInner{
-        width=\linewidth,
-        rowhead=1,
-        rows={ht=\baselineskip},
-        row{odd}={bg=lightgray},
-        row{1}={bg=lightmain},
-    }
 }
 
 % Captions
@@ -59,16 +43,10 @@
 
 %Information to be included in the title page:
 \title{Kokkos on CPU}
-\subtitle{Gray--Scott School 2026}
-\author{\scriptsize Mathieu Lobet, Paul Zehner, Paul Gannay, Hariprasad Kannan, Thomas Padioleau, Trévis Morvany}
+\subtitle{Gray-Scott School 2026}
+\author{Mathieu Lobet, Paul Zehner, Paul Gannay, Hariprasad Kannan, Thomas Padioleau, Trévis Morvany}
 \institute{CEA}
-\date{\today}
-\titlegraphic{%
-    \includegraphics[height=4em]{kokkos.png}%
-    \hspace{1em}%
-    \includegraphics[height=4em]{cexa_logo.png}
-}
-% \titlegraphicbg{\includegraphics[width=\the\paperwidth, trim=0 0 0 0, clip]{custom_bg_image}}
+\date{2026-06-25}
 
 \begin{document}
 
@@ -268,14 +246,14 @@
         \begin{column}{0.4\linewidth}
             \begin{center}
                 \small
-                \begin{tblr}[theme=kokkostable]{lll}
-                    Name       & Cmd.          & Min.\ ver. \\
-                    Clang      & \texttt{clang++} & 15.0.0    \\
-                    GCC        & \texttt{g++}     & 10.4.0    \\
-                    Intel LLVM & \texttt{icpx}    & 2024.2.1  \\
-                    NVHPC      & \texttt{nvc++}   & 22.3      \\
+                \begin{table}{Compilers}{lll}
+                    Name       & Cmd.             & Min.\ ver. \\\hline
+                    Clang      & \texttt{clang++} & 15.0.0     \\
+                    GCC        & \texttt{g++}     & 10.4.0     \\
+                    Intel LLVM & \texttt{icpx}    & 2024.2.1   \\
+                    NVHPC      & \texttt{nvc++}   & 22.3       \\
                     ROCM       & \texttt{hipcc}   & 6.2.0
-                \end{tblr}
+                \end{table}
             \end{center}
         \end{column}
     \end{columns}
@@ -294,13 +272,13 @@
         \begin{column}{0.6\linewidth}
             \begin{center}
                 \small
-                \begin{tblr}[theme=kokkostable]{ll}
-                    CPU model & Option \\
+                \begin{table}{CPU architectures}{ll}
+                    CPU model & Option \\\hline
                     (native) & \texttt{-DKokkos\_ARCH\_NATIVE=ON} \\
                     AMD Zen5 & \texttt{-DKokkos\_ARCH\_ZEN5=ON} \\
                     Intel Icelake & \texttt{-DKokkos\_ARCH\_ICX=ON} \\
                     NVIDIA Grace & \texttt{-DKokkos\_ARCH\_ARMV9\_GRACE=ON} \\
-                \end{tblr}
+                \end{table}
             \end{center}
         \end{column}
     \end{columns}
@@ -728,11 +706,10 @@
             \end{minted}
         \end{column}
         \begin{column}{0.35\linewidth}
-            \structure{Question:} What gets printed?
-
-            \pause
-
-            \structure{Answer:} 3
+            \begin{block}{What gets printed?}
+                \pause
+                3
+            \end{block}
         \end{column}
     \end{columns}
 \end{frame}
@@ -896,8 +873,9 @@
 
     \pause
 
-    \vspace{1em}
-    \structure{Question:} What is this \texttt{KOKKOS\_LAMBDA} thingy?
+    \begin{block}{Question}
+         What is this \texttt{KOKKOS\_LAMBDA} thingy?
+    \end{block}
 \end{frame}
 
 \begin{frame}[fragile]{Notion of C++ lambdas}
@@ -1134,7 +1112,7 @@
 \end{frame}
 
 \begin{frame}[fragile]{Sum reduction example}
-    \begin{minted}{C++}
+    \begin{minted}[fontsize=\scriptsize]{C++}
         double result;
         Kokkos::View<double*> A;
         ...
@@ -1150,7 +1128,7 @@
 \end{frame}
 
 \begin{frame}[fragile]{Max reduction example}
-    \begin{minted}{C++}
+    \begin{minted}[fontsize=\scriptsize]{C++}
         double max_value;
         Kokkos::View<double*> A;
         ...
@@ -1167,11 +1145,21 @@
 
     \pause
 
-    \structure{Note:} Notice that mathematical operators are in the \texttt{Kokkos} namespace
+    \vspace{-1em}
 
-    \pause
-
-    \structure{Beware:} \texttt{Kokkos::max} is a mathematical operator, \texttt{Kokkos::Max<double>} defines a Reducer object
+    \begin{columns}[T]
+        \begin{column}{0.41\linewidth}
+            \begin{block}{Math operators}
+                Notice that mathematical operators are in the \texttt{Kokkos} namespace
+            \end{block}
+        \end{column}
+        \pause
+        \begin{column}{0.59\linewidth}
+            \begin{block}{Beware}
+                \texttt{Kokkos::max} is a mathematical operator, \texttt{Kokkos::Max<double>} defines a Reducer object
+            \end{block}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}[fragile]{Min and index reduction example}
@@ -1212,7 +1200,7 @@
     \begin{itemize}
         \item Multiple Reducer objects can be specified in the same \texttt{parallel\_reduce}
     \end{itemize}
-    \begin{minted}{C++}
+    \begin{minted}[fontsize=\scriptsize]{C++}
         double sum_val,  min_val;
 
         Kokkos::parallel_reduce(
@@ -1262,12 +1250,12 @@
         \pause
         \begin{column}{0.54\linewidth}
             \begin{center}
-                \begin{tblr}[theme=kokkostable]{ll}
-                    Backend & Option \\
+                \begin{table}{CPU backends}{ll}
+                    Backend & Option \\\hline
                     Serial & \texttt{-DKokkos\_ENABLE\_SERIAL=ON} \\
                     OpenMP & \texttt{-DKokkos\_ENABLE\_OPENMP=ON} \\
-                    Threads & \texttt{-DKokkos\_ENABLE\_THREADS=ON} \\
-                \end{tblr}
+                    Threads & \texttt{-DKokkos\_ENABLE\_THREADS=ON}
+                \end{table}
             \end{center}
         \end{column}
     \end{columns}
@@ -1455,6 +1443,9 @@
         \item Auxiliary functions (load, store, etc)
         \item Math functions working on SIMD types
     \end{itemize}
+
+    \vspace{-0.75em}
+
     \begin{block}{Compiling Kokkos for vectorization}
         In order to enable vectorization, you should specify a CPU architecture flag with cmake, or use \texttt{-DKokkos\_ARCH\_NATIVE=ON} to optimize for the CPU you are compiling on
     \end{block}
@@ -1475,18 +1466,18 @@
 
 \begin{frame}[fragile]{Supported SIMD abis}
     \begin{center}
-        \begin{tblr}[theme=kokkostable]{lll}
-            ISA & abi & Compatible datatypes \\
+        \begin{table}{SIMD abis}{lll}
+            ISA & abi & Compatible datatypes \\\hline
             - & \texttt{scalar} & all \\
-            \SetCell[r=2]{c} AVX2 & \texttt{avx2\_fixed\_size<4>} & all \\
-            & \texttt{avx2\_fixed\_size<8>} & \texttt{float}, \texttt{int32\_t}, \texttt{uint32\_t} \\
-            \SetCell[r=2]{c, bg=white} AVX512 & \texttt{avx512\_fixed\_size<8>} & all \\
-            & \texttt{avx512\_fixed\_size<16>} & \texttt{float}, \texttt{int32\_t}, \texttt{uint32\_t} \\
-            \SetCell[r=2]{c} NEON & \texttt{neon\_fixed\_size<2>} & all \\
-            & \texttt{neon\_fixed\_size<4>} & \texttt{float}, \texttt{int32\_t}, \texttt{uint32\_t} \\
-            \SetCell[r=2]{c, bg=white} SVE & \texttt{sve\_fixed\_size<N/2>} & \texttt{double}, \texttt{int64\_t}, \texttt{uint64\_t}, \texttt{int32\_t} \\
-            & \texttt{sve\_fixed\_size<N>} & \texttt{float}, \texttt{int32\_t}, \texttt{uint32\_t} \\
-        \end{tblr}
+            AVX2 & \texttt{avx2\_fixed\_size<4>} & all \\
+            AVX2 & \texttt{avx2\_fixed\_size<8>} & \texttt{float}, \texttt{int32\_t}, \texttt{uint32\_t} \\
+            AVX512 & \texttt{avx512\_fixed\_size<8>} & all \\
+            AVX512 & \texttt{avx512\_fixed\_size<16>} & \texttt{float}, \texttt{int32\_t}, \texttt{uint32\_t} \\
+            NEON & \texttt{neon\_fixed\_size<2>} & all \\
+            NEON & \texttt{neon\_fixed\_size<4>} & \texttt{float}, \texttt{int32\_t}, \texttt{uint32\_t} \\
+            SVE & \texttt{sve\_fixed\_size<N/2>} & \texttt{double}, \texttt{int64\_t}, \texttt{uint64\_t}, \texttt{int32\_t} \\
+            SVE & \texttt{sve\_fixed\_size<N>} & \texttt{float}, \texttt{int32\_t}, \texttt{uint32\_t} \\
+        \end{table}
     \end{center}
 \end{frame}
 
@@ -1540,7 +1531,9 @@
             // store the result vector in memory
         });
     \end{minted}
-    \structure{Note:} We iterate from 0 to \texttt{N / VEC\_WIDTH}, since we compute \texttt{VEC\_WIDTH} elements per iteration.
+    \begin{block}{Note}
+        We iterate from 0 to \texttt{N / VEC\_WIDTH}, since we compute \texttt{VEC\_WIDTH} elements per iteration
+    \end{block}
 \end{frame}
 
 \begin{frame}[fragile]{Example: adding two views}
@@ -1597,7 +1590,7 @@
         \begin{itemize}
             \item Consider the following vector \texttt{\{-1, 2, 0, 1\}}
             \item Different values of the vector would enter different branches
-            \item \structure{Solution:} the \texttt{condition} function, which selects values from two vectors according to a \structure{mask}
+            \item The \texttt{condition} function, which selects values from two vectors according to a \structure{mask}
         \end{itemize}
     \end{itemize}
 \end{frame}
@@ -1620,6 +1613,7 @@
         \end{minted}
         \item They can be used in the \texttt{condition} function, to conditionally load/store elements of a vector or in reduction operations
     \end{itemize}
+    \vspace{0.5em}
 \end{frame}
 
 \begin{frame}[fragile]{Example: vectorizing with conditionals}
@@ -1650,11 +1644,20 @@
             }
         );
     \end{minted}
-    \vspace{-10pt}
-    \begin{itemize}
-        \item \texttt{Kokkos::Experimental::condition} takes a \texttt{simd\_mask}, and two vectors, and selects elements from both vectors depending on the values in the mask
-        \item \structure{Note:} both branches are evaluated
-    \end{itemize}
+
+    \vspace{-1em}
+    \begin{columns}
+        \begin{column}{0.8\linewidth}
+            \begin{block}{Observation}
+                \texttt{condition} takes a \texttt{simd\_mask}, and two vectors, and selects elements from both vectors depending on the values in the mask
+            \end{block}
+        \end{column}
+        \begin{column}{0.2\linewidth}
+            \begin{block}{Note}
+                Both branches are evaluated
+            \end{block}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}[plain]

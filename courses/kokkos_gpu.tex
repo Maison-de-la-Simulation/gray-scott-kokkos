@@ -5,13 +5,10 @@
 ]{beamer}
 
 \usepackage{minted}
-\usepackage{xcolor}
-\usepackage{tcolorbox}
-\usepackage{graphicx}
-\usepackage[no-math]{fontspec}
-\usepackage{tabularray}
-\UseTblrLibrary{diagbox}
+\usepackage{diagbox}
 \usepackage{todonotes}
+
+\usetheme{gray-scott}
 
 \AtBeginSection{
     \begin{frame}{Outline}
@@ -29,51 +26,30 @@
     breaklines,
 }
 
-\colorlet{lightmain}{blue} % change me!
-
 \usemintedstyle[text]{vim}
 \setminted[text]{
     bgcolor=lightgray,
     fontsize=\scriptsize,
 }
 
-\NewTblrTheme{kokkostable}{
-    \SetTblrInner{
-        width=\linewidth,
-        rowhead=1,
-        rows={ht=\baselineskip},
-        row{odd}={bg=lightgray},
-        row{1}={bg=blue},
-    }
-}
-
-% Captions
-\renewcommand{\caption}[1]{%
-    \begin{center}
-        \scriptsize #1
-    \end{center}%
-}
-
-
 \graphicspath{{images/}}
 
 %Information to be included in the title page:
 \title{Kokkos on GPU}
-\subtitle{Gray--Scott School 2026}
-\author{\scriptsize Mathieu Lobet, Paul Zehner, Paul Gannay, Hariprasad Kannan, Thomas Padioleau, Trévis Morvany}
+\subtitle{Gray-Scott School 2026}
+\author{Mathieu Lobet, Paul Zehner, Paul Gannay, Hariprasad Kannan, Thomas Padioleau, Trévis Morvany}
 \institute{CEA}
-\date{\today}
-\titlegraphic{%
-    \includegraphics[height=4em]{kokkos.png}%
-    \hspace{1em}%
-    \includegraphics[height=4em]{cexa_logo.png}
-}
-% \titlegraphicbg{\includegraphics[width=\the\paperwidth, trim=0 0 0 0, clip]{custom_bg_image}}
+\date{2026-07-02}
 
 \begin{document}
 
 \begin{frame}[plain]
     \titlepage
+\end{frame}
+
+\begin{frame}{Outline}
+    \renewcommand{\baselinestretch}{0.5}
+    \tableofcontents
 \end{frame}
 
 \section{Moving to a GPU backend}
@@ -107,15 +83,15 @@
         \pause
         \begin{column}{0.55\linewidth}
             \begin{center}
-                \begin{tblr}[theme=kokkostable]{ll}
-                    Backend & Option \\
+                \begin{table}{GPU backends}{ll}
+                    Backend & Option \\\hline
                     Serial & \texttt{-DKokkos\_ENABLE\_SERIAL=ON} \\
                     OpenMP & \texttt{-DKokkos\_ENABLE\_OPENMP=ON} \\
                     Threads & \texttt{-DKokkos\_ENABLE\_THREADS=ON} \\
                     Cuda & \texttt{-DKokkos\_ENABLE\_CUDA=ON} \\
                     HIP & \texttt{-DKokkos\_ENABLE\_HIP=ON} \\
-                    SYCL & \texttt{-DKokkos\_ENABLE\_SYCL=ON} \\
-                \end{tblr}
+                    SYCL & \texttt{-DKokkos\_ENABLE\_SYCL=ON}
+                \end{table}
             \end{center}
         \end{column}
     \end{columns}
@@ -130,7 +106,7 @@
 
 \begin{frame}{Compiling Kokkos for a specific GPU architecture}
     \begin{columns}
-        \begin{column}{0.4\linewidth}
+        \begin{column}{0.37\linewidth}
             \begin{itemize}
                 \item Add the architecture option \texttt{-DKokkos\_ARCH\_<NAME>=ON}
                 \item CPU architecture is optional, for optimization
@@ -139,19 +115,19 @@
             \end{itemize}
         \end{column}
         \pause
-        \begin{column}{0.6\linewidth}
+        \begin{column}{0.63\linewidth}
             \begin{center}
                 \small
-                \begin{tblr}[theme=kokkostable]{ll}
-                    GPU model & Option \\
+                \begin{table}{GPU architectures}{ll}
+                    GPU model & Option \\\hline
                     AMD MI300A & \texttt{-DKokkos\_ARCH\_AMD\_GFX942\_APU=ON} \\
                     AMD MI300X & \texttt{-DKokkos\_ARCH\_AMD\_GFX942=ON} \\
                     AMD MI250X & \texttt{-DKokkos\_ARCH\_AMD\_GFX90A=ON} \\
                     Intel GPU Max & \texttt{-DKokkos\_ARCH\_INTEL\_PVC=ON} \\
                     NVIDIA H200 & \texttt{-DKokkos\_ARCH\_HOPPER90=ON} \\
                     NVIDIA A100 & \texttt{-DKokkos\_ARCH\_AMPERE80=ON} \\
-                    NVIDIA V100 & \texttt{-DKokkos\_ARCH\_VOLTA70=ON} \\
-                \end{tblr}
+                    NVIDIA V100 & \texttt{-DKokkos\_ARCH\_VOLTA70=ON}
+                \end{table}
             \end{center}
         \end{column}
     \end{columns}
@@ -259,7 +235,7 @@
 
 \section{About portability}
 
-\begin{frame}[fragile]{Why do we need \texttt{KOKKOS\_LAMBDA}?}
+\begin{frame}[fragile]{Why do we need KOKKOS\_LAMBDA?}
     \begin{columns}
         \begin{column}{0.4\linewidth}
             \begin{minted}{C++}
@@ -270,6 +246,11 @@
                     }
                 );
             \end{minted}
+            \begin{uncoverenv}<3->
+                \begin{block}{Question}
+                    Why do we need to use \texttt{KOKKOS\_LAMBDA} inside parallel constructs rather than the standard C++ lambda syntax?
+                \end{block}
+            \end{uncoverenv}
         \end{column}
         \begin{column}{0.6\linewidth}
             \begin{itemize}
@@ -283,12 +264,7 @@
             \end{itemize}
         \end{column}
     \end{columns}
-
-    \pause
-    \structure{Question:} Why do we need to use \texttt{KOKKOS\_LAMBDA} inside parallel constructs rather than the standard C++ lambda syntax?
 \end{frame}
-
-
 
 \begin{frame}[fragile]{Function annotations}
     \begin{columns}
@@ -304,7 +280,7 @@
                 void host_device_function() {}
 
                 auto lambda =
-                __host__ __device__ [] () {};
+                  __host__ __device__ [] () {};
             \end{minted}
         \end{column}
         \begin{column}{0.55\linewidth}
@@ -319,21 +295,16 @@
     \end{columns}
 \end{frame}
 
-
-
 \begin{frame}[fragile]{Annotated functions calls}
-    Calling a function with the wrong annotation will generate errors and warnings:
     \begin{center}
-        \begin{tblr}[theme=kokkostable]{colspec=llll}
-            \diagbox[linecolor=white,linewidth=2pt]{Caller}{Calling}& \texttt{\_\_host\_\_}  & \texttt{\_\_device\_\_} & both\\
+        \begin{table}{Effect of calling annotated functions}{l|lll}
+            \diagbox[linecolor=darkmain,linewidth=0.5mm]{Caller}{Calling}& \texttt{\_\_host\_\_}  & \texttt{\_\_device\_\_} & both\\\hline
             \texttt{\_\_host\_\_} & Ok & Error & Ok \\
             \texttt{\_\_device\_\_} & Error & Ok & Ok \\
-            both & Warning & Error & Ok \\
-        \end{tblr}
+            both & Warning & Error & Ok
+        \end{table}
     \end{center}
 \end{frame}
-
-
 
 \begin{frame}[fragile]{Kokkos annotation macros}
     \begin{columns}
@@ -368,12 +339,12 @@
 
 \begin{frame}[fragile]{Annotated functions calls (with Kokkos macros)}
     \begin{center}
-        \begin{tblr}[theme=kokkostable]{colspec=llll}
-            \diagbox[linecolor=white,linewidth=2pt]{Caller}{Calling}& No macro  & \texttt{KOKKOS\_FUNCTION} & \texttt{KOKKOS\_LAMBDA} \\
+        \begin{table}{Effect of calling annotated functions}{l|lll}
+            \diagbox[linecolor=darkmain,linewidth=0.5mm]{Caller}{Calling}& No macro  & \texttt{KOKKOS\_FUNCTION} & \texttt{KOKKOS\_LAMBDA} \\\hline
             No macro & Ok & Ok & Ok \\
             \texttt{KOKKOS\_FUNCTION} & Error & Ok & Ok \\
-            \texttt{KOKKOS\_LAMBDA} & Error & Ok & Ok \\
-        \end{tblr}
+            \texttt{KOKKOS\_LAMBDA} & Error & Ok & Ok
+        \end{table}
     \end{center}
 \end{frame}
 
@@ -412,7 +383,7 @@
 
 \begin{frame}{Where are a View data stored?}
     \begin{center}
-        \includegraphics[width=0.65\textwidth]{view_memory.png}
+        \includegraphics[width=0.6\textwidth]{view_memory.png}
     \end{center}
     \pause
     \begin{itemize}
@@ -424,7 +395,7 @@
 
 \begin{frame}{Where are a View data stored? CPU version}
     \begin{center}
-        \includegraphics[width=0.65\textwidth]{host_view_memory.png}
+        \includegraphics[width=0.6\textwidth]{host_view_memory.png}
     \end{center}
     \begin{itemize}
         \item If Kokkos is compiled with a \structure{CPU backend only}, the View data is allocated in the \structure{Host memory} by default
@@ -435,21 +406,23 @@
 
 \begin{frame}{Where are a View data stored? GPU version}
     \begin{center}
-        \includegraphics[width=0.65\textwidth]{device_view_memory.png}
+        \includegraphics[width=0.6\textwidth]{device_view_memory.png}
     \end{center}
 
-    \vspace{-0.5em}
+    \vspace{-1em}
 
     \begin{itemize}
         \item If Kokkos is compiled with a \structure{GPU backend}, the View data is allocated in the \structure{Device memory} by default
         \item Metadata are on the Host
         \item Device view data usually \structure{cannot} be accessed on the Host (we'll see later how to transfer data)
     \end{itemize}
+
+    \vspace{0.5em}
 \end{frame}
 
 \begin{frame}{The concept of memory space}
     \begin{center}
-        \includegraphics[width=0.7\linewidth]{memory_space.png}
+        \includegraphics[width=0.6\linewidth]{memory_space.png}
     \end{center}
     \begin{itemize}
         \item Kokkos abstraction for where the data are allocated: \structure{memory space}
@@ -481,9 +454,9 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{View with \texttt{Kokkos::SharedSpace} memory space}
+\begin{frame}{View with SharedSpace memory space}
     \begin{center}
-        \includegraphics[width=0.65\textwidth]{shared_view_memory.png}
+        \includegraphics[width=0.6\textwidth]{shared_view_memory.png}
     \end{center}
 
     \vspace{-1em}
@@ -524,13 +497,14 @@
                 \item The loop is launched and the program continues
                 \item We will work with asynchronism this afternoon
             \end{itemize}
+
+            \pause
+
+            \begin{block}{Problem}
+                What if I need the result of the parallel loop in the host code?
+            \end{block}
         \end{column}
     \end{columns}
-
-    \pause
-
-    \vspace{1em}
-    \structure{Problem:} What if I need the result of the parallel loop in the host code?
 \end{frame}
 
 \begin{frame}[fragile]{All you need is a fence}
@@ -560,9 +534,6 @@
             \end{itemize}
         \end{column}
     \end{columns}
-
-    \vspace{1em}
-    \structure{Solution:} With a fence
 \end{frame}
 
 \begin{frame}{Exercise time}
@@ -768,20 +739,23 @@
         \item Has a different version number than Kokkos
         \item Should be built and installed somewhere (this requires to install Kokkos too)
         \item You should update the environment variables \texttt{PATH} and \texttt{LD\_LIBRARY\_PATH}
-        \item Use one tool at a time with the environment variable \texttt{KOKKOS\_TOOLS\_LIBS}
+        \item Use one tool at a time with either
+        \begin{itemize}
+            \item The environment variable \texttt{KOKKOS\_TOOLS\_LIBS}
 
-        Mind the \texttt{S}!
-        \item Or with the \texttt{--kokkos-tools-libs} argument of the program
+            Mind the \texttt{S}!
+            \item The \texttt{--kokkos-tools-libs} argument of the program
 
-        Mind the \texttt{s}!
+            Mind the \texttt{s}!
+        \end{itemize}
         \item Do not ship it within your program (this is a dev tool!)
     \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]{Guided tour for a dummy code}
     \begin{columns}
-        \begin{column}{0.6\linewidth}
-            \begin{minted}[fontsize=\scriptsize]{C++}
+        \begin{column}{0.67\linewidth}
+            \begin{minted}{C++}
                 Kokkos::Profiling::pushRegion("computation");
 
                 Kokkos::View<int *> view("view", N);
@@ -799,7 +773,7 @@
                 Kokkos::Profiling::popRegion();
             \end{minted}
         \end{column}
-        \begin{column}{0.4\linewidth}
+        \begin{column}{0.3\linewidth}
             \begin{itemize}
                 \item Very simple code
                 \item Let's try some tools on it
@@ -989,11 +963,14 @@
                     -o report \
                     ./my_program \
                         --kokkos-tools-libs=libkp_nvtx_connector.so
-                nsys-ui report.nsys-rep
             \end{minted}
 
             \begin{minted}{text}
                 KokkosP: NVTX Analyzer Connector (sequence is 0, version: 20240906)
+            \end{minted}
+
+            \begin{minted}{sh}
+                nsys-ui report.nsys-rep
             \end{minted}
         \end{column}
         \begin{column}{0.4\linewidth}
@@ -1064,11 +1041,14 @@
                     --set detailed \
                     ./my_program \
                         --kokkos-tools-libs=libkp_nvtx_connector.so
-                ncu-ui report.ncu-rep
             \end{minted}
 
             \begin{minted}{text}
                 KokkosP: NVTX Analyzer Connector (sequence is 0, version: 20240906)
+            \end{minted}
+
+            \begin{minted}{sh}
+                ncu-ui report.ncu-rep
             \end{minted}
         \end{column}
         \begin{column}{0.4\linewidth}
@@ -1118,7 +1098,11 @@
         \includegraphics<2>[width=0.9\textwidth]{device_memory_access_2.png}
     \end{center}
 
-    \onslide<2>{\structure{Problem:} You cannot!}
+    \begin{uncoverenv}<2>
+        \begin{block}{Problem}
+            You cannot!
+        \end{block}
+    \end{uncoverenv}
 \end{frame}
 
 \begin{frame}[fragile]{All you need is a mirror}
@@ -1151,8 +1135,6 @@
     \begin{center}
         \includegraphics[width=0.9\textwidth]{device_mirror_view.png}
     \end{center}
-
-    \structure{Solution:} With a mirror view!
 \end{frame}
 
 \begin{frame}{How to access data living on the Host from the Host?}
@@ -1160,7 +1142,9 @@
         \includegraphics[width=0.9\textwidth]{host_create_mirror_view.png}
     \end{center}
 
-    \structure{Note:} For portability reason, we always use a mirror view whether we compile with a CPU or GPU backend
+    \begin{block}{Note}
+        For portability reason, we always use a mirror view whether we compile with a CPU or GPU backend
+    \end{block}
 \end{frame}
 
 \begin{frame}[fragile]{Deep copy data between memory space}
@@ -1199,8 +1183,10 @@
     \begin{center}
         \includegraphics[width=0.9\textwidth]{host_device_deep_copy.png}
     \end{center}
+\end{frame}
 
-    \structure{Solution:} With \texttt{create\_mirror\_view} and \texttt{deep\_copy}!
+\begin{frame}{Exercise time}
+    \missingfigure{add mirrors and deep copy to the cpu code}
 \end{frame}
 
 \section{Execution spaces}
@@ -1231,12 +1217,12 @@
     \end{itemize}
     \pause
     \begin{center}
-        \begin{tblr}[theme=kokkostable]{colspec=lll, row{2}={bg=lightmain}}
-            & \SetCell[c=2]{l} Kokkos compiled on \\
-            Execution space & CPU backend & GPU backend \\
+        \begin{table}{Default execution spaces}{lll}
+            & \multicolumn{2}{l}{Kokkos compiled on} \\
+            Execution space & CPU backend & GPU backend \\\hline
             \texttt{Kokkos::DefaultExecutionSpace} & On CPU & On GPU \\
-            \texttt{Kokkos::DefaultHostExecutionSpace} & On CPU & On CPU \\
-        \end{tblr}
+            \texttt{Kokkos::DefaultHostExecutionSpace} & On CPU & On CPU
+        \end{table}
     \end{center}
 \end{frame}
 
@@ -1254,15 +1240,13 @@
     \end{itemize}
     \pause
     \begin{center}
-        % allow the table to overflow horizontally
-        \makebox[\linewidth][c]{%
-            \begin{tblr}[theme=kokkostable]{colspec=lll, row{2}={bg=lightmain}}
-                & \SetCell[c=2]{l} Kokkos compiled on \\
-                Memory space & CPU backend & GPU backend \\
-                \texttt{Kokkos::DefaultExecutionSpace::memory\_space} & On CPU & On GPU \\
-                \texttt{Kokkos::DefaultHostExecutionSpace::memory\_space} & On CPU & On CPU \\
-            \end{tblr}%
-        }
+        \small
+        \begin{table}{Default memory spaces}{lll}
+            & \multicolumn{2}{l}{Kokkos compiled on} \\
+            Memory space & CPU backend & GPU backend \\\hline
+            \texttt{Kokkos::DefaultExecutionSpace::memory\_space} & On CPU & On GPU \\
+            \texttt{Kokkos::DefaultHostExecutionSpace::memory\_space} & On CPU & On CPU
+        \end{table}
     \end{center}
 \end{frame}
 
@@ -1282,13 +1266,14 @@
     \end{itemize}
 
     \begin{center}
-        \begin{tblr}[theme=kokkostable]{colspec=lll, row{2}={bg=lightmain}}
-            & \SetCell[c=2]{l} Kokkos compiled on \\
-            SIMD alias & CPU backend & GPU backend \\
+        \small
+        \begin{table}{SIMD types}{lll}
+            & \multicolumn{2}{l}{Kokkos compiled on} \\
+            SIMD alias & CPU backend & GPU backend \\\hline
             \texttt{simd<T>} & \texttt{basic\_simd<T, abi<...>>} & \texttt{basic\_simd<T, scalar>} \\
             \texttt{simd<T, N>} & \texttt{basic\_simd<T, abi<N>>} & \texttt{basic\_simd<T, scalar>} \\
-            \texttt{basic\_simd<T, abi<N>>} & \texttt{basic\_simd<T, abi<N>>} & \texttt{basic\_simd<T, abi<N>>} \\
-        \end{tblr}
+            \texttt{basic\_simd<T, abi<N>>} & \texttt{basic\_simd<T, abi<N>>} & \texttt{basic\_simd<T, abi<N>>}
+        \end{table}
     \end{center}
 \end{frame}
 
