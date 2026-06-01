@@ -8,6 +8,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_SIMD.hpp>
+#include <type_traits>
 #include <utility>
 
 #include "helpers.hpp"
@@ -31,7 +32,7 @@ constexpr real diffusion_rate_v{0.05};
 }  // namespace constants
 
 // views type
-using View = Kokkos::View<real **, Kokkos::LayoutRight>;
+using View = Kokkos::View<real **>;
 
 /**
  * @brief Add a drop at the center of the fields.
@@ -80,18 +81,20 @@ void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
     namespace KE = Kokkos::Experimental;
 
     const int n_rows = u.extent(0);
-    const int n_cols = u.extent(1);
 
     constexpr int simd_width = SimdType::size();
 
     int const n_blocks = (end - start) / simd_width;
 
-    int const i_stride = u.stride(0);
+    // get the stride of the non-contiguous dimension: 0 for LayoutRight, 1 for
+    // LayoutLeft
+    int const non_contiguous_dimension =
+        std::is_same_v<View::array_layout, Kokkos::LayoutRight> ? 0 : 1;
+    int const stride = u.stride(non_contiguous_dimension);
 
     Kokkos::parallel_for(
         "compute_simd",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Right>>(
-            {1, 0}, {n_rows - 1, n_blocks}),
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({1, 0}, {n_rows - 1, n_blocks}),
 
         KOKKOS_LAMBDA(const int i, const int j_block) {
             // starting column of SIMD lane block (contiguous j-dimension
@@ -99,9 +102,9 @@ void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
             // advances in steps of simd_width
             const int j0 = j_block * simd_width + start;
 
-            // flattened 2D index using the row stride of the LayoutRight view
+            // flattened 2D index using the row stride of the view
             // corresponds to the grid cell at position (i, j0)
-            const int base_center = i_stride * i + j0;
+            const int base_center = stride * i + j0;
 
             // center u pointer
             const auto u_center_ptr = u.data() + base_center;
@@ -122,12 +125,12 @@ void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
             SimdType v_east(v_center_ptr + 1, KE::simd_flag_default);
 
             // north-south u pointers
-            const auto u_north_ptr = u_center_ptr - i_stride;
-            const auto u_south_ptr = u_center_ptr + i_stride;
+            const auto u_north_ptr = u_center_ptr - stride;
+            const auto u_south_ptr = u_center_ptr + stride;
 
             // north-south v pointers
-            const auto v_north_ptr = v_center_ptr - i_stride;
-            const auto v_south_ptr = v_center_ptr + i_stride;
+            const auto v_north_ptr = v_center_ptr - stride;
+            const auto v_south_ptr = v_center_ptr + stride;
 
             // north-south u
             SimdType u_north(u_north_ptr, KE::simd_flag_default);
