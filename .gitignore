@@ -1,7 +1,4 @@
-*/build-gpu/*
-*/results/*
-build/
-
+# LaTeX files
 *.fls
 *.aux
 *.log
@@ -18,3 +15,13 @@ build/
 *.vrb
 *.dvi
 _minted*
+
+# builds
+build*/
+
+# HDF5 generated files
+*.h5
+
+# benchmark files
+*.qdstrm
+*.nsys-rep
