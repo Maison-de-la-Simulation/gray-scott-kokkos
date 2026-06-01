@@ -1,5 +1,6 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Graph.hpp>
+#include <utility>
 
 #include "helpers.hpp"
 #include "output_writer.hpp"
@@ -144,8 +145,8 @@ int main(int argc, char *argv[]) {
         for (int iteration = 0; iteration < parameters.images_interval;
              iteration++) {
             compute(u, v, u_temp, v_temp);
-            Kokkos::kokkos_swap(u, u_temp);
-            Kokkos::kokkos_swap(v, v_temp);
+            std::swap(u, u_temp);
+            std::swap(v, v_temp);
         }
 
         // finally write image n - 1 (blocking)
