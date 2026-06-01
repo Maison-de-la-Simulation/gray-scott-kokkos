@@ -1,3 +1,11 @@
+/**
+ * WARNING
+ *
+ * This Kokkos implementation is incomplete and can only run on CPU. This is
+ * not valid Kokkos code! It requires modifications to be fully portable on
+ * GPU.
+ */
+
 #include <Kokkos_Core.hpp>
 #include <Kokkos_SIMD.hpp>
 
