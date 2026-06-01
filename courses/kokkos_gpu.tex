@@ -1283,12 +1283,359 @@
 
 \section{Asynchronous execution}
 
+\begin{frame}{Asynchronous behavior in Kokkos}
+    \begin{table}{Kokkos asynchronism on GPU}{ll}
+        Function & Behavior \\\hline
+        \texttt{parallel\_for(/* ... */)} & Async \\
+        \texttt{parallel\_reduce(/* ... */)} & Sync \\
+        \texttt{deep\_copy(/* ... */)} & Sync \\
+        \texttt{deep\_copy(space, /* ... */)} & Async \\
+    \end{table}
+\end{frame}
+
+\begin{frame}{When to use asynchronism}
+    \begin{itemize}
+        \item As mentioned in the Fencing section, GPU code is asynchronous by default
+        \item When starting the porting to GPU, a synchronous behavior is preferred (simpler workflow, easier to debug)
+        \item Asynchronous execution comes into play for optimization
+        \item It is useful to hide a task that takes time by running it concurrently
+        \item Need to perform a workflow analysis
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{What is the current workflow?}
+    \begin{columns}
+        \begin{column}{0.4\linewidth}
+            \includegraphics[width=\linewidth]{profile_gpu}
+
+            \begin{enumerate}
+                \item 10 computations \structure{(GPU)}
+                \item Synchronization \structure{(GPU-CPU)}
+                \item Writing \structure{(CPU)}, slow because of the filesystem
+            \end{enumerate}
+        \end{column}
+        \pause
+        \begin{column}{0.6\linewidth}
+            \centering
+            \begin{tikzpicture}[node distance=1em]
+                \node (compute) {compute $\times$ 10};
+                \node[below=of compute] (synchronize) {synchronize};
+                \node[below=of synchronize] (write) {write};
+
+                \draw[->] (compute) -- (synchronize);
+                \draw[->] (synchronize) -- (write);
+
+                \pause
+
+                \node[above=of compute] (write-before) {write};
+                \node[below=of write] (compute-after) {compute $\times$ 10};
+
+                \draw[->] (write-before) -- (compute);
+                \draw[->] (write) -- (compute-after);
+
+                \pause
+
+                \node[above=of write-before] (ellipsis-before) {...};
+                \node[below=of compute-after] (ellipsis-after) {...};
+
+                \draw[->] (ellipsis-before) -- (write-before);
+                \draw[->] (compute-after) -- (ellipsis-after);
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Exhibit asynchronism in the workflow}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \centering
+            \begin{tikzpicture}[node distance=1em]
+                \node (compute) {compute $\times$ 10};
+                \node[below=of compute] (synchronize) {synchronize};
+                \node[below=of synchronize] (write) {write};
+
+                \draw[->] (compute) -- (synchronize);
+                \draw[->] (synchronize) -- (write);
+
+                \node[above=of compute] (write-before) {write};
+                \node[below=of write] (compute-after) {compute $\times$ 10};
+
+                \draw[->] (write-before) -- (compute);
+                \draw[->] (write) -- (compute-after);
+
+                \node[above=of write-before] (ellipsis-before) {...};
+                \node[below=of compute-after] (ellipsis-after) {...};
+
+                \draw[->] (ellipsis-before) -- (write-before);
+                \draw[->] (compute-after) -- (ellipsis-after);
+            \end{tikzpicture}
+        \end{column}
+        \pause
+        \begin{column}{0.5\linewidth}
+            \centering
+            \begin{tikzpicture}[node distance=1em]
+                \node (compute) {compute $\times$ 10};
+                \node[below=of compute] (synchronize) {synchronize};
+                \node[below=of synchronize] (write) {write};
+
+                \draw[->] (compute) -- (synchronize);
+                \draw[->] (synchronize) -- (write);
+
+                \node[left=of compute] (write-before) {write};
+                \node[right=of write] (compute-after) {compute $\times$ 10};
+
+                \draw[->] (synchronize) -- (compute-after);
+
+                \node[above=of write-before] (ellipsis-before) {...};
+                \node[below=of compute-after] (ellipsis-after) {...};
+
+                \draw[->] (ellipsis-before) -- (compute);
+                \draw[->] (write-before) -- (synchronize);
+                \draw[->] (ellipsis-before) -- (write-before);
+                \draw[->] (compute-after) -- (ellipsis-after);
+                \draw[->] (write) -- (ellipsis-after);
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+    \begin{block}{Idea}
+        Synchronization can be synchronous
+    \end{block}
+\end{frame}
+
+\begin{frame}{Key ideas}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \centering
+            \begin{tikzpicture}[node distance=1em]
+                \node (compute) {compute $\times$ 10};
+                \node[below=of compute] (synchronize) {synchronize};
+                \node[below=of synchronize] (write) {write};
+
+                \draw[->] (compute) -- (synchronize);
+                \draw[->] (synchronize) -- (write);
+
+                \node[left=of compute] (write-before) {write};
+                \node[right=of write] (compute-after) {compute $\times$ 10};
+
+                \draw[->] (synchronize) -- (compute-after);
+
+                \node[above=of write-before] (ellipsis-before) {...};
+                \node[below=of compute-after] (ellipsis-after) {...};
+
+                \draw[->] (ellipsis-before) -- (compute);
+                \draw[->] (write-before) -- (synchronize);
+                \draw[->] (ellipsis-before) -- (write-before);
+                \draw[->] (compute-after) -- (ellipsis-after);
+                \draw[->] (write) -- (ellipsis-after);
+            \end{tikzpicture}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Just in the \texttt{main} function
+                \item Re-consider the loop
+                \begin{itemize}
+                    \item One loop for the images
+                    \item One loop for the iterations per image
+                \end{itemize}
+                \item Roll the operations of the loop
+                \item Take care of the boundary effects
+                \item Adjust the fences
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Exercise time}
     \missingfigure{hide data write}
 \end{frame}
 
+\begin{frame}[fragile]{Kokkos asynchronism within the GPU}
+    \begin{columns}
+        \begin{column}{0.4\linewidth}
+            \begin{itemize}
+                \item We saw how to hide a CPU task by running it concurrently with a GPU task
+                \item GPU has streams/queues that allow multiples kernels to run concurrently
+                \item Kokkos has the \texttt{partition\_space} function for this
+                \item Returns a vector of execution space instances
+                \item Weights only used by the OpenMP backend for now
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.6\linewidth}
+            \begin{minted}[breakafter={:}]{C++}
+                auto instances = Kokkos::Experimental::partition_space(
+                    Space {},
+                    weight_1,
+                    weight_2,
+                    /* ... */
+                );
+
+                Kokkos::parallel_for(
+                    "my streamed kernel",
+                    Kokkos::RangePolicy(
+                        instances[0], 0, n
+                    ),
+                    /* ... */
+                );
+            \end{minted}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{What is the current workflow?}
+        \begin{columns}
+        \begin{column}{0.4\linewidth}
+            \includegraphics[width=\linewidth]{profile_gpu_async}
+
+            \begin{enumerate}
+                \item Synchronization \structure{(GPU-CPU)}, slow because of the PCIe bus
+                \item 10 computations \structure{(GPU)}
+                \item Writing \structure{(CPU, hidden)}
+            \end{enumerate}
+        \end{column}
+        \pause
+        \begin{column}{0.6\linewidth}
+            \centering
+            \begin{tikzpicture}[node distance=1em]
+                \node (compute) {compute $\times$ 10};
+                \node[below=of compute] (synchronize) {synchronize};
+                \node[below=of synchronize] (write) {write};
+
+                \draw[->] (compute) -- (synchronize);
+                \draw[->] (synchronize) -- (write);
+
+                \node[left=of compute] (write-before) {write};
+                \node[right=of write] (compute-after) {compute $\times$ 10};
+
+                \draw[->] (synchronize) -- (compute-after);
+
+                \node[above=of write-before] (ellipsis-before) {...};
+                \node[below=of compute-after] (ellipsis-after) {...};
+
+                \draw[->] (ellipsis-before) -- (compute);
+                \draw[->] (write-before) -- (synchronize);
+                \draw[->] (ellipsis-before) -- (write-before);
+                \draw[->] (compute-after) -- (ellipsis-after);
+                \draw[->] (write) -- (ellipsis-after);
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Exhibit more asynchronism in the workflow}
+    \begin{columns}
+        \begin{column}{0.4\linewidth}
+            \centering
+            \begin{tikzpicture}[node distance=1em]
+                \node (compute) {compute $\times$ 10};
+                \node[below=of compute] (synchronize) {synchronize};
+                \node[below=of synchronize] (write) {write};
+
+                \draw[->] (compute) -- (synchronize);
+                \draw[->] (synchronize) -- (write);
+
+                \node[left=of compute] (write-before) {write};
+                \node[right=of write] (compute-after) {compute $\times$ 10};
+
+                \draw[->] (synchronize) -- (compute-after);
+
+                \node[above=of write-before] (ellipsis-before) {...};
+                \node[below=of compute-after] (ellipsis-after) {...};
+
+                \draw[->] (ellipsis-before) -- (compute);
+                \draw[->] (write-before) -- (synchronize);
+                \draw[->] (ellipsis-before) -- (write-before);
+                \draw[->] (compute-after) -- (ellipsis-after);
+                \draw[->] (write) -- (ellipsis-after);
+            \end{tikzpicture}
+        \end{column}
+        \pause
+        \begin{column}{0.6\linewidth}
+            \centering
+            \begin{tikzpicture}[node distance=1em]
+                \node (compute) {compute $\times$ 10};
+                \node[below=3em of compute] (duplicate) {duplicate};
+                \node[below=of duplicate] (synchronize) {synchronize};
+                \node[below=of synchronize] (write) {write};
+
+                \draw[->] (compute) -- (duplicate);
+                \draw[->] (duplicate) -- (synchronize);
+                \draw[->] (synchronize) -- (write);
+
+                \node[left=of compute] (synchronize-before) {synchronize};
+                \node[below=of synchronize-before] (write-before) {write};
+                \node[right=of synchronize] (compute-after) {compute $\times$ 10};
+
+                \draw[->] (duplicate) -- (compute-after);
+
+                \node[above=of synchronize-before] (ellipsis-before) {...};
+                \node[below=3em of compute-after] (ellipsis-after) {...};
+
+                \draw[->] (ellipsis-before) -- (compute);
+                \draw[->] (write-before) -- (duplicate);
+                \draw[->] (ellipsis-before) -- (synchronize-before);
+                \draw[->] (synchronize-before) -- (write-before);
+                \draw[->] (compute-after) -- (ellipsis-after);
+                \draw[->] (write) -- (ellipsis-after);
+            \end{tikzpicture}
+        \end{column}
+    \end{columns}
+    \begin{block}{Idea}
+        D-to-H synchronize can be viewed as D-to-D duplicate, then D-to-H synchronize
+    \end{block}
+\end{frame}
+
+\begin{frame}{Key ideas}
+    \begin{columns}
+        \begin{column}{0.6\linewidth}
+            \centering
+            \begin{tikzpicture}[node distance=1em]
+                \node (compute) {compute $\times$ 10};
+                \node[below=3em of compute] (duplicate) {duplicate};
+                \node[below=of duplicate] (synchronize) {synchronize};
+                \node[below=of synchronize] (write) {write};
+
+                \draw[->] (compute) -- (duplicate);
+                \draw[->] (duplicate) -- (synchronize);
+                \draw[->] (synchronize) -- (write);
+
+                \node[left=of compute] (synchronize-before) {synchronize};
+                \node[below=of synchronize-before] (write-before) {write};
+                \node[right=of synchronize] (compute-after) {compute $\times$ 10};
+
+                \draw[->] (duplicate) -- (compute-after);
+
+                \node[above=of synchronize-before] (ellipsis-before) {...};
+                \node[below=3em of compute-after] (ellipsis-after) {...};
+
+                \draw[->] (ellipsis-before) -- (compute);
+                \draw[->] (write-before) -- (duplicate);
+                \draw[->] (ellipsis-before) -- (synchronize-before);
+                \draw[->] (synchronize-before) -- (write-before);
+                \draw[->] (compute-after) -- (ellipsis-after);
+                \draw[->] (write) -- (ellipsis-after);
+            \end{tikzpicture}
+        \end{column}
+        \begin{column}{0.4\linewidth}
+            \begin{itemize}
+                \item Create the duplicated view
+                \item Create one stream for computation, and one for duplication
+                \begin{itemize}
+                    \item One stream for \texttt{parallel\_for}
+                    \item One stream for \texttt{deep\_synchronize}
+                \end{itemize}
+                \item Differentiate the \texttt{deep\_synchronize} for the duplication and for the synchronization
+                \item Adjust the fences
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Exercise time}
     \missingfigure{hide data transfer too}
+\end{frame}
+
+\begin{frame}{A word about graphs}
+    contenu...
 \end{frame}
 
 \begin{frame}[plain]
@@ -1296,10 +1643,10 @@
         \huge That's all folks!
     \end{center}
     \vspace{2em}
-    \begin{description}[Gray--Scott Kokkos repository]
+    \begin{description}[Gray-Scott Kokkos repository]
         \item[Kokkos website] \href{https://kokkos.org}{\texttt{kokkos.org}}
         \item[Kokkos repository] \href{https://github.com/kokkos}{\texttt{github.com/kokkos}}
-        \item[Gray--Scott Kokkos repository] \href{https://github.com/Maison-de-la-Simulation/gray-scott-kokkos}{\texttt{github.com/Maison-de-la-Simulation/} \texttt{gray-scott-kokkos}}
+        \item[Gray-Scott Kokkos repository] \href{https://github.com/Maison-de-la-Simulation/gray-scott-kokkos}{\texttt{github.com/Maison-de-la-Simulation/} \texttt{gray-scott-kokkos}}
     \end{description}
 \end{frame}
 
