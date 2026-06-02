@@ -131,9 +131,13 @@ int main(int argc, char *argv[]) {
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);
     View v("v", parameters.n_rows_ext, parameters.n_columns_ext);
 
+    // output fields (with halo)
+    View v_out("v_out", parameters.n_rows_ext, parameters.n_columns_ext);
+
     // mirrors of the fields (with halo)
     auto u_h = Kokkos::create_mirror_view(u);
-    auto v_h = Kokkos::create_mirror_view(v);
+    // beware that v_h is the mirror of the output v
+    auto v_h = Kokkos::create_mirror_view(v_out);
 
     // create writer
     OutputWriter<real> writer("gray_scott.h5", n_images, parameters.n_rows_ext,
@@ -160,9 +164,6 @@ int main(int argc, char *argv[]) {
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
-    // output fields (with halo)
-    View v_out("v_out", parameters.n_rows_ext, parameters.n_columns_ext);
-
     // create one space for compute, and one for data
     auto [space_compute, space_data] = Kokkos::Experimental::partition_space(
         Kokkos::DefaultExecutionSpace{}, 1, 1);
@@ -180,8 +181,8 @@ int main(int argc, char *argv[]) {
             std::swap(v, v_temp);
         }
 
-        // then synchronize image n - 1 (blocking in its own space and for the
-        // host)
+        // then synchronize image n - 1 (blocking in its own space and for
+        // the host)
         Kokkos::deep_copy(space_data, v_h, v_out);
         space_data.fence("waiting for deep_copy");
 
