@@ -101,6 +101,29 @@ void compute(const View &u, const View &v, const View &u_temp,
         });
 }
 
+/**
+ * @brief Compute and print the checksum of an array.
+ * @param field Field to compute the checksum of.
+ * @param iteration Current iteration.
+ * @return Checksum value.
+ */
+View::value_type check(const View &field, const std::size_t iteration) {
+    typename View::value_type checksum;
+    Kokkos::parallel_reduce(
+        "check fields",
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+            {0, 0}, {field.extent(0), field.extent(1)}),
+        KOKKOS_LAMBDA(const int i, const int j,
+                      View::value_type &checksum_local) {
+            checksum_local += field(i, j);
+        },
+        checksum);
+
+    helpers::print_checksum(field.label().c_str(), checksum, iteration);
+
+    return checksum;
+}
+
 int main(int argc, char *argv[]) {
     Kokkos::ScopeGuard kokkos{argc, argv};
 
@@ -150,8 +173,8 @@ int main(int argc, char *argv[]) {
     }
 
     // checksum
-    helpers::print_checksum(u, parameters.n_iterations);
-    helpers::print_checksum(v, parameters.n_iterations);
+    check(u, parameters.n_iterations);
+    check(v, parameters.n_iterations);
 
     // print last if requested
     if (parameters.display_fields) {

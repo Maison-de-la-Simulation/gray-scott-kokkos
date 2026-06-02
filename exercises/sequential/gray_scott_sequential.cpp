@@ -1,6 +1,9 @@
+#include <fmt/format.h>
+
 #include <cstddef>
 #include <utility>
 
+#include "helpers.hpp"
 #include "helpers_pod.hpp"
 #include "macros_pod.hpp"
 #include "output_writer.hpp"
@@ -55,7 +58,7 @@ void add_drop(real *u, real *v, const std::size_t n_rows_ext,
  * @param u_temp U temporary field.
  * @param v_temp V temporary field.
  * @param n_rows_ext Number of rows + halo.
- * @param n_columns_ext Number of columens + halo.
+ * @param n_columns_ext Number of columns + halo.
  */
 void compute(real const *u, real const *v, real *u_temp, real *v_temp,
              const std::size_t n_rows_ext, const std::size_t n_columns_ext) {
@@ -84,6 +87,29 @@ void compute(real const *u, real const *v, real *u_temp, real *v_temp,
             v_temp[ACCESS(i, j)] = v[ACCESS(i, j)] + v_delta * constants::dt;
         }
     }
+}
+
+/**
+ * @brief Compute and print the checksum of an array.
+ * @param field Pointer of data.
+ * @param label Name of field.
+ * @param n_rows Number of rows.
+ * @param n_columns Number of columns.
+ * @param iteration Current iteration.
+ * @return Checksum value.
+ */
+real check(const real *field, const char *label, const std::size_t n_rows_ext,
+           const std::size_t n_columns_ext, const std::size_t iteration) {
+    real checksum = 0;
+    for (int i = 0; i < n_rows_ext; i++) {
+        for (int j = 0; j < n_columns_ext; j++) {
+            checksum += field[ACCESS(i, j)];
+        }
+    }
+
+    helpers::print_checksum(label, checksum, iteration);
+
+    return checksum;
 }
 
 int main(int argc, char *argv[]) {
@@ -140,12 +166,10 @@ int main(int argc, char *argv[]) {
     }
 
     // checksum
-    helpers_pod::print_checksum(u, "u", parameters.n_rows_ext,
-                                parameters.n_columns_ext,
-                                parameters.n_iterations);
-    helpers_pod::print_checksum(v, "v", parameters.n_rows_ext,
-                                parameters.n_columns_ext,
-                                parameters.n_iterations);
+    check(u, "u", parameters.n_rows_ext, parameters.n_columns_ext,
+          parameters.n_iterations);
+    check(v, "v", parameters.n_rows_ext, parameters.n_columns_ext,
+          parameters.n_iterations);
 
     // print last if requested
     if (parameters.display_fields) {

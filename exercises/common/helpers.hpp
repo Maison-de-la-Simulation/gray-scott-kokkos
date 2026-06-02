@@ -3,6 +3,7 @@
 #include <Kokkos_Core.hpp>
 #include <iomanip>
 #include <iostream>
+#include <string>
 
 namespace helpers {
 
@@ -33,37 +34,24 @@ void print_field(const View &field, const std::size_t iteration) {
 }
 
 /**
- * @brief Compute and print the checksum of an array.
- * @tparam View Type of view.
- * @param field Field to compute the checksum of.
+ * @brief Print a checksum on screen.
+ * @tparam real Type of float.
+ * @param label Name of the field.
+ * @param checksum Value of the checksum.
  * @param iteration Current iteration.
- * @return Checksum value.
  */
-template <typename View>
-View::value_type print_checksum(const View &field,
-                                const std::size_t iteration) {
-    typename View::value_type checksum;
-    Kokkos::parallel_reduce(
-        "check fields",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-            {0, 0}, {field.extent(0), field.extent(1)}),
-        KOKKOS_LAMBDA(const int i, const int j,
-                      View::value_type &checksum_local) {
-            checksum_local += field(i, j);
-        },
-        checksum);
-
+template <typename real>
+void print_checksum(const char *label, const real checksum,
+                    const std::size_t iteration) {
     // set precision
     const auto default_precision{std::cout.precision()};
     std::cout << std::setprecision(2) << std::fixed;
 
-    std::cout << "Checksum field " << field.label() << " at iteration "
-              << iteration << ": " << checksum << std::endl;
+    std::cout << "Checksum field " << label << " at iteration " << iteration
+              << ": " << checksum << std::endl;
 
     // reset precision
     std::cout << std::setprecision(default_precision);
-
-    return checksum;
 }
 
 }  // namespace helpers
