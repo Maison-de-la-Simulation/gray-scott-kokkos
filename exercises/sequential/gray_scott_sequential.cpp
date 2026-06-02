@@ -88,6 +88,7 @@ void compute(real const *u, real const *v, real *u_temp, real *v_temp,
 
 int main(int argc, char *argv[]) {
     Parameters parameters{argc, argv};
+    parameters.check();
     parameters.describe();
 
     // fields (with halo)

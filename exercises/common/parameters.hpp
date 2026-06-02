@@ -44,4 +44,10 @@ struct Parameters {
      * @param argv Pointer of array of arguments.
      */
     void parse(int argc, char *argv[]);
+
+    /**
+     * @brief Check the validity of the entered values.
+     * Exits the program if values are invalid.
+     */
+    void check() const;
 };

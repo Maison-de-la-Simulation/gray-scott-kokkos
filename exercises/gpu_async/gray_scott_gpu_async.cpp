@@ -99,7 +99,9 @@ int main(int argc, char *argv[]) {
     Kokkos::ScopeGuard kokkos{argc, argv};
 
     Parameters parameters{argc, argv};
+    parameters.check();
     parameters.describe();
+
     const std::size_t n_images =
         parameters.n_iterations / parameters.images_interval;
 
