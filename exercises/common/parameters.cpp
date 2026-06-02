@@ -47,18 +47,18 @@ void Parameters::parse(int argc, char *argv[]) {
 void Parameters::check() const {
     if (this->n_rows < 3) {
         std::cerr << "Invalid number of rows: " << this->n_rows
-                  << " (must be larger than 3)" << std::endl;
+                  << " (must be greater or equal to 3)" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (this->n_columns < 3) {
         std::cerr << "Invalid number of columns: " << this->n_columns
-                  << " (must be larger than 3)" << std::endl;
+                  << " (must be greater or equal to 3)" << std::endl;
         exit(EXIT_FAILURE);
     }
 
     if (this->n_iterations < this->images_interval) {
-        std::cerr << "Number of iterations lower than the number of iterations "
+        std::cerr << "Number of iterations lower than number of iterations "
                      "between snapshots: "
                   << this->n_iterations << " < " << this->images_interval
                   << std::endl;
