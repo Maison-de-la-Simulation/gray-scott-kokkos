@@ -377,13 +377,33 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{Commands to use}
-\end{frame}
+\begin{exerciseframe}{Build Kokkos for the Serial backend}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/serial \
+                    -DCMAKE_INSTALL_PREFIX=${path_to_install}/serial \
+                    -DCMAKE_BUILD_TYPE=Release
+
+                cmake \
+                    --build build/serial \
+                    --parallel 4
+
+                cmake --install build/serial
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \begin{itemize}
+                \item Build and install Kokkos with the Serial backend
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Docker images}
 
-\begin{frame}{Exercise time}
+\begin{frame}{Docker images}
     \missingfigure{Description of the images}
 \end{frame}
 
@@ -505,15 +525,54 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{Build Kokkos and the Hello World code}
-\end{frame}
+\begin{exerciseframe}{From the hello\_world folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/serial \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ROOT=${path_to_install}/serial
+
+                cmake \
+                    --build build/serial \
+                    --parallel 4
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Spin up the environment
+                \item Build the hello world code
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Sequential implementation of the Gray--Scott equation}
 
-\begin{frame}{Presentation time}
-    \missingfigure{show the code}
-\end{frame}
+\begin{exerciseframe}{From the sequential folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/serial \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ROOT=${path_to_install}/serial
+
+                cmake \
+                    --build build/serial \
+                    --parallel 4
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Check the implementation
+                \item Build the code
+                \item Run it
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Data containers}
 
@@ -779,9 +838,32 @@
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{Use Views in the CPU folder}
-\end{frame}
+\begin{exerciseframe}{From the sequential folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                #include <Kokkos_Core.hpp>
+
+                // ...
+
+                using View =
+                    Kokkos::View<double **>;
+
+                View a("A", N, M);
+                a(0) = 1;
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Duplicate the \texttt{sequential} folder to a different name
+                \item Add the Kokkos header
+                \item Use Kokkos views instead of plain-old-data arrays for \texttt{u} and \texttt{v} in \texttt{main} and in \texttt{compute}
+                \item For now, just pass a raw pointer when calling \texttt{print\_checksum} and \texttt{print\_field}
+                \item The checksum must remain the same!
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Parallel loops}
 
@@ -990,7 +1072,6 @@
         \begin{column}{0.6\linewidth}
             \begin{minted}{C++}
                 Kokkos::MDRangePolicy<
-                    ExecutionSpace,
                     Kokkos::Rank<n>
                 > policy(
                     {start_index_0, ..., start_index_n},
@@ -1016,7 +1097,6 @@
                 Kokkos::parallel_for(
                     "my_loop",
                     Kokkos::MDRangePolicy<
-                        ExecutionSpace,
                         Kokkos::Rank<2>
                     >({0, 0}, {Nx, Ny}),
                     KOKKOS_LAMBDA (int i, int j) {
@@ -1035,9 +1115,29 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{Use parallel loops in the CPU directory}
-\end{frame}
+\begin{exerciseframe}{From your worktree}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                Kokkos::parallel_for(
+                    "my_loop",
+                    Kokkos::MDRangePolicy<
+                        Kokkos::Rank<2>
+                    >({0, 0}, {Nx, Ny}),
+                    KOKKOS_LAMBDA (int i, int j) {
+                        A(i, j) = i + j;
+                    }
+                );
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Use Kokkos \texttt{parallel\_for} and \texttt{MDRangePolicy} instead of the nested loops in \texttt{compute}
+                \item The checksum must remain the same!
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Parallel reductions}
 
@@ -1214,9 +1314,32 @@
     \end{minted}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{Use parallel reduction in the CPU directory}
-\end{frame}
+\begin{exerciseframe}{From your worktree}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                double result;
+                Kokkos::parallel_reduce(
+                    "my_reduction",
+                    N,
+                    KOKKOS_LAMBDA (
+                        const int i,
+                        double& local_result
+                    ) {
+                        local_result += A(i);
+                    },
+                    result
+                );
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Use Kokkos \texttt{parallel\_reduce} and \texttt{MDRangePolicy} instead of the nested loops in \texttt{print\_checksum}
+                \item The checksum must remain the same!
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Moving to a CPU backend}
 
@@ -1261,21 +1384,60 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{Build Kokkos and the example in CPU}
-\end{frame}
+\begin{exerciseframe}{Build Kokkos for the OpenMP backend}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake -B build/openmp \
+                    -DCMAKE_INSTALL_PREFIX=${path_to_install}/openmp \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ENABLE_OPENMP=ON \
+                    -DKokkos_ARCH_NATIVE=ON
 
-\begin{frame}{Exercise time}
-    \missingfigure{Run with and without IO}
-\end{frame}
+                cmake --build build/openmp \
+                    --parallel 4
 
-\begin{frame}{Exercise time}
-    \missingfigure{Perform strong scaling}
-\end{frame}
+                cmake --install build/openmp
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \begin{itemize}
+                \item Build and install Kokkos with the OpenMP backend
+                \item Pay attention to the \texttt{Kokkos\_ARCH\_NATIVE=ON} flag
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
-\begin{frame}{Exercise time}
-    \missingfigure{Perform weak scaling}
-\end{frame}
+\begin{exerciseframe}{From your worktree or the cpu folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/openmp \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ROOT=${path_to_install}/openmp
+
+                cmake \
+                    --build build/openmp \
+                    --parallel 4
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \begin{itemize}
+                \item Build your code using this OpenMP instance of Kokkos
+                \item Run with and without I/Os with the \texttt{time} command
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\begin{exerciseframe}{From your worktree or the cpu folder}
+    \begin{itemize}
+        \item Perform a strong scaling
+        \item Perform a weak scaling
+    \end{itemize}
+\end{exerciseframe}
 
 \section{SIMD and vectorization}
 
@@ -1568,9 +1730,9 @@
     \end{minted}
 \end{frame}
 
-\begin{frame}{Exercise time}
+\begin{exerciseframe}{From your worktree or the cpu folder}
     \missingfigure{Vectorize the CPU code}
-\end{frame}
+\end{exerciseframe}
 
 \begin{frame}[fragile]{Conditionals (bonus)}
     \begin{itemize}
@@ -1660,16 +1822,32 @@
     \end{columns}
 \end{frame}
 
+\section{Conclusion}
+
+\begin{frame}{Conclusion}
+    \begin{itemize}
+        \item Kokkos provides views as useful data containers
+        \item \texttt{parall\_for} and \texttt{parallel\_reduce} for parallel constructs
+        \item \texttt{RangePolicy} and \texttt{MDRangePolicy} for loop dimensionality
+        \item CPU optimization with SIMD
+    \end{itemize}
+    \pause
+    \vspace{2em}
+    \begin{alertblock}{Caution}
+        The Kokkos code so far only works on CPU and is not portable!
+    \end{alertblock}
+\end{frame}
+
 \begin{frame}[plain]
     \begin{center}
         \huge That's all folks!
     \end{center}
     \vspace{2em}
-    \begin{description}[Gray--Scott Kokkos repository]
+    \begin{description}[Gray-Scott Kokkos repository]
+        \item[Next Kokkos session] Thursday 2\textsuperscript{nd} of July for Kokkos on GPU
         \item[Kokkos website] \href{https://kokkos.org}{\texttt{kokkos.org}}
         \item[Kokkos repository] \href{https://github.com/kokkos}{\texttt{github.com/kokkos}}
-        \item[Gray--Scott Kokkos repository] \href{https://github.com/Maison-de-la-Simulation/gray-scott-kokkos}{\texttt{github.com/Maison-de-la-Simulation/} \texttt{gray-scott-kokkos}}
-        \item[Next Kokkos session] Thursday 2\textsuperscript{nd} of July for Kokkos on GPU
+        \item[Gray-Scott Kokkos repository] \href{https://github.com/Maison-de-la-Simulation/gray-scott-kokkos}{\texttt{github.com/Maison-de-la-Simulation/} \texttt{gray-scott-kokkos}}
     \end{description}
 \end{frame}
 

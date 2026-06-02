@@ -84,3 +84,11 @@
 }{%
     \end{tcolorbox}
 }
+
+% Exercice frame
+\newenvironment{exerciseframe}[1]{%
+    \setbeamertemplate{background}{\usebeamertemplate{background exercisepage}}%
+    \begin{frame}[environment=exerciseframe, fragile]{Exercise: #1}
+    }{%
+    \end{frame}%
+}

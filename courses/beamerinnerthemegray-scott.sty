@@ -1,23 +1,60 @@
 \mode<presentation>
 
+% Background title page
+\setbeamertemplate{background titlepage}{
+    \begin{tikzpicture}[overlay, remember picture]
+        \node[
+            inner sep=0pt,
+            outer sep=0pt,
+            anchor=north east
+        ] at (current page.north east) {
+            \includegraphics[
+                width=\the\paperwidth,
+                height=\the\paperheight
+            ]{gray_scott.jpg}
+        };
+    \end{tikzpicture}
+}
+
 % Background
 \setbeamertemplate{background}{
     \begin{tikzpicture}[overlay, remember picture]
-        \node[inner sep=0pt,outer sep=0pt,anchor=north east] at (current page.north east) {
-                \includegraphics[width=\the\paperwidth,height=\the\paperheight]{gray_scott.jpg}
+        \node[
+            inner sep=0pt,
+            outer sep=0pt,
+            anchor=north east
+        ] at (current page.north east) {
+            \includegraphics[
+                width=\the\paperwidth,
+                height=\the\paperheight
+            ]{gray_scott.jpg}
         };
-        % first page
-        \ifnum\thepage=1\relax%
-        % other pages
-        \else
-            \fill[color=white] (0em, -2em) rectangle (\the\paperwidth, -\the\paperheight + 1.5em);
-        \fi
+        \fill[color=white] (0em, -2em) rectangle (\the\paperwidth, -\the\paperheight + 1.5em);
+    \end{tikzpicture}
+}
+
+% Background exercise page
+\setbeamertemplate{background exercisepage}{
+    \begin{tikzpicture}[overlay, remember picture]
+        \node[
+            inner sep=0pt,
+            outer sep=0pt,
+            anchor=north east
+        ] at (current page.north east) {
+            \includegraphics[
+            width=\the\paperwidth,
+            height=\the\paperheight
+            ]{gray_scott.jpg}
+        };
+        % there's fucking horizontal gap I can't explain, so I've to compensiate for it
+        \fill[color=lightmain] (0.5em, -2em) rectangle (\the\paperwidth - 1em, -\the\paperheight + 1.5em);
     \end{tikzpicture}
 }
 
 % Title page
-\defbeamertemplate*{title page}{gray-scott}[1][]
+\defbeamertemplate*{title page}{gray-scott}
 {
+    \usebeamertemplate{background titlepage}
     \vskip2cm%
     \begin{beamercolorbox}[center]{title page header}
         \usebeamerfont{title page header}\inserttitle%

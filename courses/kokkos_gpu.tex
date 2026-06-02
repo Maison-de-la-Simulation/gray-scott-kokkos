@@ -225,13 +225,57 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{compile Kokkos with a GPU backend}
-\end{frame}
+\begin{exerciseframe}{Build Kokkos for a GPU backend}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake -B build/cuda \
+                    -DCMAKE_INSTALL_PREFIX=${path_to_install}/cuda \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ENABLE_CUDA=ON \
+                    -DKokkos_ARCH_XXXX=ON
 
-\begin{frame}{Exercise time}
-    \missingfigure{compile the CPU code with a GPU backend}
-\end{frame}
+                cmake --build build/cuda \
+                    --parallel 4
+
+                cmake --install build/cuda
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \begin{itemize}
+                \item Build and install Kokkos with the CUDA backend
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\begin{exerciseframe}{From the cpu folder}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake -B build/cuda \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ROOT=${path_to_install}/cuda
+
+                cmake --build build/cuda \
+                    --parallel 4
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \begin{itemize}
+                \item Duplicate the \texttt{cpu} folder to another name
+                \item Compile the CPU code with the CUDA backend
+                \item Try to run it
+            \end{itemize}
+
+            \pause
+            \vspace{1em}
+            \begin{block}{Holly Molly}
+                The program crashes!
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{About portability}
 
@@ -271,7 +315,7 @@
         \begin{column}{0.47\linewidth}
             \begin{minted}{C++}
                 __device__
-                void device_function(){}
+                void device_function() {}
 
                 __host__
                 void host_function() {}
@@ -440,7 +484,7 @@
         \begin{column}{0.5\linewidth}
             \begin{minted}{C++}
                 Kokkos::View<int**, MemorySpace>
-                my_matrix("matrix", 10, 10);
+                    my_matrix("matrix", 10, 10);
             \end{minted}
         \end{column}
         \begin{column}{0.5\linewidth}
@@ -462,15 +506,36 @@
     \vspace{-1em}
 
     \begin{itemize}
-        \item If Kokkos is compiled with a \structure{GPU backend only}, the View data is allocated in the \structure{Device memory}
-        \item Shared view data \structure{can} be accessed from the Host, as it is copied in chunks automatically by the OS and the driver
-        \item Performance cost
+        \item If Kokkos is compiled with a \structure{GPU backend}, the View data is allocated in the \structure{Device memory}
+        \item Shared view data \structure{can} be accessed from the Host, as the data are synchronized in chunks on automatically by the OS and the driver
+        \item Convenient, but comes with a performance cost
     \end{itemize}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{use the shared space in the CPU example}
-\end{frame}
+\begin{exerciseframe}{From your worktree}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                using View =
+                    Kokkos::View<
+                        double **,
+                        Kokkos::SharedSpace
+                    >;
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Use the Kokkos \texttt{SharedSpace} memory space for the views
+                \item Try to run the code
+            \end{itemize}
+            \pause
+            \vspace{1em}
+            \begin{block}{Holly Molly}
+                The results are wrong!
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Fencing}
 
@@ -536,9 +601,34 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{add fence to the CPU code with shared space}
-\end{frame}
+\begin{exerciseframe}{From your worktree}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                Kokkos::parallel_for(
+                    "my_loop",
+                    N,
+                    KOKKOS_LAMBDA (int i) {
+                        data(i) = ...
+                    }
+                );
+
+                Kokkos::fence("my_loop fence");
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Use the Kokkos \texttt{fence} after the \texttt{parallel\_for}
+                \item Try to run the code
+            \end{itemize}
+            \pause
+            \vspace{1em}
+            \begin{block}{Holly Molly}
+                It works!
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Kokkos tools}
 
@@ -1086,11 +1176,63 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{add regions in the code and profile it; see the performance of the shared space}
-\end{frame}
+\begin{exerciseframe}{Build Kokkos-Tools}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=,/}, fontsize=\scriptsize]{C++}
+                cmake -B build/cuda \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DCMAKE_INSTALL_PREFIX=${path_to_install}/cuda/tools
+                    -DKokkos_ROOT=${path_to_install}/cuda
 
-\section{Mirrors}
+                cmake --build build/cuda \
+                    --parallel 4
+
+                cmake --install build/cuda
+
+                export PATH=${path_to_install}/cuda/tools/bin:$PATH
+                export LD_LIBRARY_PIATH=${path_to_install}/cuda/tools/lib:$LD_LIBRARY_PATH
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Build and install Kokkos-Tools for the installed instance of Kokkos
+                \item Adjust the \texttt{PATH} and \texttt{LD\_LIBRARY\_PATH} environment variables
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\begin{exerciseframe}{From your worktree}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                Kokkos::Profiling::pushRegion(
+                    "region name"
+                );
+
+                // ...
+
+                Kokkos::Profiling::popRegion();
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Add regions in the code and profile it
+                \item Build the code with the OpenMP backend and compare (if you have time)
+                \item Observe the performance with Nsight Systems
+            \end{itemize}
+
+            \pause
+            \vspace{1em}
+            \begin{block}{Holly Molly}
+                This is not great
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\section{Explicit memory management}
 
 \begin{frame}{How to access data living on the Device from the Host?}
     \begin{center}
@@ -1147,7 +1289,7 @@
     \end{block}
 \end{frame}
 
-\begin{frame}[fragile]{Deep copy data between memory space}
+\begin{frame}[fragile]{Deep copy data between memory spaces}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}{C++}
@@ -1156,8 +1298,8 @@
 
                 auto host_view =
                     Kokkos::create_mirror_view(
-                    device_view
-                );
+                        device_view
+                    );
 
                 initialize(host_view);
 
@@ -1185,9 +1327,32 @@
     \end{center}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{add mirrors and deep copy to the cpu code}
-\end{frame}
+\begin{exerciseframe}{From your worktree}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                auto host_view =
+                    Kokkos::create_mirror_view(
+                        device_view
+                    );
+
+                // ...
+
+                Kokkos::deep_copy(
+                    device_view,
+                    host_view
+                );
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Add mirrors with Kokkos \texttt{create\_mirror\_view}
+                \item Synchronize views and mirrors with \texttt{deep\_copy}
+                \item Observe the performance with Nsight Systems
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \section{Execution spaces}
 
@@ -1277,20 +1442,31 @@
     \end{center}
 \end{frame}
 
-\begin{frame}{Exercise time}
-    \missingfigure{run the SIMD code on GPU with a SharedSpace View and a fence}
-\end{frame}
+\begin{exerciseframe}{From the cpu\_simd folder (optional)}
+    \begin{itemize}
+        \item Apply the same modifications we have done so far in the \texttt{cpu\_simd} folder
+    \end{itemize}
+\end{exerciseframe}
 
 \section{Asynchronous execution}
 
 \begin{frame}{Asynchronous behavior in Kokkos}
-    \begin{table}{Kokkos asynchronism on GPU}{ll}
-        Function & Behavior \\\hline
-        \texttt{parallel\_for(/* ... */)} & Async \\
-        \texttt{parallel\_reduce(/* ... */)} & Sync \\
-        \texttt{deep\_copy(/* ... */)} & Sync \\
-        \texttt{deep\_copy(space, /* ... */)} & Async \\
-    \end{table}
+    \begin{columns}
+        \begin{column}{0.6\linewidth}
+            \begin{table}{Kokkos asynchronism on GPU}{ll}
+                Function & Behavior \\\hline
+                \texttt{parallel\_for(/* ... */)} & Async. \\
+                \texttt{parallel\_reduce(/* ... */)} & Sync. \\
+                \texttt{deep\_copy(/* ... */)} & Sync. \\
+                \texttt{deep\_copy(space, /* ... */)} & Async. \\
+            \end{table}
+        \end{column}
+        \begin{column}{0.4\linewidth}
+            \begin{block}{Rule of thumb}
+                If a Kokkos function can take an execution space, then the version with it is asynchronous, and the version without is synchronous
+            \end{block}
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \begin{frame}{When to use asynchronism}
@@ -1370,39 +1546,42 @@
                 \draw[->] (compute-after) -- (ellipsis-after);
             \end{tikzpicture}
         \end{column}
-        \pause
         \begin{column}{0.5\linewidth}
             \centering
-            \begin{tikzpicture}[node distance=1em]
-                \node (compute) {compute $\times$ 10};
-                \node[below=of compute] (synchronize) {synchronize};
-                \node[below=of synchronize] (write) {write};
+            \begin{uncoverenv}<3->
+                \begin{tikzpicture}[node distance=1em]
+                    \node (compute) {compute $\times$ 10};
+                    \node[below=of compute] (synchronize) {synchronize};
+                    \node[below=of synchronize] (write) {write};
 
-                \draw[->] (compute) -- (synchronize);
-                \draw[->] (synchronize) -- (write);
+                    \draw[->] (compute) -- (synchronize);
+                    \draw[->] (synchronize) -- (write);
 
-                \node[left=of compute] (write-before) {write};
-                \node[right=of write] (compute-after) {compute $\times$ 10};
+                    \node[left=of compute] (write-before) {write};
+                    \node[right=of write] (compute-after) {compute $\times$ 10};
 
-                \draw[->] (synchronize) -- (compute-after);
+                    \draw[->] (synchronize) -- (compute-after);
 
-                \node[above=of write-before] (ellipsis-before) {...};
-                \node[below=of compute-after] (ellipsis-after) {...};
+                    \node[above=of write-before] (ellipsis-before) {...};
+                    \node[below=of compute-after] (ellipsis-after) {...};
 
-                \draw[->] (ellipsis-before) -- (compute);
-                \draw[->] (write-before) -- (synchronize);
-                \draw[->] (ellipsis-before) -- (write-before);
-                \draw[->] (compute-after) -- (ellipsis-after);
-                \draw[->] (write) -- (ellipsis-after);
-            \end{tikzpicture}
+                    \draw[->] (ellipsis-before) -- (compute);
+                    \draw[->] (write-before) -- (synchronize);
+                    \draw[->] (ellipsis-before) -- (write-before);
+                    \draw[->] (compute-after) -- (ellipsis-after);
+                    \draw[->] (write) -- (ellipsis-after);
+                \end{tikzpicture}
+            \end{uncoverenv}
         \end{column}
     \end{columns}
-    \begin{block}{Idea}
-        Synchronization can be synchronous
-    \end{block}
+    \begin{uncoverenv}<2->
+        \begin{block}{Idea}
+            Computation and writing can happen at the same time, as data are independent
+        \end{block}
+    \end{uncoverenv}
 \end{frame}
 
-\begin{frame}{Key ideas}
+\begin{exerciseframe}{From your worktree or the gpu folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \centering
@@ -1443,11 +1622,7 @@
             \end{itemize}
         \end{column}
     \end{columns}
-\end{frame}
-
-\begin{frame}{Exercise time}
-    \missingfigure{hide data write}
-\end{frame}
+\end{exerciseframe}
 
 \begin{frame}[fragile]{Kokkos asynchronism within the GPU}
     \begin{columns}
@@ -1463,7 +1638,7 @@
         \begin{column}{0.6\linewidth}
             \begin{minted}[breakafter={:}]{C++}
                 auto instances = Kokkos::Experimental::partition_space(
-                    Space {},
+                    Kokkos::DefaultExecutionSpace {},
                     weight_1,
                     weight_2,
                     /* ... */
@@ -1548,43 +1723,46 @@
                 \draw[->] (write) -- (ellipsis-after);
             \end{tikzpicture}
         \end{column}
-        \pause
         \begin{column}{0.6\linewidth}
             \centering
-            \begin{tikzpicture}[node distance=1em]
-                \node (compute) {compute $\times$ 10};
-                \node[below=3em of compute] (duplicate) {duplicate};
-                \node[below=of duplicate] (synchronize) {synchronize};
-                \node[below=of synchronize] (write) {write};
+            \begin{uncoverenv}<3->
+                \begin{tikzpicture}[node distance=1em]
+                    \node (compute) {compute $\times$ 10};
+                    \node[below=3em of compute] (duplicate) {duplicate};
+                    \node[below=of duplicate] (synchronize) {synchronize};
+                    \node[below=of synchronize] (write) {write};
 
-                \draw[->] (compute) -- (duplicate);
-                \draw[->] (duplicate) -- (synchronize);
-                \draw[->] (synchronize) -- (write);
+                    \draw[->] (compute) -- (duplicate);
+                    \draw[->] (duplicate) -- (synchronize);
+                    \draw[->] (synchronize) -- (write);
 
-                \node[left=of compute] (synchronize-before) {synchronize};
-                \node[below=of synchronize-before] (write-before) {write};
-                \node[right=of synchronize] (compute-after) {compute $\times$ 10};
+                    \node[left=of compute] (synchronize-before) {synchronize};
+                    \node[below=of synchronize-before] (write-before) {write};
+                    \node[right=of synchronize] (compute-after) {compute $\times$ 10};
 
-                \draw[->] (duplicate) -- (compute-after);
+                    \draw[->] (duplicate) -- (compute-after);
 
-                \node[above=of synchronize-before] (ellipsis-before) {...};
-                \node[below=3em of compute-after] (ellipsis-after) {...};
+                    \node[above=of synchronize-before] (ellipsis-before) {...};
+                    \node[below=3em of compute-after] (ellipsis-after) {...};
 
-                \draw[->] (ellipsis-before) -- (compute);
-                \draw[->] (write-before) -- (duplicate);
-                \draw[->] (ellipsis-before) -- (synchronize-before);
-                \draw[->] (synchronize-before) -- (write-before);
-                \draw[->] (compute-after) -- (ellipsis-after);
-                \draw[->] (write) -- (ellipsis-after);
-            \end{tikzpicture}
+                    \draw[->] (ellipsis-before) -- (compute);
+                    \draw[->] (write-before) -- (duplicate);
+                    \draw[->] (ellipsis-before) -- (synchronize-before);
+                    \draw[->] (synchronize-before) -- (write-before);
+                    \draw[->] (compute-after) -- (ellipsis-after);
+                    \draw[->] (write) -- (ellipsis-after);
+                \end{tikzpicture}
+            \end{uncoverenv}
         \end{column}
     \end{columns}
-    \begin{block}{Idea}
-        Synchronize D-to-H can be viewed as duplicate D-to-D, then synchronize D-to-H
-    \end{block}
+    \begin{uncoverenv}<2->
+        \begin{block}{Idea}
+            Synchronize D-to-H can be viewed as duplicate D-to-D, then synchronize D-to-H
+        \end{block}
+    \end{uncoverenv}
 \end{frame}
 
-\begin{frame}{Key ideas}
+\begin{exerciseframe}{From your worktree or the gpu\_async folder}
     \begin{columns}
         \begin{column}{0.6\linewidth}
             \centering
@@ -1618,24 +1796,47 @@
         \begin{column}{0.4\linewidth}
             \begin{itemize}
                 \item Create the duplicated view
-                \item Create one stream for computation, and one for duplication
+                \item Create one stream for computation, and one for duplication, with \texttt{partition\_space}
                 \begin{itemize}
                     \item One stream for \texttt{parallel\_for}
-                    \item One stream for \texttt{deep\_synchronize}
+                    \item One stream for \texttt{deep\_copy}
                 \end{itemize}
-                \item Differentiate the \texttt{deep\_synchronize} for the duplication and for the synchronization
+                \item Differentiate the \texttt{deep\_copy} for the duplication and for the synchronization
                 \item Adjust the fences
             \end{itemize}
         \end{column}
     \end{columns}
-\end{frame}
-
-\begin{frame}{Exercise time}
-    \missingfigure{hide data transfer too}
-\end{frame}
+\end{exerciseframe}
 
 \begin{frame}{A word about graphs}
-    contenu...
+    \begin{itemize}
+        \item The \emph{workflow} we analyzed before can also be called a graph
+        \item CUDA/HIP has a task-based graph approach
+        \item SYCL has a data-based graph approach
+        \pause
+        \item Kokkos provides a graph API (very similar with the CUDA graph API)
+        \item It expresses the workflow clearly, without having to manage the execution spaces manually
+        \pause
+        \item Still experimental and not complete enough for our example
+    \end{itemize}
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}{Conclusion}
+    \begin{itemize}
+        \item Portability for GPU-only annotations
+        \item Concept of memory spaces and execution spaces
+        \item Fencing to force synchronous execution
+        \item Kokkos-Tools
+        \item Explicit memory management with mirrors
+        \item GPU optimization with asynchronous execution
+    \end{itemize}
+    \pause
+    \vspace{2em}
+    \begin{block}{Congratulations}
+        You can now write Kokkos portable code!
+    \end{block}
 \end{frame}
 
 \begin{frame}[plain]
