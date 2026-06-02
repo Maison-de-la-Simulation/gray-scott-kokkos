@@ -112,7 +112,7 @@ View::value_type check(const View &field, const std::size_t iteration) {
         },
         checksum);
 
-    helpers::print_checksum(field.label().c_str(), checksum, iteration);
+    helpers::print_checksum(field.label(), checksum, iteration);
 
     return checksum;
 }

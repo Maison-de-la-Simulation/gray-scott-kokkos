@@ -18,6 +18,12 @@ namespace helpers_pod {
  */
 template <typename real>
 void print_field(real *field, char const *label, const std::size_t n_rows_ext,
+                 const std::size_t n_columns_ext, const int iteration);
+
+// implementations
+
+template <typename real>
+void print_field(real *field, char const *label, const std::size_t n_rows_ext,
                  const std::size_t n_columns_ext, const int iteration) {
     std::cout << "Field " << label << " at iteration " << iteration
               << std::endl;

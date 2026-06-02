@@ -31,7 +31,7 @@ struct Parameters {
      * @param argc Number of arguments.
      * @param argv Pointer of array of arguments.
      */
-    Parameters(int argc, char *argv[]) { parse(argc, argv); }
+    Parameters(int argc, char *argv[]);
 
     /**
      * @brief Describe the current parameters.

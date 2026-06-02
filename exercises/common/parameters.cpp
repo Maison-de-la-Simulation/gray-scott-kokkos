@@ -3,6 +3,8 @@
 #include <CLI/CLI.hpp>
 #include <iostream>
 
+Parameters::Parameters(int argc, char *argv[]) { parse(argc, argv); }
+
 void Parameters::describe() const {
     std::cout << "Number of rows: " << n_rows << std::endl;
     std::cout << "Number of columns: " << n_columns << std::endl;

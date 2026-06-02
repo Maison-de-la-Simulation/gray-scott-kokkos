@@ -14,6 +14,33 @@ namespace helpers {
  * @param iteration Current iteration number.
  */
 template <typename View>
+void print_field(const View &field, const std::size_t iteration);
+
+/**
+ * @brief Print a checksum on screen.
+ * @tparam real Type of float.
+ * @param label Name of the field.
+ * @param checksum Value of the checksum.
+ * @param iteration Current iteration.
+ */
+template <typename real>
+void print_checksum(const std::string &label, const real checksum,
+                    const std::size_t iteration);
+
+/**
+ * @brief Print a checksum on screen.
+ * @tparam real Type of float.
+ * @param label Name of the field.
+ * @param checksum Value of the checksum.
+ * @param iteration Current iteration.
+ */
+template <typename real>
+void print_checksum(const char *label, const real checksum,
+                    const std::size_t iteration);
+
+// implementations
+
+template <typename View>
 void print_field(const View &field, const std::size_t iteration) {
     std::cout << "Field " << field.label() << " at iteration " << iteration
               << std::endl;
@@ -33,13 +60,12 @@ void print_field(const View &field, const std::size_t iteration) {
     std::cout << std::setprecision(default_precision);
 }
 
-/**
- * @brief Print a checksum on screen.
- * @tparam real Type of float.
- * @param label Name of the field.
- * @param checksum Value of the checksum.
- * @param iteration Current iteration.
- */
+template <typename real>
+void print_checksum(const std::string &label, const real checksum,
+                    const std::size_t iteration) {
+    print_checksum(label.c_str(), checksum, iteration);
+}
+
 template <typename real>
 void print_checksum(const char *label, const real checksum,
                     const std::size_t iteration) {

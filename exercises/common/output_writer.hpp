@@ -7,9 +7,9 @@
 #include <H5PredType.h>
 
 #include <cstddef>
+#include <filesystem>
 #include <iostream>
 #include <memory>
-#include <filesystem>
 
 /**
  * @brief HDF5 file writer.
@@ -41,10 +41,7 @@ class OutputWriter {
      * @see `prepare` method.
      */
     OutputWriter(const char *filename, const std::size_t n_images,
-                 const std::size_t n_rows_ext,
-                 const std::size_t n_columns_ext) {
-        this->prepare(filename, n_images, n_rows_ext, n_columns_ext);
-    }
+                 const std::size_t n_rows_ext, const std::size_t n_columns_ext);
 
     /**
      * @brief Prepare the output writer in HDF5 format.
@@ -54,79 +51,96 @@ class OutputWriter {
      * used at this step.
      */
     void prepare(const char *filename, const std::size_t n_images,
-                 const std::size_t n_rows_ext,
-                 const std::size_t n_columns_ext) {
-        this->n_rows_ext = n_rows_ext;
-        this->n_columns_ext = n_columns_ext;
-
-        // set real type dependenig on the given view
-        static_assert(
-            std::is_same_v<real, double> or std::is_same_v<real, float>,
-            "Unexpected real type");
-        if constexpr (std::is_same_v<real, double>) {
-            this->real_type =
-                std::make_unique<H5::PredType>(H5::PredType::NATIVE_DOUBLE);
-        } else {
-            this->real_type =
-                std::make_unique<H5::PredType>(H5::PredType::NATIVE_FLOAT);
-        }
-
-        // add attributes on how to manipulate the file
-        H5::FileAccPropList fapl;
-        fapl.setFcloseDegree(H5F_CLOSE_STRONG);  // Ensure immediate flush
-        fapl.setCache(0, 0, 0, 0.0);  // Optional: Set chunk cache size to 0
-
-        // remove file if it already exists
-        if (std::filesystem::exists(filename)) {
-            std::filesystem::remove(filename);
-        }
-
-        // create file in current working directory
-        this->file = H5::H5File(filename, H5F_ACC_TRUNC,
-                                H5::FileCreatPropList::DEFAULT, fapl);
-
-        // create spaces
-        // NOTE This gives wrong ordering when the file is opened with
-        // HDFCompass
-        hsize_t dims_3d[3] = {static_cast<hsize_t>(n_images + 1),
-                              static_cast<hsize_t>(n_rows_ext),
-                              static_cast<hsize_t>(n_columns_ext)};
-        hsize_t dims_2d[2] = {static_cast<hsize_t>(n_rows_ext),
-                              static_cast<hsize_t>(n_columns_ext)};
-        this->space_3d = H5::DataSpace(3, dims_3d);
-        this->space_2d = H5::DataSpace(2, dims_2d);
-
-        // create dataset
-        this->dataset =
-            file.createDataSet("matrix", *this->real_type, this->space_3d);
-    }
+                 const std::size_t n_rows_ext, const std::size_t n_columns_ext);
 
     /**
      * @brief Write an image.
      * @param field The field to output.
      * @note `prepare` must have been called beforehand.
      */
-    void write(real const *field) {
-        // check `prepare` was called
-        if (this->file.getId() == -1) {
-            throw std::runtime_error("OutputWriter is not prepared");
-        }
-
-        std::cout << "Writing image " << this->current_image_id << std::endl;
-
-        // set the amount of data to write
-        // NOTE This gives wrong ordering when the file is opened with
-        // HDFCompass
-        hsize_t start[3]{this->current_image_id, 0, 0};
-        hsize_t count[3]{1, static_cast<hsize_t>(this->n_rows_ext),
-                         static_cast<hsize_t>(this->n_columns_ext)};
-        this->space_3d.selectHyperslab(H5S_SELECT_SET, count, start);
-
-        // write data to file
-        this->dataset.write(field, *this->real_type, this->space_2d,
-                            this->space_3d);
-
-        // update current image index
-        this->current_image_id++;
-    }
+    void write(real const *field);
 };
+
+// implementations
+
+template <typename real>
+OutputWriter<real>::OutputWriter(const char *filename,
+                                 const std::size_t n_images,
+                                 const std::size_t n_rows_ext,
+                                 const std::size_t n_columns_ext) {
+    this->prepare(filename, n_images, n_rows_ext, n_columns_ext);
+}
+
+template <typename real>
+void OutputWriter<real>::prepare(const char *filename,
+                                 const std::size_t n_images,
+                                 const std::size_t n_rows_ext,
+                                 const std::size_t n_columns_ext) {
+    this->n_rows_ext = n_rows_ext;
+    this->n_columns_ext = n_columns_ext;
+
+    // set real type dependenig on the given view
+    static_assert(std::is_same_v<real, double> or std::is_same_v<real, float>,
+                  "Unexpected real type");
+    if constexpr (std::is_same_v<real, double>) {
+        this->real_type =
+            std::make_unique<H5::PredType>(H5::PredType::NATIVE_DOUBLE);
+    } else {
+        this->real_type =
+            std::make_unique<H5::PredType>(H5::PredType::NATIVE_FLOAT);
+    }
+
+    // add attributes on how to manipulate the file
+    H5::FileAccPropList fapl;
+    fapl.setFcloseDegree(H5F_CLOSE_STRONG);  // Ensure immediate flush
+    fapl.setCache(0, 0, 0, 0.0);  // Optional: Set chunk cache size to 0
+
+    // remove file if it already exists
+    if (std::filesystem::exists(filename)) {
+        std::filesystem::remove(filename);
+    }
+
+    // create file in current working directory
+    this->file = H5::H5File(filename, H5F_ACC_TRUNC,
+                            H5::FileCreatPropList::DEFAULT, fapl);
+
+    // create spaces
+    // NOTE This gives wrong ordering when the file is opened with
+    // HDFCompass
+    hsize_t dims_3d[3] = {static_cast<hsize_t>(n_images + 1),
+                          static_cast<hsize_t>(n_rows_ext),
+                          static_cast<hsize_t>(n_columns_ext)};
+    hsize_t dims_2d[2] = {static_cast<hsize_t>(n_rows_ext),
+                          static_cast<hsize_t>(n_columns_ext)};
+    this->space_3d = H5::DataSpace(3, dims_3d);
+    this->space_2d = H5::DataSpace(2, dims_2d);
+
+    // create dataset
+    this->dataset =
+        file.createDataSet("matrix", *this->real_type, this->space_3d);
+}
+
+template <typename real>
+void OutputWriter<real>::write(real const *field) {
+    // check `prepare` was called
+    if (this->file.getId() == -1) {
+        throw std::runtime_error("OutputWriter is not prepared");
+    }
+
+    std::cout << "Writing image " << this->current_image_id << std::endl;
+
+    // set the amount of data to write
+    // NOTE This gives wrong ordering when the file is opened with
+    // HDFCompass
+    hsize_t start[3]{this->current_image_id, 0, 0};
+    hsize_t count[3]{1, static_cast<hsize_t>(this->n_rows_ext),
+                     static_cast<hsize_t>(this->n_columns_ext)};
+    this->space_3d.selectHyperslab(H5S_SELECT_SET, count, start);
+
+    // write data to file
+    this->dataset.write(field, *this->real_type, this->space_2d,
+                        this->space_3d);
+
+    // update current image index
+    this->current_image_id++;
+}
