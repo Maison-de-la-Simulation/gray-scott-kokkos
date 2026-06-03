@@ -6,6 +6,7 @@ project(
     VERSION 0.1.0
 )
 
+set(NO_KOKKOS ON)
 include(../dependencies.cmake)
 include(../common.cmake)
 
