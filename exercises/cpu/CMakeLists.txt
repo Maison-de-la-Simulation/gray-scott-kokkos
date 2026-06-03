@@ -25,5 +25,5 @@ target_link_libraries(
     gray_scott_cpu
     PRIVATE
         Kokkos::kokkos
-        common
+        common_kokkos
 )

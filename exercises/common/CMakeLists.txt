@@ -5,7 +5,6 @@ target_sources(
     PUBLIC
         FILE_SET HEADERS
         FILES
-            helpers.hpp
             output_writer.hpp
             parameters.hpp
     PRIVATE
@@ -15,7 +14,6 @@ target_sources(
 target_link_libraries(
     common
     PUBLIC
-        Kokkos::kokkos
         HDF5::HDF5
     PRIVATE
         CLI11::CLI11
@@ -34,6 +32,21 @@ target_sources(
 target_link_libraries(
     common_pod
     INTERFACE
-        HDF5::HDF5
+        common
+)
+
+add_library(common_kokkos INTERFACE)
+
+target_sources(
+    common_kokkos
+    INTERFACE
+        FILE_SET HEADERS
+        FILES
+            helpers_kokkos.hpp
+)
+
+target_link_libraries(
+    common_kokkos
+    INTERFACE
         common
 )

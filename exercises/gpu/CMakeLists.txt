@@ -21,5 +21,5 @@ target_link_libraries(
     gray_scott_gpu
     PRIVATE
         Kokkos::kokkos
-        common
+        common_kokkos
 )
