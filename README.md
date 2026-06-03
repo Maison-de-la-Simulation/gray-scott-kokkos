@@ -40,7 +40,7 @@ You can also build each implementation independently.
 Dependencies to build the exercises are:
 
 - CMake 3.28 or more recent;
-- Kokkos 5.0 or more recent;
+- Kokkos 5.1.1 or more recent;
 - HDF5 1.10 with C++ bindings or more recent;
 - CLI11 2.4 or more recent.
 
