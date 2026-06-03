@@ -1205,7 +1205,7 @@
                 cmake --install build/cuda
 
                 export PATH=${path_to_install}/cuda/tools/bin:$PATH
-                export LD_LIBRARY_PIATH=${path_to_install}/cuda/tools/lib:$LD_LIBRARY_PATH
+                export LD_LIBRARY_PATH=${path_to_install}/cuda/tools/lib:$LD_LIBRARY_PATH
             \end{minted}
         \end{column}
         \begin{column}{0.5\linewidth}
@@ -1525,21 +1525,21 @@
                 \draw[->] (compute) -- (synchronize);
                 \draw[->] (synchronize) -- (write);
 
-                \pause
+                \begin{uncoverenv}<3->
+                    \node[above=of compute] (write-before) {write};
+                    \node[below=of write] (compute-after) {compute $\times$ 10};
 
-                \node[above=of compute] (write-before) {write};
-                \node[below=of write] (compute-after) {compute $\times$ 10};
+                    \draw[->] (write-before) -- (compute);
+                    \draw[->] (write) -- (compute-after);
+                \end{uncoverenv}
 
-                \draw[->] (write-before) -- (compute);
-                \draw[->] (write) -- (compute-after);
+                \begin{uncoverenv}<4->
+                    \node[above=of write-before] (ellipsis-before) {...};
+                    \node[below=of compute-after] (ellipsis-after) {...};
 
-                \pause
-
-                \node[above=of write-before] (ellipsis-before) {...};
-                \node[below=of compute-after] (ellipsis-after) {...};
-
-                \draw[->] (ellipsis-before) -- (write-before);
-                \draw[->] (compute-after) -- (ellipsis-after);
+                    \draw[->] (ellipsis-before) -- (write-before);
+                    \draw[->] (compute-after) -- (ellipsis-after);
+                \end{uncoverenv}
             \end{tikzpicture}
         \end{column}
     \end{columns}
