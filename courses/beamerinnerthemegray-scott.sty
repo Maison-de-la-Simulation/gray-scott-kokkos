@@ -27,7 +27,7 @@
             \includegraphics[
                 width=\the\paperwidth,
                 height=\the\paperheight
-            ]{gray_scott.jpg}
+            ]{gray_scott_empty.jpg}
         };
         \fill[color=white] (0em, -2em) rectangle (\the\paperwidth, -\the\paperheight + 1.5em);
     \end{tikzpicture}
@@ -44,17 +44,14 @@
             \includegraphics[
             width=\the\paperwidth,
             height=\the\paperheight
-            ]{gray_scott.jpg}
+            ]{gray_scott_empty.jpg}
         };
-        % there's fucking horizontal gap I can't explain, so I've to compensiate for it
-        \fill[color=lightmain] (0.5em, -2em) rectangle (\the\paperwidth - 1em, -\the\paperheight + 1.5em);
     \end{tikzpicture}
 }
 
 % Title page
-\defbeamertemplate*{title page}{gray-scott}
-{
-    \usebeamertemplate{background titlepage}
+\defbeamertemplate*{title page}{gray-scott}{%
+    \usebeamertemplate{background titlepage}%
     \vskip2cm%
     \begin{beamercolorbox}[center]{title page header}
         \usebeamerfont{title page header}\inserttitle%
@@ -75,6 +72,20 @@
     \begin{beamercolorbox}[center]{date}
         \usebeamerfont{author}\insertdate%
     \end{beamercolorbox}
+    \vfill
+}
+
+% Closing page
+\defbeamertemplate*{closing page}{gray-scott}{%
+    \usebeamertemplate{background titlepage}%
+    \vskip2cm%
+    \begin{beamercolorbox}[center]{title page header}
+        \usebeamerfont{title page header}That's all folks!%
+    \end{beamercolorbox}%
+    \vskip0.6cm%
+    \begin{beamercolorbox}[center]{normal text}
+        \usebeamerfont{normal text}\insertclosing%
+    \end{beamercolorbox}%
     \vfill
 }
 

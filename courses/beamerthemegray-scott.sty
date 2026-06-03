@@ -88,7 +88,33 @@
 % Exercice frame
 \newenvironment{exerciseframe}[1]{%
     \setbeamertemplate{background}{\usebeamertemplate{background exercisepage}}%
+    \setbeamercolor*{structure}{fg=lightmain}%
+    \setbeamercolor*{normal text}{fg=white}%
+    \setbeamercolor*{itemize item}{fg=lightmain}%
+    \setbeamercolor*{itemize subitem}{fg=lightmain}%
+    \setbeamercolor*{enumerate item}{fg=lightmain}%
+    \setbeamercolor*{enumerate subitem}{fg=lightmain}%
+    \setbeamercolor*{description item}{fg=lightmain}%
+    \setbeamercolor*{description subitem}{fg=lightmain}%
     \begin{frame}[environment=exerciseframe, fragile]{Exercise: #1}
-    }{%
+        \begin{beamercolorbox}{normal text}
+}{%
+        \end{beamercolorbox}
     \end{frame}%
+}
+
+\def\insertclosing{}
+\newcommand{\closing}[1]{\def\insertclosing{#1}}
+
+% Closing page
+\newcommand{\closingpage}{%
+    \setbeamercolor*{structure}{fg=white}%
+    \setbeamercolor*{normal text}{fg=white}%
+    \setbeamercolor*{itemize item}{fg=white}%
+    \setbeamercolor*{itemize subitem}{fg=white}%
+    \setbeamercolor*{enumerate item}{fg=white}%
+    \setbeamercolor*{enumerate subitem}{fg=white}%
+    \setbeamercolor*{description item}{fg=white}%
+    \setbeamercolor*{description subitem}{fg=white}%
+    \usebeamertemplate{closing page}%
 }

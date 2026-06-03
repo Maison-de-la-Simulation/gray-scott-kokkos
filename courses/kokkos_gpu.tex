@@ -20,15 +20,15 @@
 \setminted{
     autogobble,
     fontsize=\small,
-    bgcolor=lightgray,
     xleftmargin=0.5em,
     xrightmargin=0.5em,
     breaklines,
+    style=nord,
+    bgcolor=black,
+    formatcom=\color{white},
 }
 
-\usemintedstyle[text]{vim}
 \setminted[text]{
-    bgcolor=lightgray,
     fontsize=\scriptsize,
 }
 
@@ -40,6 +40,13 @@
 \author{Mathieu Lobet, Paul Zehner, Paul Gannay, Hariprasad Kannan, Thomas Padioleau, Trévis Morvany}
 \institute{CEA}
 \date{2026-07-02}
+\closing{
+    \begin{description}[\hspace{0.355\linewidth}]
+        \item[Kokkos website] \href{https://kokkos.org}{\texttt{kokkos.org}}
+        \item[Kokkos repository] \href{https://github.com/kokkos}{\texttt{github.com/kokkos}}
+        \item[Gray-Scott Kokkos repository] \href{https://github.com/Maison-de-la-Simulation/gray-scott-kokkos}{\texttt{github.com/Maison-de-la-Simulation/} \texttt{gray-scott-kokkos}}
+    \end{description}%
+}
 
 \begin{document}
 
@@ -141,11 +148,11 @@
             \end{center}
             \begin{minted}{sh}
                 cmake \
-                -B ${build_dir} \
-                -DKokkos_ENABLE_OPENMP=ON \
-                -DKokkos_ARCH_SKX=ON \
-                -DKokkos_ENABLE_CUDA=ON \
-                -DKokkos_ARCH_AMPERE80=ON
+                    -B ${build_dir} \
+                    -DKokkos_ENABLE_OPENMP=ON \
+                    -DKokkos_ARCH_SKX=ON \
+                    -DKokkos_ENABLE_CUDA=ON \
+                    -DKokkos_ARCH_AMPERE80=ON
             \end{minted}
         \end{column}
         \begin{column}{0.525\linewidth}
@@ -229,13 +236,15 @@
     \begin{columns}
         \begin{column}{0.55\linewidth}
             \begin{minted}[breakafter={=}]{sh}
-                cmake -B build/cuda \
+                cmake \
+                    -B build/cuda \
                     -DCMAKE_INSTALL_PREFIX=${path_to_install}/cuda \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ENABLE_CUDA=ON \
                     -DKokkos_ARCH_XXXX=ON
 
-                cmake --build build/cuda \
+                cmake \
+                    --build build/cuda \
                     --parallel 4
 
                 cmake --install build/cuda
@@ -244,6 +253,7 @@
         \begin{column}{0.45\linewidth}
             \begin{itemize}
                 \item Build and install Kokkos with the CUDA backend
+                \item Enable CUDA architecture XXXX
             \end{itemize}
         \end{column}
     \end{columns}
@@ -253,11 +263,13 @@
     \begin{columns}
         \begin{column}{0.55\linewidth}
             \begin{minted}[breakafter={=}]{sh}
-                cmake -B build/cuda \
+                cmake \
+                    -B build/cuda \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ROOT=${path_to_install}/cuda
 
-                cmake --build build/cuda \
+                cmake \
+                    --build build/cuda \
                     --parallel 4
             \end{minted}
         \end{column}
@@ -403,12 +415,12 @@
 
                 void compute() {
                     Kokkos::parallel_for(
-                    "compute",
-                    N,
-                    KOKKOS_LAMBDA (int i) {
-                        int a = function(i);
-                        // ...
-                    }
+                        "compute",
+                        N,
+                        KOKKOS_LAMBDA (int i) {
+                            int a = function(i);
+                            // ...
+                        }
                     );
                 }
             \end{minted}
@@ -548,7 +560,7 @@
                     "my_loop",
                     N,
                     KOKKOS_LAMBDA (int i) {
-                        data(i) = ...
+                        data(i) = // ...
                     }
                 );
 
@@ -581,7 +593,7 @@
                     "my_loop",
                     N,
                     KOKKOS_LAMBDA (int i) {
-                        data(i) = ...
+                        data(i) = // ...
                     }
                 );
 
@@ -609,7 +621,7 @@
                     "my_loop",
                     N,
                     KOKKOS_LAMBDA (int i) {
-                        data(i) = ...
+                        // ...
                     }
                 );
 
@@ -1180,12 +1192,14 @@
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}[breakafter={=,/}, fontsize=\scriptsize]{C++}
-                cmake -B build/cuda \
+                cmake \
+                    -B build/cuda \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DCMAKE_INSTALL_PREFIX=${path_to_install}/cuda/tools
                     -DKokkos_ROOT=${path_to_install}/cuda
 
-                cmake --build build/cuda \
+                cmake \
+                    --build build/cuda \
                     --parallel 4
 
                 cmake --install build/cuda
@@ -1214,6 +1228,15 @@
                 // ...
 
                 Kokkos::Profiling::popRegion();
+            \end{minted}
+
+            \begin{minted}[breakafter={=}]{sh}
+                nsys profile \
+                    -o report \
+                    ./my_program \
+                    --kokkos-tools-libs=libkp_nvtx_connector.so
+
+                nsys-ui report.nsys-rep
             \end{minted}
         \end{column}
         \begin{column}{0.5\linewidth}
@@ -1346,6 +1369,7 @@
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
+                \item Remove the \texttt{SharedSpace} memory space parameter of the views
                 \item Add mirrors with Kokkos \texttt{create\_mirror\_view}
                 \item Synchronize views and mirrors with \texttt{deep\_copy}
                 \item Observe the performance with Nsight Systems
@@ -1803,6 +1827,7 @@
                 \end{itemize}
                 \item Differentiate the \texttt{deep\_copy} for the duplication and for the synchronization
                 \item Adjust the fences
+                \item Beware, there is a subtlety
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1840,15 +1865,7 @@
 \end{frame}
 
 \begin{frame}[plain]
-    \begin{center}
-        \huge That's all folks!
-    \end{center}
-    \vspace{2em}
-    \begin{description}[Gray-Scott Kokkos repository]
-        \item[Kokkos website] \href{https://kokkos.org}{\texttt{kokkos.org}}
-        \item[Kokkos repository] \href{https://github.com/kokkos}{\texttt{github.com/kokkos}}
-        \item[Gray-Scott Kokkos repository] \href{https://github.com/Maison-de-la-Simulation/gray-scott-kokkos}{\texttt{github.com/Maison-de-la-Simulation/} \texttt{gray-scott-kokkos}}
-    \end{description}
+    \closingpage
 \end{frame}
 
 \end{document}

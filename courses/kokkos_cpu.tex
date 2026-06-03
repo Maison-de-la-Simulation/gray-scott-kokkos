@@ -19,15 +19,15 @@
 \setminted{
     autogobble,
     fontsize=\small,
-    bgcolor=lightgray,
     xleftmargin=0.5em,
     xrightmargin=0.5em,
     breaklines,
+    style=nord,
+    bgcolor=black,
+    formatcom=\color{white},
 }
 
-\usemintedstyle[text]{vim}
 \setminted[text]{
-    bgcolor=lightgray,
     fontsize=\scriptsize,
 }
 
@@ -38,7 +38,6 @@
     \end{center}%
 }
 
-
 \graphicspath{{images/}}
 
 %Information to be included in the title page:
@@ -47,6 +46,14 @@
 \author{Mathieu Lobet, Paul Zehner, Paul Gannay, Hariprasad Kannan, Thomas Padioleau, Trévis Morvany}
 \institute{CEA}
 \date{2026-06-25}
+\closing{%
+    \begin{description}[\hspace{0.355\linewidth}]
+        \item[Next Kokkos session] Thursday 2\textsuperscript{nd} of July for Kokkos on GPU
+        \item[Kokkos website] \href{https://kokkos.org}{\texttt{kokkos.org}}
+        \item[Kokkos repository] \href{https://github.com/kokkos}{\texttt{github.com/kokkos}}
+        \item[Gray-Scott Kokkos repository] \href{https://github.com/Maison-de-la-Simulation/gray-scott-kokkos}{\texttt{github.com/Maison-de-la-Simulation/} \texttt{gray-scott-kokkos}}
+    \end{description}
+}
 
 \begin{document}
 
@@ -232,13 +239,18 @@
                 \item Use the default compiler or specify it with \texttt{-DCMAKE\_CXX\_COMPILER=<command>}
                 \item Minimum supported version of the compilers detailed \href{https://kokkos.org/kokkos-core-wiki/get-started/requirements.html}{in the doc}
             \end{itemize}
+
+            \vspace{-0.5em}
+
             \begin{minted}{bash}
                 cmake \
                   -B ${build_dir} \
                   -DCMAKE_BUILD_TYPE=Release \
                   -DCMAKE_CXX_COMPILER=g++ \
                   -DCMAKE_INSTALL_PREFIX=${path_to_kokkos}
-                cmake --build ${build_dir} --parallel ${jobs}
+                cmake \
+                  --build ${build_dir} \
+                  --parallel ${jobs}
                 cmake --install ${build_dir}
             \end{minted}
         \end{column}
@@ -556,8 +568,7 @@
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
                     -B build/serial \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=${path_to_install}/serial
+                    -DCMAKE_BUILD_TYPE=Release
 
                 cmake \
                     --build build/serial \
@@ -568,6 +579,7 @@
             \begin{itemize}
                 \item Check the implementation
                 \item Build the code
+                \item No need for Kokkos here
                 \item Run it
             \end{itemize}
         \end{column}
@@ -992,9 +1004,9 @@
         \begin{column}{0.45\linewidth}
             \begin{itemize}
                 \item Kokkos way to tell how a loop is executed: \structure{execution policy}
-                \item \mintinline{c++}{RangePolicy} for single-dimensional loops
-                \item \mintinline{c++}{ExecutionSpace} for specifying where the loop is executed (defaults to \mintinline{c++}{DefaultExecutionSpace})
-                \item \mintinline{c++}{start_index} and \mintinline{c++}{end_index} are the beginning (inclusive) and the end (exclusive) of the loop
+                \item \mintinline{c++}|RangePolicy| for single-dimensional loops
+                \item \mintinline{c++}|ExecutionSpace| for specifying where the loop is executed (we'll discuss about this next week, you can keep the default now)
+                \item \mintinline{c++}|start_index| and \mintinline{c++}|end_index| are the beginning (inclusive) and the end (exclusive) of the loop
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1009,8 +1021,6 @@
                 Kokkos::parallel_for(
                     "my_loop",
                     N,
-
-
                     KOKKOS_LAMBDA (int i) {
                         /* ... */
                     }
@@ -1024,9 +1034,7 @@
             \begin{minted}{C++}
                 Kokkos::parallel_for(
                     "my_loop",
-                    Kokkos::RangePolicy<
-                        Kokkos::DefaultExecutionSpace
-                    >(0, N),
+                    Kokkos::RangePolicy<>(0, N),
                     KOKKOS_LAMBDA (int i) {
                         /* ... */
                     }
@@ -1069,22 +1077,22 @@
 
 \begin{frame}[fragile]{How to have multidimensional loop policies?}
     \begin{columns}
-        \begin{column}{0.6\linewidth}
+        \begin{column}{0.66\linewidth}
             \begin{minted}{C++}
                 Kokkos::MDRangePolicy<
                     Kokkos::Rank<n>
                 > policy(
-                    {start_index_0, ..., start_index_n},
-                    {end_index_0, ..., end_index_n}
+                    {start_index_0, /* ... */, start_index_n},
+                    {end_index_0, /* ... */, end_index_n}
                 );
             \end{minted}
         \end{column}
-        \begin{column}{0.4\linewidth}
+        \begin{column}{0.34\linewidth}
             \begin{itemize}
-                \item \texttt{MDRangePolicy} for nested loops (with \emph{MD} for multidimensional)
-                \item \texttt{Rank} template parameter to specify the dimension
+                \item \mintinline{C++}|MDRangePolicy| for nested loops (with \emph{MD} for multidimensional)
+                \item \mintinline{C++}|Rank| template parameter to specify the dimension
                 \item Max rank is 6
-                \item \texttt{start\_index\_*} and \texttt{end\_index\_*} are the beginning (inclusive) and the end (exclusive) of each loop
+                \item \mintinline{C++}|start_index_*| and \mintinline{C++}|end_index_*| are the beginning (inclusive) and the end (exclusive) of each loop
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1367,7 +1375,6 @@
                     -DCMAKE_CXX_COMPILER=g++ \
                     -DKokkos_ENABLE_OPENMP=ON \
                     ${other_arguments}
-                # build and install
             \end{minted}
         \end{column}
         \pause
@@ -1388,13 +1395,15 @@
     \begin{columns}
         \begin{column}{0.55\linewidth}
             \begin{minted}[breakafter={=}]{sh}
-                cmake -B build/openmp \
+                cmake \
+                    -B build/openmp \
                     -DCMAKE_INSTALL_PREFIX=${path_to_install}/openmp \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ENABLE_OPENMP=ON \
                     -DKokkos_ARCH_NATIVE=ON
 
-                cmake --build build/openmp \
+                cmake \
+                    --build build/openmp \
                     --parallel 4
 
                 cmake --install build/openmp
@@ -1730,6 +1739,10 @@
     \end{minted}
 \end{frame}
 
+\begin{frame}{Strategy}
+    \missingfigure{explain the vectorization strategy}
+\end{frame}
+
 \begin{exerciseframe}{From your worktree or the cpu folder}
     \missingfigure{Vectorize the CPU code}
 \end{exerciseframe}
@@ -1834,21 +1847,12 @@
     \pause
     \vspace{2em}
     \begin{alertblock}{Caution}
-        The Kokkos code so far only works on CPU and is not portable!
+        The Kokkos code so far only works on CPU and is not portable! We will make it portable next week
     \end{alertblock}
 \end{frame}
 
 \begin{frame}[plain]
-    \begin{center}
-        \huge That's all folks!
-    \end{center}
-    \vspace{2em}
-    \begin{description}[Gray-Scott Kokkos repository]
-        \item[Next Kokkos session] Thursday 2\textsuperscript{nd} of July for Kokkos on GPU
-        \item[Kokkos website] \href{https://kokkos.org}{\texttt{kokkos.org}}
-        \item[Kokkos repository] \href{https://github.com/kokkos}{\texttt{github.com/kokkos}}
-        \item[Gray-Scott Kokkos repository] \href{https://github.com/Maison-de-la-Simulation/gray-scott-kokkos}{\texttt{github.com/Maison-de-la-Simulation/} \texttt{gray-scott-kokkos}}
-    \end{description}
+    \closingpage
 \end{frame}
 
 \end{document}
