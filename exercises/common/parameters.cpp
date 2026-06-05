@@ -20,7 +20,6 @@ void Parameters::describe() const {
 
 void Parameters::parse(int argc, char *argv[]) {
     CLI::App app{"Gray-Scott equation solver implemented with Kokkos"};
-    argv = app.ensure_utf8(argv);
 
     app.add_option("-n,--rows", this->n_rows, "Number of rows");
     app.add_option("-m,--columns", this->n_columns, "Number of columns");
