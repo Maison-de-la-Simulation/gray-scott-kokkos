@@ -1,5 +1,5 @@
 #include <Kokkos_Core.hpp>
-#include <Kokkos_Graph.hpp>
+#include <utility>
 
 #include "helpers.hpp"
 #include "output_writer.hpp"
@@ -54,21 +54,20 @@ void add_drop(const View &u, const View &v) {
 
 /**
  * @brief Compute the Gray-Scott equation for one iteration.
- * @param space Execution space for the computation.
  * @param u U field.
  * @param v V field.
  * @param u_temp U temporary field.
  * @param v_temp V temporary field.
  */
-void compute(Kokkos::DefaultExecutionSpace const &space, const View &u,
-             const View &v, const View &u_temp, const View &v_temp) {
+void compute(const View &u, const View &v, const View &u_temp,
+             const View &v_temp) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
     Kokkos::parallel_for(
         "compute",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-            space, {1, 1},
+            {1, 1},
             {n_rows_ext - 1, n_columns_ext - 1}),  // do not iterate on the halo
         KOKKOS_LAMBDA(const int i, const int j) {
             // clang-format off
@@ -92,15 +91,39 @@ void compute(Kokkos::DefaultExecutionSpace const &space, const View &u,
             u_temp(i, j) = u(i, j) + u_delta * constants::dt;
             v_temp(i, j) = v(i, j) + v_delta * constants::dt;
         });
+
+    Kokkos::fence("wait for compute");
+}
+
+/**
+ * @brief Compute and print the checksum of an array.
+ * @param field Field to compute the checksum of.
+ * @param iteration Current iteration.
+ * @return Checksum value.
+ */
+View::value_type check(const View &field, const std::size_t iteration) {
+    typename View::value_type checksum;
+    Kokkos::parallel_reduce(
+        "check fields",
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+            {0, 0}, {field.extent(0), field.extent(1)}),
+        KOKKOS_LAMBDA(const int i, const int j,
+                      View::value_type &checksum_local) {
+            checksum_local += field(i, j);
+        },
+        checksum);
+
+    helpers::print_checksum(field.label(), checksum, iteration);
+
+    return checksum;
 }
 
 int main(int argc, char *argv[]) {
     Kokkos::ScopeGuard kokkos{argc, argv};
 
     Parameters parameters{argc, argv};
+    parameters.check();
     parameters.describe();
-    const std::size_t n_images =
-        parameters.n_iterations / parameters.images_interval;
 
     // fields (with halo)
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);
@@ -111,8 +134,9 @@ int main(int argc, char *argv[]) {
     auto v_h = Kokkos::create_mirror_view(v);
 
     // create writer
-    OutputWriter<real> writer("gray_scott.h5", n_images, parameters.n_rows_ext,
-                              parameters.n_columns_ext);
+    OutputWriter<real> writer(
+        "gray_scott.h5", parameters.n_iterations / parameters.images_interval,
+        parameters.n_rows_ext, parameters.n_columns_ext);
 
     // initialize fields
     Kokkos::deep_copy(u, 1);
@@ -131,46 +155,29 @@ int main(int argc, char *argv[]) {
         helpers::print_field(v_h, 0);
     }
 
+    // write init
+    writer.write(v_h.data());
+
     // temporary fields (with halo)
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
-    // output fields (with halo)
-    View v_out("v_out", parameters.n_rows_ext, parameters.n_columns_ext);
+    // time loop
+    for (int iteration = 0; iteration < parameters.n_iterations; iteration++) {
+        compute(u, v, u_temp, v_temp);
+        std::swap(u, u_temp);
+        std::swap(v, v_temp);
 
-    // create one space for compute, and one for data
-    auto [space_compute, space_data] = Kokkos::Experimental::partition_space(
-        Kokkos::DefaultExecutionSpace{}, 1, 1);
-
-    // loop on images
-    for (int image = 0; image < n_images; image++) {
-        // start duplicate image n - 1 on the device (blocking for everybody)
-        Kokkos::deep_copy(v_out, v);
-
-        // then batch compute image n (non-blocking)
-        for (int iteration = 0; iteration < parameters.images_interval;
-             iteration++) {
-            compute(space_compute, u, v, u_temp, v_temp);
-            Kokkos::kokkos_swap(u, u_temp);
-            Kokkos::kokkos_swap(v, v_temp);
+        // write image every images_interval iterations
+        if (iteration % parameters.images_interval == 0) {
+            Kokkos::deep_copy(v_h, v);
+            writer.write(v_h.data());
         }
-
-        // then synchronize image n - 1 (blocking in its own space and for the
-        // host)
-        Kokkos::deep_copy(space_data, v_h, v_out);
-        space_data.fence("waiting for deep_copy");
-
-        // finally write image n - 1 (blocking)
-        writer.write(v_h.data());
     }
 
-    // write final image
-    Kokkos::deep_copy(v_h, v);
-    writer.write(v_h.data());
-
     // checksum
-    helpers::print_checksum(u, parameters.n_iterations);
-    helpers::print_checksum(v, parameters.n_iterations);
+    check(u, parameters.n_iterations);
+    check(v, parameters.n_iterations);
 
     // transfer fields
     Kokkos::deep_copy(u_h, u);

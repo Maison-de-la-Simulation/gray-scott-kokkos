@@ -1,19 +1,86 @@
+# Gray-Scott School Kokkos
 
 ## Presentation
 
-This a Kokkos adapted version of the existing demonstrator code make by David CHAMONT for the Gray Scott School [GrayScottSyclBench](https://gitlab.in2p3.fr/CodeursIntensifs/grayscott/GrayScottSyclBench). In this version we have adapted the original Sycl verion to Kokkos keeping the same code structure.  
+This repository contains the Kokkos courses and exercises for the Gray-Scott School 2026.
 
 ## Repository structure
 
-Inside of each of the benchmark version you will find the following files and folder.
-- `src`      : C++ source
-- `build-gpu`   : Files to build the gpu version
-- `results`    : h5 output files
-- `CmakeLists.txt` : CmakeList to create the make file
+- The `courses` folder contains the courses that are presented online:
+  - The CPU course is `kokkos_cpu`;
+  - The GPU course is `kokkos_gpu`.
+- The `exercises` folder contains the exercises associated to the course, based on the Gray-Scott equation:
+  - The `common` folder contains common files for all implementations;
+  - The `sequential` folder contains the sequential implementation of the equation;
+  - The `cpu` folder contains the Kokkos CPU implementation (note it cannot be run with a GPU backend);
+  - The `cpu_simd` folder contains the Kokkos CPU implementation using SIMD (note it cannot be run with a GPU backend);
+  - The `gpu` folder contains the Kokkos GPU implementation;
+  - The `gpu_async` folder contains the Kokkos GPU implementation with asynchronous writing of the results;
+  - The `gpu_async_more` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results.
 
-## Jean-Zay Enviroment
+## Courses
 
-Here is the enviroment have been using to execute the code in the Jean-Zay supermachine.
+In order to build the sources, a LaTeX distribution is required.
+You are encouraged to use the PDF files of the latest release if you do not have a workable LaTeX environment.
+
+Courses are built as following:
+
+```sh
+cd courses
+make
+```
+
+## Exercises
+
+The exercises have a common `CMakeLists.txt` that allows to build all implementations at the same time.
+You can also build each implementation independently.
+
+### Configuration
+
+Dependencies to build the exercises are:
+
+- CMake 3.28 or more recent;
+- Kokkos 5.1.1 or more recent;
+- HDF5 1.10 with C++ bindings or more recent;
+- CLI11 2.4 or more recent.
+
+By default, you have to manage the installation of the dependencies by yourself:
+
+```sh
+cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DKokkos_ROOT=${path_to_kokkos} \
+          -DHDF5_ROOT=${path_to_hdf5} \
+          -DCLI11_ROOT=${path_to_cli11}
+```
+
+For the Gray-Scott School, a Docker image is provided with most dependencies installed, with the exception of Kokkos, which you have to build and install by yourself.
+
+You can also use the `ENABLE_DOWNLOAD_FALLBACK` flag to allow CMake to download and build the dependencies itself:
+
+```sh
+cmake -B build \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DENABLE_DOWNLOAD_FALLBACK=ON \
+          -DHDF5_ROOT=${path_to_hdf5} \
+          ${kokkos_parameters} \
+          ${cli11_parameters}
+```
+
+Note that HDF5 cannot be handled this way, however.
+You can still install HDF5 with your system package manager.
+
+### Compilation
+
+```sh
+cmake --build build --parallell ${number_of_jobs}
+```
+
+### Cluster configuration
+
+#### Jean-Zay
+
+Here is the environment to execute the code in the Jean-Zay supercomputer:
 
 ```
 module purge
@@ -21,40 +88,11 @@ module load cuda/12.6.3
 module load cmake/3.31.4
 module load git/2.53.0
 module load libtool/2.4.6
-module load nvidia-compilers/25.11
-
-# Cuda path
-export CUDA_HOME=/lustre/fshomisc/sys/common/nvidia/cuda/12.6.3/
-export CUDA_LIB_PATH=$CUDA_HOME/lib64/stubs/
-export CUDA_TOOLKIT_PATH=$CUDA_HOME
-export HDF5_ROOT=/lustre/fswork/projects/idris/sos/ssos044/libraries/hdf5/install
 ```
 
-##  Compilation and execution on Jean-Zay partitions
+When compiling Kokkos, you have to specify the GPU architecture among its flags:
 
-# CPU
-To compile the code on CPU use the following cmake command.
-
-```
-cmake ../ -DMODE=CPU && make
-```
-
-To execute the code the following command. 
-
-```
-./gray-scott.exe CPU 1920 1080 1000 32
-```
-
-# GPU
-
-To compile the code on GPU V100 Jean-Zay node use the following cmake command.
-
-```
-cmake ../ -DMODE=GPU -DKokkos_ENABLE_CUDA=ON -DKokkos_VOLTA100=ON && make
-```
-
-To execute the code the following command.
-
-```
-./gray-scott.exe GPU 1920 1080 1000 32
-```
+```sh
+cmake -B build_kokkos \
+          -DKokkos_ARCH_VOLTA70=ON \
+          ${other_kokkos_flags}

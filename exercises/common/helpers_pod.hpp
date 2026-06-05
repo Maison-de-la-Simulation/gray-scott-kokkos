@@ -18,6 +18,12 @@ namespace helpers_pod {
  */
 template <typename real>
 void print_field(real *field, char const *label, const std::size_t n_rows_ext,
+                 const std::size_t n_columns_ext, const int iteration);
+
+// implementations
+
+template <typename real>
+void print_field(real *field, char const *label, const std::size_t n_rows_ext,
                  const std::size_t n_columns_ext, const int iteration) {
     std::cout << "Field " << label << " at iteration " << iteration
               << std::endl;
@@ -35,41 +41,6 @@ void print_field(real *field, char const *label, const std::size_t n_rows_ext,
 
     // reset precision
     std::cout << std::setprecision(default_precision);
-}
-
-/**
- * @brief Compute and print the checksum of an array.
- * @tparam real Type of data.
- * @param field Pointer of data.
- * @param label Name of field.
- * @param n_rows Number of rows.
- * @param n_columns Number of columns.
- * @param iteration Current iteration.
- * @return Checksum value.
- */
-template <typename real>
-real print_checksum(const real *field, char const *label,
-                    const std::size_t n_rows_ext,
-                    const std::size_t n_columns_ext,
-                    const std::size_t iteration) {
-    real checksum = 0;
-    for (int i = 0; i < n_rows_ext; i++) {
-        for (int j = 0; j < n_columns_ext; j++) {
-            checksum += field[ACCESS(i, j)];
-        }
-    }
-
-    // set precision
-    const auto default_precision{std::cout.precision()};
-    std::cout << std::setprecision(2) << std::fixed;
-
-    std::cout << "Checksum field " << label << " at iteration " << iteration
-              << ": " << checksum << std::endl;
-
-    // reset precision
-    std::cout << std::setprecision(default_precision);
-
-    return checksum;
 }
 
 }  // namespace helpers_pod
