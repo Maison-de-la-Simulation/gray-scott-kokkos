@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(
-    GrayScottKokkosSequential
+    GrayScottKokkosGPU
     LANGUAGES CXX
     VERSION 0.1.0
 )
@@ -9,16 +9,17 @@ project(
 include(../dependencies.cmake)
 include(../common.cmake)
 
-add_executable(gray_scott_sequential)
+add_executable(gray_scott_gpu)
 
 target_sources(
-    gray_scott_sequential
+    gray_scott_gpu
     PRIVATE
-        gray_scott_sequential.cpp
+        gray_scott_gpu.cpp
 )
 
 target_link_libraries(
-    gray_scott_sequential
+    gray_scott_gpu
     PRIVATE
-        common_pod
+        Kokkos::kokkos
+        common_kokkos
 )

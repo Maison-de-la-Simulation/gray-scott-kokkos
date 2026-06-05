@@ -9,6 +9,10 @@ project(
 include(../dependencies.cmake)
 include(../common.cmake)
 
+if(Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP OR Kokkos_ENABLE_SYCL)
+    message(WARNING "This implementation cannot run on GPU without modifications")
+endif()
+
 add_executable(gray_scott_cpu)
 
 target_sources(
@@ -21,5 +25,5 @@ target_link_libraries(
     gray_scott_cpu
     PRIVATE
         Kokkos::kokkos
-        common
+        common_kokkos
 )

@@ -1,5 +1,6 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Graph.hpp>
+#include <utility>
 
 #include "helpers.hpp"
 #include "output_writer.hpp"
@@ -94,11 +95,36 @@ void compute(const View &u, const View &v, const View &u_temp,
         });
 }
 
+/**
+ * @brief Compute and print the checksum of an array.
+ * @param field Field to compute the checksum of.
+ * @param iteration Current iteration.
+ * @return Checksum value.
+ */
+View::value_type check(const View &field, const std::size_t iteration) {
+    typename View::value_type checksum;
+    Kokkos::parallel_reduce(
+        "check fields",
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+            {0, 0}, {field.extent(0), field.extent(1)}),
+        KOKKOS_LAMBDA(const int i, const int j,
+                      View::value_type &checksum_local) {
+            checksum_local += field(i, j);
+        },
+        checksum);
+
+    helpers::print_checksum(field.label(), checksum, iteration);
+
+    return checksum;
+}
+
 int main(int argc, char *argv[]) {
     Kokkos::ScopeGuard kokkos{argc, argv};
 
     Parameters parameters{argc, argv};
+    parameters.check();
     parameters.describe();
+
     const std::size_t n_images =
         parameters.n_iterations / parameters.images_interval;
 
@@ -144,8 +170,8 @@ int main(int argc, char *argv[]) {
         for (int iteration = 0; iteration < parameters.images_interval;
              iteration++) {
             compute(u, v, u_temp, v_temp);
-            Kokkos::kokkos_swap(u, u_temp);
-            Kokkos::kokkos_swap(v, v_temp);
+            std::swap(u, u_temp);
+            std::swap(v, v_temp);
         }
 
         // finally write image n - 1 (blocking)
@@ -157,8 +183,8 @@ int main(int argc, char *argv[]) {
     writer.write(v_h.data());
 
     // checksum
-    helpers::print_checksum(u, parameters.n_iterations);
-    helpers::print_checksum(v, parameters.n_iterations);
+    check(u, parameters.n_iterations);
+    check(v, parameters.n_iterations);
 
     // transfer fields
     Kokkos::deep_copy(u_h, u);

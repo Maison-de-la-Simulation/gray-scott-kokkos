@@ -3,6 +3,8 @@
 #include <CLI/CLI.hpp>
 #include <iostream>
 
+Parameters::Parameters(int argc, char *argv[]) { parse(argc, argv); }
+
 void Parameters::describe() const {
     std::cout << "Number of rows: " << n_rows << std::endl;
     std::cout << "Number of columns: " << n_columns << std::endl;
@@ -18,7 +20,6 @@ void Parameters::describe() const {
 
 void Parameters::parse(int argc, char *argv[]) {
     CLI::App app{"Gray-Scott equation solver implemented with Kokkos"};
-    argv = app.ensure_utf8(argv);
 
     app.add_option("-n,--rows", this->n_rows, "Number of rows");
     app.add_option("-m,--columns", this->n_columns, "Number of columns");
@@ -40,4 +41,26 @@ void Parameters::parse(int argc, char *argv[]) {
 
     this->n_rows_ext = this->n_rows + 2;
     this->n_columns_ext = this->n_columns + 2;
+}
+
+void Parameters::check() const {
+    if (this->n_rows < 3) {
+        std::cerr << "Invalid number of rows: " << this->n_rows
+                  << " (must be greater or equal to 3)" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    if (this->n_columns < 3) {
+        std::cerr << "Invalid number of columns: " << this->n_columns
+                  << " (must be greater or equal to 3)" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    if (this->n_iterations < this->images_interval) {
+        std::cerr << "Number of iterations lower than number of iterations "
+                     "between snapshots: "
+                  << this->n_iterations << " < " << this->images_interval
+                  << std::endl;
+        exit(EXIT_FAILURE);
+    }
 }

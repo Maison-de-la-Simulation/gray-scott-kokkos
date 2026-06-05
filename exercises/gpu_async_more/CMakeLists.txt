@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(
-    GrayScottKokkosGPUAsync
+    GrayScottKokkosGPUAsyncMore
     LANGUAGES CXX
     VERSION 0.1.0
 )
@@ -9,17 +9,17 @@ project(
 include(../dependencies.cmake)
 include(../common.cmake)
 
-add_executable(gray_scott_gpu_async)
+add_executable(gray_scott_gpu_async_more)
 
 target_sources(
-    gray_scott_gpu_async
+    gray_scott_gpu_async_more
     PRIVATE
-        gray_scott_gpu_async.cpp
+        gray_scott_gpu_async_more.cpp
 )
 
 target_link_libraries(
-    gray_scott_gpu_async
+    gray_scott_gpu_async_more
     PRIVATE
         Kokkos::kokkos
-        common
+        common_kokkos
 )
