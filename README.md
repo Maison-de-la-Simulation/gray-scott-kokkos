@@ -11,7 +11,8 @@ This repository contains the Kokkos courses and exercises for the Gray-Scott Sch
   - The GPU course is `kokkos_gpu`.
 - The `exercises` folder contains the exercises associated to the course, based on the Gray-Scott equation:
   - The `common` folder contains common files for all implementations;
-  - The `sequential` folder contains the sequential implementation of the equation;
+  - The `hello_world` folder contains a simple test code to check the installation of Kokkos is successful;
+  - The `sequential` folder contains the sequential implementation of the Gray-Scott equation;
   - The `cpu` folder contains the Kokkos CPU implementation (note it cannot be run with a GPU backend);
   - The `cpu_simd` folder contains the Kokkos CPU implementation using SIMD (note it cannot be run with a GPU backend);
   - The `gpu` folder contains the Kokkos GPU implementation;

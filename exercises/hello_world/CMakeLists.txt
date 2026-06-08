@@ -6,6 +6,8 @@ project(
     VERSION 0.1.0
 )
 
+set(NO_HDF5 ON)
+set(NO_CLI11 ON)
 include(../dependencies.cmake)
 
 add_executable(gray_scott_hello)

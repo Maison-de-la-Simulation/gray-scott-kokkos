@@ -9,6 +9,7 @@ project(
 include(dependencies.cmake)
 include(common.cmake)
 
+add_subdirectory(hello_world)
 add_subdirectory(sequential)
 add_subdirectory(cpu)
 add_subdirectory(cpu_simd)
