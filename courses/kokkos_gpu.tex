@@ -1546,9 +1546,9 @@
             \includegraphics[width=\linewidth]{profile_gpu}
 
             \begin{enumerate}
-                \item 10 computations \structure{(GPU)}
-                \item Synchronization \structure{(GPU-CPU)}
-                \item Writing \structure{(CPU)}, slow because of the filesystem
+                \item 10 computes \structure{(GPU)}
+                \item 1 copy D-to-H \structure{(GPU-CPU)}
+                \item 1 write \structure{(CPU)}, slow because of the filesystem
             \end{enumerate}
         \end{column}
         \pause
@@ -1556,11 +1556,11 @@
             \centering
             \begin{tikzpicture}[node distance=1em]
                 \node (compute) {compute $\times$ 10};
-                \node[below=of compute] (synchronize) {synchronize};
-                \node[below=of synchronize] (write) {write};
+                \node[below=of compute] (copy-d-to-h) {copy D-to-H};
+                \node[below=of copy-d-to-h] (write) {write};
 
-                \draw[->] (compute) -- (synchronize);
-                \draw[->] (synchronize) -- (write);
+                \draw[->] (compute) -- (copy-d-to-h);
+                \draw[->] (copy-d-to-h) -- (write);
 
                 \begin{uncoverenv}<3->
                     \node[above=of compute] (write-before) {write};
@@ -1588,11 +1588,11 @@
             \centering
             \begin{tikzpicture}[node distance=1em]
                 \node (compute) {compute $\times$ 10};
-                \node[below=of compute] (synchronize) {synchronize};
-                \node[below=of synchronize] (write) {write};
+                \node[below=of compute] (copy-d-to-h) {copy-d-to-h};
+                \node[below=of copy-d-to-h] (write) {write};
 
-                \draw[->] (compute) -- (synchronize);
-                \draw[->] (synchronize) -- (write);
+                \draw[->] (compute) -- (copy-d-to-h);
+                \draw[->] (copy-d-to-h) -- (write);
 
                 \node[above=of compute] (write-before) {write};
                 \node[below=of write] (compute-after) {compute $\times$ 10};
@@ -1612,22 +1612,22 @@
             \begin{uncoverenv}<3->
                 \begin{tikzpicture}[node distance=1em]
                     \node (compute) {compute $\times$ 10};
-                    \node[below=of compute] (synchronize) {synchronize};
-                    \node[below=of synchronize] (write) {write};
+                    \node[below=of compute] (copy-d-to-h) {copy D-to-H};
+                    \node[below=of copy-d-to-h] (write) {write};
 
-                    \draw[->] (compute) -- (synchronize);
-                    \draw[->] (synchronize) -- (write);
+                    \draw[->] (compute) -- (copy-d-to-h);
+                    \draw[->] (copy-d-to-h) -- (write);
 
                     \node[left=of compute] (write-before) {write};
                     \node[right=of write] (compute-after) {compute $\times$ 10};
 
-                    \draw[->] (synchronize) -- (compute-after);
+                    \draw[->] (copy-d-to-h) -- (compute-after);
 
                     \node[above=of write-before] (ellipsis-before) {...};
                     \node[below=of compute-after] (ellipsis-after) {...};
 
                     \draw[->] (ellipsis-before) -- (compute);
-                    \draw[->] (write-before) -- (synchronize);
+                    \draw[->] (write-before) -- (copy-d-to-h);
                     \draw[->] (ellipsis-before) -- (write-before);
                     \draw[->] (compute-after) -- (ellipsis-after);
                     \draw[->] (write) -- (ellipsis-after);
@@ -1648,22 +1648,22 @@
             \centering
             \begin{tikzpicture}[node distance=1em]
                 \node (compute) {compute $\times$ 10};
-                \node[below=of compute] (synchronize) {synchronize};
-                \node[below=of synchronize] (write) {write};
+                \node[below=of compute] (copy-d-to-h) {copy D-to-H};
+                \node[below=of copy-d-to-h] (write) {write};
 
-                \draw[->] (compute) -- (synchronize);
-                \draw[->] (synchronize) -- (write);
+                \draw[->] (compute) -- (copy-d-to-h);
+                \draw[->] (copy-d-to-h) -- (write);
 
                 \node[left=of compute] (write-before) {write};
                 \node[right=of write] (compute-after) {compute $\times$ 10};
 
-                \draw[->] (synchronize) -- (compute-after);
+                \draw[->] (copy-d-to-h) -- (compute-after);
 
                 \node[above=of write-before] (ellipsis-before) {...};
                 \node[below=of compute-after] (ellipsis-after) {...};
 
                 \draw[->] (ellipsis-before) -- (compute);
-                \draw[->] (write-before) -- (synchronize);
+                \draw[->] (write-before) -- (copy-d-to-h);
                 \draw[->] (ellipsis-before) -- (write-before);
                 \draw[->] (compute-after) -- (ellipsis-after);
                 \draw[->] (write) -- (ellipsis-after);
@@ -1725,9 +1725,9 @@
             \includegraphics[width=\linewidth]{profile_gpu_async}
 
             \begin{enumerate}
-                \item Synchronization \structure{(GPU-CPU)}, slow because of the PCIe bus
+                \item 1 copy D-to-H \structure{(GPU-CPU)}, slow because of the PCIe bus
                 \item 10 computations \structure{(GPU)}
-                \item Writing \structure{(CPU, hidden)}
+                \item 1 write \structure{(CPU, hidden)}
             \end{enumerate}
         \end{column}
         \pause
@@ -1735,22 +1735,22 @@
             \centering
             \begin{tikzpicture}[node distance=1em]
                 \node (compute) {compute $\times$ 10};
-                \node[below=of compute] (synchronize) {synchronize};
-                \node[below=of synchronize] (write) {write};
+                \node[below=of compute] (copy-d-to-h) {copy D-to-H};
+                \node[below=of copy-d-to-h] (write) {write};
 
-                \draw[->] (compute) -- (synchronize);
-                \draw[->] (synchronize) -- (write);
+                \draw[->] (compute) -- (copy-d-to-h);
+                \draw[->] (copy-d-to-h) -- (write);
 
                 \node[left=of compute] (write-before) {write};
                 \node[right=of write] (compute-after) {compute $\times$ 10};
 
-                \draw[->] (synchronize) -- (compute-after);
+                \draw[->] (copy-d-to-h) -- (compute-after);
 
                 \node[above=of write-before] (ellipsis-before) {...};
                 \node[below=of compute-after] (ellipsis-after) {...};
 
                 \draw[->] (ellipsis-before) -- (compute);
-                \draw[->] (write-before) -- (synchronize);
+                \draw[->] (write-before) -- (copy-d-to-h);
                 \draw[->] (ellipsis-before) -- (write-before);
                 \draw[->] (compute-after) -- (ellipsis-after);
                 \draw[->] (write) -- (ellipsis-after);
@@ -1765,22 +1765,22 @@
             \centering
             \begin{tikzpicture}[node distance=1em]
                 \node (compute) {compute $\times$ 10};
-                \node[below=of compute] (synchronize) {synchronize};
-                \node[below=of synchronize] (write) {write};
+                \node[below=of compute] (copy-d-to-h) {copy D-to-H};
+                \node[below=of copy-d-to-h] (write) {write};
 
-                \draw[->] (compute) -- (synchronize);
-                \draw[->] (synchronize) -- (write);
+                \draw[->] (compute) -- (copy-d-to-h);
+                \draw[->] (copy-d-to-h) -- (write);
 
                 \node[left=of compute] (write-before) {write};
                 \node[right=of write] (compute-after) {compute $\times$ 10};
 
-                \draw[->] (synchronize) -- (compute-after);
+                \draw[->] (copy-d-to-h) -- (compute-after);
 
                 \node[above=of write-before] (ellipsis-before) {...};
                 \node[below=of compute-after] (ellipsis-after) {...};
 
                 \draw[->] (ellipsis-before) -- (compute);
-                \draw[->] (write-before) -- (synchronize);
+                \draw[->] (write-before) -- (copy-d-to-h);
                 \draw[->] (ellipsis-before) -- (write-before);
                 \draw[->] (compute-after) -- (ellipsis-after);
                 \draw[->] (write) -- (ellipsis-after);
@@ -1791,27 +1791,27 @@
             \begin{uncoverenv}<3->
                 \begin{tikzpicture}[node distance=1em]
                     \node (compute) {compute $\times$ 10};
-                    \node[below=3em of compute] (duplicate) {duplicate};
-                    \node[below=of duplicate] (synchronize) {synchronize};
-                    \node[below=of synchronize] (write) {write};
+                    \node[below=3em of compute] (copy-d-to-d) {copy D-to-D};
+                    \node[below=of copy-d-to-d] (copy-d-to-h) {copy D-to-H};
+                    \node[below=of copy-d-to-h] (write) {write};
 
-                    \draw[->] (compute) -- (duplicate);
-                    \draw[->] (duplicate) -- (synchronize);
-                    \draw[->] (synchronize) -- (write);
+                    \draw[->] (compute) -- (copy-d-to-d);
+                    \draw[->] (copy-d-to-d) -- (copy-d-to-h);
+                    \draw[->] (copy-d-to-h) -- (write);
 
-                    \node[left=of compute] (synchronize-before) {synchronize};
-                    \node[below=of synchronize-before] (write-before) {write};
-                    \node[right=of synchronize] (compute-after) {compute $\times$ 10};
+                    \node[left=of compute] (copy-d-to-h-before) {copy D-to-H};
+                    \node[below=of copy-d-to-h-before] (write-before) {write};
+                    \node[right=of copy-d-to-h] (compute-after) {compute $\times$ 10};
 
-                    \draw[->] (duplicate) -- (compute-after);
+                    \draw[->] (copy-d-to-d) -- (compute-after);
 
-                    \node[above=of synchronize-before] (ellipsis-before) {...};
+                    \node[above=of copy-d-to-h-before] (ellipsis-before) {...};
                     \node[below=3em of compute-after] (ellipsis-after) {...};
 
                     \draw[->] (ellipsis-before) -- (compute);
-                    \draw[->] (write-before) -- (duplicate);
-                    \draw[->] (ellipsis-before) -- (synchronize-before);
-                    \draw[->] (synchronize-before) -- (write-before);
+                    \draw[->] (write-before) -- (copy-d-to-d);
+                    \draw[->] (ellipsis-before) -- (copy-d-to-h-before);
+                    \draw[->] (copy-d-to-h-before) -- (write-before);
                     \draw[->] (compute-after) -- (ellipsis-after);
                     \draw[->] (write) -- (ellipsis-after);
                 \end{tikzpicture}
@@ -1820,7 +1820,7 @@
     \end{columns}
     \begin{uncoverenv}<2->
         \begin{block}{Idea}
-            Synchronize D-to-H can be viewed as duplicate D-to-D, then synchronize D-to-H
+            Copy D-to-H can be viewed as copy D-to-D, then copy D-to-H
         \end{block}
     \end{uncoverenv}
 \end{frame}
@@ -1831,27 +1831,27 @@
             \centering
             \begin{tikzpicture}[node distance=1em]
                 \node (compute) {compute $\times$ 10};
-                \node[below=3em of compute] (duplicate) {duplicate};
-                \node[below=of duplicate] (synchronize) {synchronize};
-                \node[below=of synchronize] (write) {write};
+                \node[below=3em of compute] (copy-d-to-d) {copy D-to-D};
+                \node[below=of copy-d-to-d] (copy-d-to-h) {copy D-to-H};
+                \node[below=of copy-d-to-h] (write) {write};
 
-                \draw[->] (compute) -- (duplicate);
-                \draw[->] (duplicate) -- (synchronize);
-                \draw[->] (synchronize) -- (write);
+                \draw[->] (compute) -- (copy-d-to-d);
+                \draw[->] (copy-d-to-d) -- (copy-d-to-h);
+                \draw[->] (copy-d-to-h) -- (write);
 
-                \node[left=of compute] (synchronize-before) {synchronize};
-                \node[below=of synchronize-before] (write-before) {write};
-                \node[right=of synchronize] (compute-after) {compute $\times$ 10};
+                \node[left=of compute] (copy-d-to-h-before) {copy D-to-H};
+                \node[below=of copy-d-to-h-before] (write-before) {write};
+                \node[right=of copy-d-to-h] (compute-after) {compute $\times$ 10};
 
-                \draw[->] (duplicate) -- (compute-after);
+                \draw[->] (copy-d-to-d) -- (compute-after);
 
-                \node[above=of synchronize-before] (ellipsis-before) {...};
+                \node[above=of copy-d-to-h-before] (ellipsis-before) {...};
                 \node[below=3em of compute-after] (ellipsis-after) {...};
 
                 \draw[->] (ellipsis-before) -- (compute);
-                \draw[->] (write-before) -- (duplicate);
-                \draw[->] (ellipsis-before) -- (synchronize-before);
-                \draw[->] (synchronize-before) -- (write-before);
+                \draw[->] (write-before) -- (copy-d-to-d);
+                \draw[->] (ellipsis-before) -- (copy-d-to-h-before);
+                \draw[->] (copy-d-to-h-before) -- (write-before);
                 \draw[->] (compute-after) -- (ellipsis-after);
                 \draw[->] (write) -- (ellipsis-after);
             \end{tikzpicture}
