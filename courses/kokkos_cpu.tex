@@ -1668,7 +1668,7 @@
         \vspace{-5pt}
         \begin{minted}{C++}
             Kokkos::Experimental::simd<double>
-                x(KOKKOS_LAMBDA(int idx) { return idx * idx; });
+                x([](int idx) { return idx * idx; });
         \end{minted}
         \item Load the values from memory
         \vspace{-5pt}
