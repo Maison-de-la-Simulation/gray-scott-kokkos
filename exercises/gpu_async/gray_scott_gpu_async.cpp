@@ -137,8 +137,12 @@ int main(int argc, char *argv[]) {
     auto v_h = Kokkos::create_mirror_view(v);
 
     // create writer
-    OutputWriter<real> writer("gray_scott.h5", n_images, parameters.n_rows_ext,
-                              parameters.n_columns_ext);
+    OutputWriter<real> writer;
+    if (parameters.write_results) {
+        writer.prepare("gray_scott.h5",
+                       parameters.n_iterations / parameters.images_interval,
+                       parameters.n_rows_ext, parameters.n_columns_ext);
+    }
 
     // initialize fields
     Kokkos::deep_copy(u, 1);
@@ -164,7 +168,9 @@ int main(int argc, char *argv[]) {
     // loop on images
     for (int image = 0; image < n_images; image++) {
         // start duplicate image n - 1 on the host (blocking)
-        Kokkos::deep_copy(v_h, v);
+        if (parameters.write_results) {
+            Kokkos::deep_copy(v_h, v);
+        }
 
         // then batch compute image n (non-blocking)
         for (int iteration = 0; iteration < parameters.images_interval;
@@ -175,12 +181,16 @@ int main(int argc, char *argv[]) {
         }
 
         // finally write image n - 1 (blocking)
-        writer.write(v_h.data());
+        if (parameters.write_results) {
+            writer.write(v.data());
+        }
     }
 
     // write final image
-    Kokkos::deep_copy(v_h, v);
-    writer.write(v_h.data());
+    if (parameters.write_results) {
+        Kokkos::deep_copy(v_h, v);
+        writer.write(v_h.data());
+    }
 
     // checksum
     check(u, parameters.n_iterations);

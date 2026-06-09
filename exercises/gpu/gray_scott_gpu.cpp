@@ -134,9 +134,12 @@ int main(int argc, char *argv[]) {
     auto v_h = Kokkos::create_mirror_view(v);
 
     // create writer
-    OutputWriter<real> writer(
-        "gray_scott.h5", parameters.n_iterations / parameters.images_interval,
-        parameters.n_rows_ext, parameters.n_columns_ext);
+    OutputWriter<real> writer;
+    if (parameters.write_results) {
+        writer.prepare("gray_scott.h5",
+                       parameters.n_iterations / parameters.images_interval,
+                       parameters.n_rows_ext, parameters.n_columns_ext);
+    }
 
     // initialize fields
     Kokkos::deep_copy(u, 1);
@@ -156,7 +159,9 @@ int main(int argc, char *argv[]) {
     }
 
     // write init
-    writer.write(v_h.data());
+    if (parameters.write_results) {
+        writer.write(v.data());
+    }
 
     // temporary fields (with halo)
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
@@ -169,7 +174,8 @@ int main(int argc, char *argv[]) {
         std::swap(v, v_temp);
 
         // write image every images_interval iterations
-        if (iteration % parameters.images_interval == 0) {
+        if (iteration % parameters.images_interval == 0 and
+            parameters.write_results) {
             Kokkos::deep_copy(v_h, v);
             writer.write(v_h.data());
         }

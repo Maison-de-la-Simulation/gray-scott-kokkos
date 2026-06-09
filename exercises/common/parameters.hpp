@@ -21,6 +21,9 @@ struct Parameters {
     // debug
     bool display_fields = false;
 
+    // ios
+    bool write_results = true;
+
     /**
      * @brief Default constructor.
      */
