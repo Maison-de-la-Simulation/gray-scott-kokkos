@@ -62,6 +62,55 @@
     \titlepage
 \end{frame}
 
+\begin{frame}{About this course}
+    \begin{enumerate}
+        \item CPU course (July the 25\textsuperscript{th})
+        \item GPU course (today!)
+    \end{enumerate}
+\end{frame}
+
+\begin{frame}[fragile]{Previously in Kokkos}
+    \vspace{-1em}
+
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[fontsize=\scriptsize]{C++}
+                #include <Kokkos_Core.hpp>
+
+                int main(int argc, char* argv[]) {
+                    Kokkos::ScopeGuard kokkos(argc, argv);
+
+                    Kokkos::View<int **>
+                        view("view", 10, 20);
+
+                    Kokkos::parallel_for(
+                        "compute",
+                        Kokkos::MDRangePolicy<
+                            Kokkos::Range<2>
+                        >({0, 0}, {10, 20}),
+                        KOKKOS_LAMBDA (int i, int j) {
+                            view(i, j) = i + j;
+                        }
+                    );
+                }
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \small
+            \begin{itemize}
+                \item \mintinline{C++}|#include <Kokkos_Core.hpp>| the main Kokkos header
+                \item \mintinline{C++}|ScopeGuard| or \mintinline{C++}|initialize|/\break\mintinline{C++}|finalize| before or around Kokkos code
+                \item \mintinline{C++}|View| for multidimensional containers
+                \item \mintinline{C++}|parallel_for| for parallel loops
+                \item \mintinline{C++}|parallel_reduce| for parallel reductions
+                \item \mintinline{C++}|RangePolicy| for single-dimension iteration spaces
+                \item \mintinline{C++}|MDRangePolicy| for multidimensional iteration spaces
+                \item \mintinline{C++}|KOKKOS_LAMBDA| for the lambdas
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Outline}
     \renewcommand{\baselinestretch}{0.5}
     \tableofcontents
