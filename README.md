@@ -1,6 +1,7 @@
 # Gray-Scott School Kokkos
 
 [![Exercises](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/exercises.yml/badge.svg)](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/exercises.yml)
+[![Courses](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/courses.yml/badge.svg)](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/courses.yml)
 
 ## Presentation
 
