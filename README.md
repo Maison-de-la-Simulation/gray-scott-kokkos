@@ -1,5 +1,7 @@
 # Gray-Scott School Kokkos
 
+[![Exercises](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/exercises.yml/badge.svg)](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/exercises.yml)
+
 ## Presentation
 
 This repository contains the Kokkos courses and exercises for the Gray-Scott School 2026.
