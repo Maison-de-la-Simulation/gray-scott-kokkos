@@ -23,3 +23,8 @@ target_link_libraries(
         Kokkos::kokkos
         common_kokkos
 )
+
+add_test(
+    NAME gray_scott_gpu_async
+    COMMAND gray_scott_gpu_async
+)
