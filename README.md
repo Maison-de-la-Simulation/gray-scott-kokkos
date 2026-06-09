@@ -20,7 +20,10 @@ This repository contains the Kokkos courses and exercises for the Gray-Scott Sch
   - The `cpu_simd` folder contains the Kokkos CPU implementation using SIMD (note it cannot be run with a GPU backend);
   - The `gpu` folder contains the Kokkos GPU implementation;
   - The `gpu_async` folder contains the Kokkos GPU implementation with asynchronous writing of the results;
-  - The `gpu_async_more` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results.
+  - The `gpu_async_more` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results;
+  - The `scripts` folder contains some tools to run the built implementations:
+    - `run_all.sh` runs all known implementations binaries given a build directory (useful for a top-level build only);
+    - `check_outcome.sh` run an implementation binary for the 10 × 10 case and check the checksums.
 
 ## Courses
 
