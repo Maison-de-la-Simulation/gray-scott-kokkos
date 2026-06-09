@@ -32,6 +32,14 @@
     fontsize=\scriptsize,
 }
 
+% Captions
+\renewcommand{\caption}[1]{%
+    \begin{center}
+        \color{darkgray}
+        \scriptsize #1
+    \end{center}%
+}
+
 \graphicspath{{images/}}
 
 %Information to be included in the title page:
@@ -102,6 +110,20 @@
             \end{center}
         \end{column}
     \end{columns}
+\end{frame}
+
+\begin{frame}{Compilers minimum version}
+    \begin{center}
+        \small
+        \begin{table}{Compilers}{lll}
+            Name       & Cmd.             & Min.\ ver. \\\hline
+            Clang      & \texttt{clang++} & 15.0.0     \\
+            GCC        & \texttt{g++}     & 10.4.0     \\
+            Intel LLVM & \texttt{icpx}    & 2024.2.1   \\
+            NVHPC      & \texttt{nvc++}   & 22.3       \\
+            ROCM       & \texttt{hipcc}   & 6.2.0
+        \end{table}
+    \end{center}
 \end{frame}
 
 \begin{frame}{Warning regarding the backends}
@@ -206,12 +228,11 @@
 
             \vspace{-0.5em}
 
-            \begin{minted}{sh}
+            \begin{minted}[breakafter={=}]{sh}
                 cmake \
                     -B ${build_dir} \
                     -DCMAKE_CXX_COMPILER=icpx \
-                    -DCMAKE_CXX_FLAGS=\
-                        "-fp-model=precise" \
+                    -DCMAKE_CXX_FLAGS="-fp-model=precise" \
                     -DKokkos_ENABLE_OPENMP=ON \
                     -DKokkos_ARCH_SKX=ON \
                     -DKokkos_ENABLE_SYCL=ON \
@@ -234,27 +255,42 @@
 
 \begin{exerciseframe}{Build Kokkos for a GPU backend}
     \begin{columns}
-        \begin{column}{0.55\linewidth}
+        \begin{column}{0.475\linewidth}
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
                     -B build/cuda \
-                    -DCMAKE_INSTALL_PREFIX=${path_to_install}/cuda \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ENABLE_CUDA=ON \
-                    -DKokkos_ARCH_XXXX=ON
+                    -DKokkos_ARCH_XXX=ON
 
                 cmake \
                     --build build/cuda \
                     --parallel 4
 
-                cmake --install build/cuda
+                cmake \
+                    --install build/cuda \
+                    --prefix $HOME/opt/kokkos/cuda
             \end{minted}
         \end{column}
-        \begin{column}{0.45\linewidth}
+        \begin{column}{0.525\linewidth}
             \begin{itemize}
                 \item Build and install Kokkos with the CUDA backend
-                \item Enable CUDA architecture XXXX
+                \item Enable CUDA architecture \texttt{XXX}
             \end{itemize}
+            \vspace{1em}
+
+            \begin{center}
+                \scriptsize
+                \begin{table}{Usual GPU architectures}{ll}
+                    GPU model & Option \\\hline
+                    AMD MI300A & \texttt{-DKokkos\_ARCH\_AMD\_GFX942\_APU=ON} \\
+                    AMD MI300X & \texttt{-DKokkos\_ARCH\_AMD\_GFX942=ON} \\
+                    AMD MI250X & \texttt{-DKokkos\_ARCH\_AMD\_GFX90A=ON} \\
+                    NVIDIA H200 & \texttt{-DKokkos\_ARCH\_HOPPER90=ON} \\
+                    NVIDIA A100 & \texttt{-DKokkos\_ARCH\_AMPERE80=ON} \\
+                    NVIDIA V100 & \texttt{-DKokkos\_ARCH\_VOLTA70=ON}
+                \end{table}
+            \end{center}
         \end{column}
     \end{columns}
 \end{exerciseframe}
@@ -266,11 +302,10 @@
                 cmake \
                     -B build/cuda \
                     -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=${path_to_install}/cuda
+                    -DKokkos_ROOT=$HOME/opt/kokkos/cuda
 
                 cmake \
-                    --build build/cuda \
-                    --parallel 4
+                    --build build/cuda
             \end{minted}
         \end{column}
         \begin{column}{0.45\linewidth}
@@ -1190,25 +1225,26 @@
 
 \begin{exerciseframe}{Build Kokkos-Tools}
     \begin{columns}
-        \begin{column}{0.5\linewidth}
+        \begin{column}{0.6\linewidth}
             \begin{minted}[breakafter={=,/}, fontsize=\scriptsize]{C++}
                 cmake \
                     -B build/cuda \
                     -DCMAKE_BUILD_TYPE=Release \
-                    -DCMAKE_INSTALL_PREFIX=${path_to_install}/cuda/tools
-                    -DKokkos_ROOT=${path_to_install}/cuda
+                    -DKokkos_ROOT=$HOME/opt/kokkos/cuda
 
                 cmake \
                     --build build/cuda \
                     --parallel 4
 
-                cmake --install build/cuda
+                cmake \
+                    --install build/cuda \
+                    --prefix $HOME/opt/kokkos_tools/cuda
 
-                export PATH=${path_to_install}/cuda/tools/bin:$PATH
-                export LD_LIBRARY_PATH=${path_to_install}/cuda/tools/lib:$LD_LIBRARY_PATH
+                export PATH=$HOME/opt/kokkos_tools/cuda/bin:$PATH
+                export LD_LIBRARY_PATH=$HOME/opt/kokkos_tools/cuda/lib:$LD_LIBRARY_PATH
             \end{minted}
         \end{column}
-        \begin{column}{0.5\linewidth}
+        \begin{column}{0.4\linewidth}
             \begin{itemize}
                 \item Build and install Kokkos-Tools for the installed instance of Kokkos
                 \item Adjust the \texttt{PATH} and \texttt{LD\_LIBRARY\_PATH} environment variables
@@ -1234,7 +1270,7 @@
                 nsys profile \
                     -o report \
                     ./my_program \
-                    --kokkos-tools-libs=libkp_nvtx_connector.so
+                        --kokkos-tools-libs=libkp_nvtx_connector.so
 
                 nsys-ui report.nsys-rep
             \end{minted}
@@ -1506,6 +1542,7 @@
 \begin{frame}{What is the current workflow?}
     \begin{columns}
         \begin{column}{0.4\linewidth}
+            \caption{Profiling of a 1000 by 1000 case \\ on a A500 GPU}
             \includegraphics[width=\linewidth]{profile_gpu}
 
             \begin{enumerate}
@@ -1671,7 +1708,7 @@
                 Kokkos::parallel_for(
                     "my streamed kernel",
                     Kokkos::RangePolicy(
-                        instances[0], 0, n
+                        instances[0], 0, N
                     ),
                     /* ... */
                 );
@@ -1683,6 +1720,8 @@
 \begin{frame}{What is the current workflow?}
         \begin{columns}
         \begin{column}{0.4\linewidth}
+            \caption{Profiling of a 1000 by 1000 case \\ on a A500 GPU}
+
             \includegraphics[width=\linewidth]{profile_gpu_async}
 
             \begin{enumerate}

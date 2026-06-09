@@ -32,8 +32,10 @@
 }
 
 % Captions
+% Captions
 \renewcommand{\caption}[1]{%
     \begin{center}
+        \color{darkgray}
         \scriptsize #1
     \end{center}%
 }
@@ -224,6 +226,30 @@
     \missingfigure{Description of the images}
 \end{frame}
 
+\begin{exerciseframe}{Initialization}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={/}]{sh}
+                git clone https://github.com/Maison-de-la-Simulation/gray-scott-kokkos.git
+
+                cd gray-scott-kokkos
+
+                srun ... --pty /bin/bash
+
+                apptainer run ...
+            \end{minted}
+            \missingfigure{fill out the blanks}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Clone the Gray-Scott Kokkos repository
+                \item Reserve a job for the day/half a day
+                \item Run Apptainer on the image
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
 \section{Starting with the serial backend}
 
 \begin{frame}{The notion of backend in Kokkos}
@@ -250,14 +276,15 @@
 
             \begin{minted}{bash}
                 cmake \
-                  -B ${build_dir} \
-                  -DCMAKE_BUILD_TYPE=Release \
-                  -DCMAKE_CXX_COMPILER=g++ \
-                  -DCMAKE_INSTALL_PREFIX=${path_to_kokkos}
+                    -B ${build_dir} \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DCMAKE_CXX_COMPILER=g++
                 cmake \
-                  --build ${build_dir} \
-                  --parallel ${jobs}
-                cmake --install ${build_dir}
+                    --build ${build_dir} \
+                    --parallel ${jobs}
+                cmake \
+                    --install ${build_dir} \
+                    --prefix ${path_to_kokkos}
             \end{minted}
         \end{column}
         \pause
@@ -401,14 +428,15 @@
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
                     -B build/serial \
-                    -DCMAKE_INSTALL_PREFIX=${path_to_install}/serial \
                     -DCMAKE_BUILD_TYPE=Release
 
                 cmake \
                     --build build/serial \
                     --parallel 4
 
-                cmake --install build/serial
+                cmake \
+                    --install build/serial \
+                    --prefix $HOME/opt/kokkos/serial
             \end{minted}
         \end{column}
         \begin{column}{0.45\linewidth}
@@ -544,11 +572,10 @@
                 cmake \
                     -B build/serial \
                     -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=${path_to_install}/serial
+                    -DKokkos_ROOT=$HOME/opt/kokkos/serial
 
                 cmake \
-                    --build build/serial \
-                    --parallel 4
+                    --build build/serial
             \end{minted}
         \end{column}
         \begin{column}{0.5\linewidth}
@@ -571,8 +598,7 @@
                     -DCMAKE_BUILD_TYPE=Release
 
                 cmake \
-                    --build build/serial \
-                    --parallel 4
+                    --build build/serial
             \end{minted}
         \end{column}
         \begin{column}{0.5\linewidth}
@@ -915,7 +941,7 @@
                 }
             \end{minted}
             \begin{block}{Note}
-                Only works on CPUs (need \texttt{target} directive for GPUs)
+                Only works on CPUs (needs the \texttt{target} directive for GPUs)
             \end{block}
         \end{column}
         \pause
@@ -985,9 +1011,9 @@
         \begin{column}{0.5\linewidth}
             \begin{itemize}
                 \item A lambda is a C++ anonymous function (i.e. a function as an object)
-                \item It has explicit arguments (\mintinline{C++}{int i}) and captured objects (\texttt{A}, \texttt{B}, \texttt{C}, \texttt{D})
+                \item It has explicit arguments (\mintinline{C++}|int i|) and captured objects (\mintinline{C++}|A|, \mintinline{C++}|B|, \mintinline{C++}|C|, \mintinline{C++}|D|)
                 \item \texttt{KOKKOS\_LAMBDA} is a macro that creates a lambda function with the correct capture for you (and a bit more)
-                \item For beginners, no need to understand C++ lambdas to use Kokkos
+                \item We will give more details about it next week
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1005,7 +1031,7 @@
             \begin{itemize}
                 \item Kokkos way to tell how a loop is executed: \structure{execution policy}
                 \item \mintinline{c++}|RangePolicy| for single-dimensional loops
-                \item \mintinline{c++}|ExecutionSpace| for specifying where the loop is executed (we'll discuss about this next week, you can keep the default now)
+                \item \mintinline{c++}|ExecutionSpace| for specifying where the loop is executed (we'll discuss about this next week, you can keep the default value for now)
                 \item \mintinline{c++}|start_index| and \mintinline{c++}|end_index| are the beginning (inclusive) and the end (exclusive) of the loop
             \end{itemize}
         \end{column}
@@ -1080,7 +1106,7 @@
         \begin{column}{0.66\linewidth}
             \begin{minted}{C++}
                 Kokkos::MDRangePolicy<
-                    Kokkos::Rank<n>
+                    Kokkos::Rank<N>
                 > policy(
                     {start_index_0, /* ... */, start_index_n},
                     {end_index_0, /* ... */, end_index_n}
@@ -1106,7 +1132,10 @@
                     "my_loop",
                     Kokkos::MDRangePolicy<
                         Kokkos::Rank<2>
-                    >({0, 0}, {Nx, Ny}),
+                    >(
+                        {0, 0},
+                        {Nx, Ny}
+                    ),
                     KOKKOS_LAMBDA (int i, int j) {
                         A(i, j) = i + j;
                     }
@@ -1131,7 +1160,10 @@
                     "my_loop",
                     Kokkos::MDRangePolicy<
                         Kokkos::Rank<2>
-                    >({0, 0}, {Nx, Ny}),
+                    >(
+                        {0, 0},
+                        {Nx, Ny}
+                    ),
                     KOKKOS_LAMBDA (int i, int j) {
                         A(i, j) = i + j;
                     }
@@ -1397,7 +1429,6 @@
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
                     -B build/openmp \
-                    -DCMAKE_INSTALL_PREFIX=${path_to_install}/openmp \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ENABLE_OPENMP=ON \
                     -DKokkos_ARCH_NATIVE=ON
@@ -1406,7 +1437,9 @@
                     --build build/openmp \
                     --parallel 4
 
-                cmake --install build/openmp
+                cmake \
+                    --install build/openmp \
+                    --prefix $HOME/opt/kokkos/openmp
             \end{minted}
         \end{column}
         \begin{column}{0.45\linewidth}
@@ -1425,11 +1458,10 @@
                 cmake \
                     -B build/openmp \
                     -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=${path_to_install}/openmp
+                    -DKokkos_ROOT=$HOME/opt/kokkos/openmp
 
                 cmake \
-                    --build build/openmp \
-                    --parallel 4
+                    --build build/openmp
             \end{minted}
         \end{column}
         \begin{column}{0.45\linewidth}
@@ -1530,13 +1562,14 @@
             \begin{minted}{C++}
                 #pragma ivdep
                 for (int i = 0; i < m; i++)
-                a[i] = a[i + k] * c;
+                    a[i] = a[i + k] * c;
             \end{minted}
             \begin{minted}{C++}
                 Kokkos::parallel_for("loop", m,
-                KOKKOS_LAMBDA(int i) {
-                    a(i) = a(i + k) * c;
-                });
+                    KOKKOS_LAMBDA(int i) {
+                        a(i) = a(i + k) * c;
+                    }
+                );
             \end{minted}
         \end{column}
     \end{columns}
@@ -1683,11 +1716,12 @@
     A loop typically has the following structure:
     \begin{minted}{C++}
         Kokkos::parallel_for("loop", N,
-        KOKKOS_LAMBDA(int i) {
-            // load input data
-            // do some computation
-            // store the result
-        });
+            KOKKOS_LAMBDA(int i) {
+                // load input data
+                // do some computation
+                // store the result
+            }
+        );
     \end{minted}
 
 \end{frame}
@@ -1696,11 +1730,12 @@
     A vectorized loop follows the same pattern:
     \begin{minted}{C++}
         Kokkos::parallel_for("vectorized loop", N / VEC_WIDTH,
-        KOKKOS_LAMBDA(int i) {
-            // load input data into vectors
-            // do some computation
-            // store the result vector in memory
-        });
+            KOKKOS_LAMBDA(int i) {
+                // load input data into vectors
+                // do some computation
+                // store the result vector in memory
+            }
+        );
     \end{minted}
     \begin{block}{Note}
         We iterate from 0 to \texttt{N / VEC\_WIDTH}, since we compute \texttt{VEC\_WIDTH} elements per iteration
