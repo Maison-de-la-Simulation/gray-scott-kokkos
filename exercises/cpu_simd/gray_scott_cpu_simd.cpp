@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
     // time loop
-    for (int iteration = 0; iteration < parameters.n_iterations; iteration++) {
+    for (int iteration = 1; iteration <= parameters.n_iterations; iteration++) {
         compute(u, v, u_temp, v_temp);
         std::swap(u, u_temp);
         std::swap(v, v_temp);
