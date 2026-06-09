@@ -25,3 +25,12 @@ add_subdirectory(cpu_simd)
 add_subdirectory(gpu)
 add_subdirectory(gpu_async)
 add_subdirectory(gpu_async_more)
+
+message(
+    WARNING
+    "You are about to perform a top-level build, which is usually done by "
+    "developers or by the CI."
+    "\n"
+    "If you are doing the exercises while following the course, you should "
+    "build each implementation folder separately instead."
+)
