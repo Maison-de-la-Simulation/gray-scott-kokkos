@@ -27,3 +27,8 @@ target_link_libraries(
         Kokkos::kokkos
         common
 )
+
+add_test(
+    NAME gray_scott_cpu_simd
+    COMMAND gray_scott_cpu_simd
+)

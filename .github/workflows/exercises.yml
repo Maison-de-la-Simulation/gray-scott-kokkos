@@ -1,0 +1,62 @@
+name: Test exercises
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - 'exercises/**'
+
+jobs:
+  build_test_exercises:
+    runs-on: ubuntu-latest
+    container:
+      image: gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive:latest
+      options: --user root
+    steps:
+      - name: Set up Git repository
+        uses: actions/checkout@v4
+      - name: Set ownership of sources in the image
+        run: |
+          git config --global --add safe.directory /src/kokkos
+          git config --global --add safe.directory /src/kokkos-tools
+      - name: Prepare Kokkos with the OpenMP backend
+        run: |
+          cmake \
+            -B /tmp/build/kokkos \
+            -S /src/kokkos \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DKokkos_ENABLE_OPENMP=ON
+      - name: Build Kokkos
+        run: |
+          cmake \
+            --build /tmp/build/kokkos \
+            --parallel $(($(nproc) * 2 + 1))
+      - name: Install Kokkos
+        run: |
+          cmake \
+            --install /tmp/build/kokkos \
+            --prefix /opt/kokkos
+      - name: Prepare all exercices
+        run: |
+          cmake \
+            -B /tmp/build/exercises \
+            -S exercises \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DKokkos_ROOT=/opt/kokkos \
+            -DENABLE_TESTS=ON
+      - name: Build all exercises
+        run: |
+          cmake \
+            --build /tmp/build/exercises \
+            --parallel $(($(nproc) * 2 + 1))
+      - name: Test all exercises
+        env:
+          OMP_PROC_BIND: spread
+          OMP_PLACES: threads
+          OMP_NUM_THREADS: 2
+        run: |
+          ctest \
+            --test-dir /tmp/build/exercises \
+            --output-on-failure

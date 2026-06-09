@@ -23,3 +23,8 @@ target_link_libraries(
     PRIVATE
         common_pod
 )
+
+add_test(
+    NAME gray_scott_sequential
+    COMMAND gray_scott_sequential
+)
