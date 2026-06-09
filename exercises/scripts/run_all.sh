@@ -7,11 +7,11 @@ then
     cat <<EOF
 run_all.sh [-h] DIRECTORY
 
-Runn all Gray-Scott Kokkos implementations for the 10 × 10 case.
+Run all Gray-Scott Kokkos implementations for the 10 × 10 case.
 
 Positional arguments:
     DIRECTORY
-        Path to the build directory where the implemtation directories are
+        Path to the build directory where the implementation directories are
         present.
 
 Optional arguments:

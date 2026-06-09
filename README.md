@@ -76,7 +76,7 @@ You can still install HDF5 with your system package manager.
 ### Compilation
 
 ```sh
-cmake --build build --parallell ${number_of_jobs}
+cmake --build build --parallel ${number_of_jobs}
 ```
 
 ### Cluster configuration
