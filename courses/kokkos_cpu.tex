@@ -245,23 +245,34 @@
 
 \begin{exerciseframe}{Initialization}
     \begin{columns}
-        \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={/}]{sh}
+        \begin{column}{0.6\linewidth}
+            \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
                 git clone https://github.com/Maison-de-la-Simulation/gray-scott-kokkos.git
 
                 cd gray-scott-kokkos
 
                 srun ... --pty /bin/bash
 
-                apptainer run ...
+                REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
+
+                # pick one
+                apptainer run $REPO/kokkos_cpu_interactive
+                apptainer run $REPO/kokkos_cpu_interactive_jupyter
+                apptainer run $REPO/kokkos_cpu_interactive_vscode
+                apptainer run $REPO/kokkos_cpu_learning_platform_code_server
             \end{minted}
-            \missingfigure{fill out the blanks}
         \end{column}
-        \begin{column}{0.5\linewidth}
+        \begin{column}{0.4\linewidth}
             \begin{itemize}
                 \item Clone the Gray-Scott Kokkos repository
-                \item Reserve a job for the day/half a day
-                \item Run Apptainer on the image
+                \item Reserve a job for the day/half a day (ask your satellite staff)
+                \item Run Apptainer with the desired image
+                \begin{itemize}
+                    \item No editor
+                    \item Jupyter
+                    \item VSCode
+                    \item CodeServer
+                \end{itemize}
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1398,7 +1409,42 @@
     \end{columns}
 \end{exerciseframe}
 
-\section{Moving to a CPU backend}
+\section{Moving to a parallel CPU backend}
+
+\begin{exerciseframe}{(Re-)Initialization}
+    \begin{columns}
+        \begin{column}{0.6\linewidth}
+            \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
+                git clone https://github.com/Maison-de-la-Simulation/gray-scott-kokkos.git
+
+                cd gray-scott-kokkos
+
+                srun ... --pty /bin/bash
+
+                REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
+
+                # pick one
+                apptainer run $REPO/kokkos_cpu_interactive
+                apptainer run $REPO/kokkos_cpu_interactive_jupyter
+                apptainer run $REPO/kokkos_cpu_interactive_vscode
+                apptainer run $REPO/kokkos_cpu_learning_platform_code_server
+            \end{minted}
+        \end{column}
+        \begin{column}{0.4\linewidth}
+            \begin{itemize}
+                \item Clone the Gray-Scott Kokkos repository (if not already)
+                \item Reserve a job for half a day (if needed, ask your satellite staff)
+                \item Run Apptainer with the desired image
+                \begin{itemize}
+                    \item No editor
+                    \item Jupyter
+                    \item VSCode
+                    \item CodeServer
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
 
 \begin{frame}{The notion of backend in Kokkos}
     \begin{itemize}
