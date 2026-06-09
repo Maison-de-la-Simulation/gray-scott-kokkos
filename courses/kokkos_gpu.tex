@@ -554,7 +554,7 @@
 
     \begin{itemize}
         \item If Kokkos is compiled with a \structure{GPU backend}, the View data is allocated in the \structure{Device memory}
-        \item Shared view data \structure{can} be accessed from the Host, as the data are synchronized in chunks on automatically by the OS and the driver
+        \item Shared view data \structure{can} be accessed from the Host by pages, which is managed by the OS and the driver
         \item Convenient, but comes with a slight performance cost
     \end{itemize}
 \end{frame}
