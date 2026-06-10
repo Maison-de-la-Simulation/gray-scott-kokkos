@@ -120,9 +120,12 @@ int main(int argc, char *argv[]) {
     real *v = new real[parameters.n_rows_ext * parameters.n_columns_ext];
 
     // create writer
-    OutputWriter<real> writer(
-        "gray_scott.h5", parameters.n_iterations / parameters.images_interval,
-        parameters.n_rows_ext, parameters.n_columns_ext);
+    OutputWriter<real> writer;
+    if (parameters.write_results) {
+        writer.prepare("gray_scott.h5",
+                       parameters.n_iterations / parameters.images_interval,
+                       parameters.n_rows_ext, parameters.n_columns_ext);
+    }
 
     // initialize fields
     for (std::size_t i = 0;
@@ -143,7 +146,9 @@ int main(int argc, char *argv[]) {
     }
 
     // write init
-    writer.write(v);
+    if (parameters.write_results) {
+        writer.write(v);
+    }
 
     // temporary fields (with halo)
     real *u_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
@@ -158,7 +163,8 @@ int main(int argc, char *argv[]) {
         std::swap(v, v_temp);
 
         // write image every images_interval iterations
-        if (iteration % parameters.images_interval == 0) {
+        if (iteration % parameters.images_interval == 0 and
+            parameters.write_results) {
             writer.write(v);
         }
     }
