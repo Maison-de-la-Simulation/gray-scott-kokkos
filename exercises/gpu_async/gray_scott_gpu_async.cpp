@@ -134,7 +134,8 @@ int main(int argc, char *argv[]) {
 
     // mirrors of the fields (with halo)
     auto u_h = Kokkos::create_mirror_view(u);
-    auto v_h = Kokkos::create_mirror_view(v);
+    // beware that v_h is always allocated
+    auto v_h = Kokkos::create_mirror(v);
 
     // create writer
     OutputWriter<real> writer;
@@ -173,7 +174,7 @@ int main(int argc, char *argv[]) {
         }
 
         // then batch compute image n (non-blocking)
-        for (int iteration = 0; iteration < parameters.images_interval;
+        for (int iteration = 1; iteration <= parameters.images_interval;
              iteration++) {
             compute(u, v, u_temp, v_temp);
             std::swap(u, u_temp);

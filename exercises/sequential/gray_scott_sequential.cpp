@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
     real *v_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
 
     // time loop
-    for (std::size_t iteration = 0; iteration < parameters.n_iterations;
+    for (std::size_t iteration = 1; iteration <= parameters.n_iterations;
          iteration++) {
         compute(u, v, u_temp, v_temp, parameters.n_rows_ext,
                 parameters.n_columns_ext);

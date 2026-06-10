@@ -180,7 +180,7 @@ int main(int argc, char *argv[]) {
         }
 
         // then batch compute image n (non-blocking)
-        for (int iteration = 0; iteration < parameters.images_interval;
+        for (int iteration = 1; iteration <= parameters.images_interval;
              iteration++) {
             compute(space_compute, u, v, u_temp, v_temp);
             std::swap(u, u_temp);
