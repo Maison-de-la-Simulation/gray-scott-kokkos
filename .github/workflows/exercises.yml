@@ -60,3 +60,9 @@ jobs:
           ctest \
             --test-dir /tmp/build/exercises \
             --output-on-failure
+      - name: Run all exercises with run_all
+        env:
+          OMP_PROC_BIND: spread
+          OMP_PLACES: threads
+          OMP_NUM_THREADS: 2
+        run: exercises/scripts/run_all.sh /tmp/build/exercises
