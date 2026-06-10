@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
 
     // write init
     if (parameters.write_results) {
-        writer.write(v.data());
+        writer.write(v_h.data());
     }
 
     // temporary fields (with halo)

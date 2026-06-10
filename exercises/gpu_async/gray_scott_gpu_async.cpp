@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
 
         // finally write image n - 1 (blocking)
         if (parameters.write_results) {
-            writer.write(v.data());
+            writer.write(v_h.data());
         }
     }
 
