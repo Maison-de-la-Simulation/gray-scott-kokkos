@@ -29,9 +29,12 @@ void Parameters::parse(int argc, char *argv[]) {
     app.add_option("-t,--interval", this->images_interval,
                    "Number of iterations between two snapshots");
 
-    app.add_flag("-d", this->display_fields,
+    app.add_flag("-d,--display", this->display_fields,
                  "Display fields on screen at the beginning and at the end "
                  "of the execution");
+
+    app.add_flag("-N{false},--no-write{false}", this->write_results,
+                 "Do not write result file on disk");
 
     try {
         app.parse(argc, argv);

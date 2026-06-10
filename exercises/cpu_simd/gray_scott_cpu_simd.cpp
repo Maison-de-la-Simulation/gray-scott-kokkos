@@ -248,9 +248,12 @@ int main(int argc, char *argv[]) {
     View v("v", parameters.n_rows_ext, parameters.n_columns_ext);
 
     // create writer
-    OutputWriter<real> writer(
-        "gray_scott.h5", parameters.n_iterations / parameters.images_interval,
-        parameters.n_rows_ext, parameters.n_columns_ext);
+    OutputWriter<real> writer;
+    if (parameters.write_results) {
+        writer.prepare("gray_scott.h5",
+                       parameters.n_iterations / parameters.images_interval,
+                       parameters.n_rows_ext, parameters.n_columns_ext);
+    }
 
     // initialize fields
     Kokkos::deep_copy(u, 1);
@@ -266,20 +269,23 @@ int main(int argc, char *argv[]) {
     }
 
     // write init
-    writer.write(v.data());
+    if (parameters.write_results) {
+        writer.write(v.data());
+    }
 
     // temporary fields (with halo)
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
     // time loop
-    for (int iteration = 0; iteration < parameters.n_iterations; iteration++) {
+    for (int iteration = 1; iteration <= parameters.n_iterations; iteration++) {
         compute(u, v, u_temp, v_temp);
         std::swap(u, u_temp);
         std::swap(v, v_temp);
 
         // write image every images_interval iterations
-        if (iteration % parameters.images_interval == 0) {
+        if (iteration % parameters.images_interval == 0 and
+            parameters.write_results) {
             writer.write(v.data());
         }
     }
