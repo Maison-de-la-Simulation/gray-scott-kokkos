@@ -1516,6 +1516,107 @@
     \end{columns}
 \end{frame}
 
+\begin{frame}[fragile]{Performance scaling in parallel computing}
+
+\textbf{Scaling} describes how application performance changes as more compute
+resources (CPU cores, nodes, GPUs) are added.
+
+\vspace{0.5em}
+
+\begin{center}
+    \begin{table}{Two Fundamental Types}{ll}
+        \textbf{Strong Scaling} & \textbf{Weak Scaling} \\\hline
+        Fixed problem size & Problem size grows with processor count \\
+        Increase processor count & Work per processor remains constant \\
+        Goal: reduce time-to-solution & Goal: maintain runtime while solving larger problems \\
+    \end{table}
+\end{center}
+
+\begin{center}
+\begin{tabular}{c|c|c}
+\textbf{Processors} & \textbf{Strong Scaling} & \textbf{Weak Scaling} \\
+\hline
+1   & 1M points   & 1M points \\
+10  & 1M points   & 10M points \\
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Strong Scaling}
+
+\begin{block}{Definition}
+Strong scaling measures how execution time decreases when solving a
+\textbf{fixed-size problem} using more processors.
+\end{block}
+
+\begin{columns}
+    \begin{column}{0.5\linewidth}
+        \textbf{Ideal strong scaling}
+
+        \[
+        T(P) = \frac{T(1)}{P}
+        \]
+
+        \begin{itemize}
+            \item $T(1)$: runtime on one thread
+            \item $T(P)$: runtime on $P$ threads
+        \end{itemize}
+
+        \textbf{Strong scaling speedup}
+
+        \[
+        S(P) = \frac{T(1)}{T(P)}
+        \]
+    \end{column}
+    \begin{column}{0.5\linewidth}
+        \textbf{Common limitations}
+        \begin{itemize}
+            \item Communication overhead
+            \item Synchronization costs
+            \item Load imbalance
+            \item Serial code sections (Amdahl's Law)
+        \end{itemize}
+    \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Weak Scaling}
+
+\begin{block}{Definition}
+Weak scaling measures how runtime changes when both the number of processors
+and the total problem size increase proportionally, keeping the workload per
+processor approximately constant.
+\end{block}
+
+\vspace{0.5em}
+
+\begin{columns}
+    \begin{column}{0.5\linewidth}
+        \textbf{Ideal weak scaling}
+
+        \[
+        T(P) \approx T(1)
+        \]
+
+        \textbf{Weak scaling efficiency}
+
+        \[
+        E(P) = \frac{T(1)}{T(P)}
+        \]
+    \end{column}
+    \begin{column}{0.5\linewidth}
+        \textbf{Common limitations}
+        \begin{itemize}
+            \item Communication growth
+            \item Network contention
+            \item Collective operations (reductions, barriers)
+            \item Memory and I/O bottlenecks
+        \end{itemize}
+    \end{column}
+\end{columns}
+
+\end{frame}
+
 \begin{exerciseframe}{Build Kokkos for the OpenMP backend}
     \begin{columns}
         \begin{column}{0.55\linewidth}
