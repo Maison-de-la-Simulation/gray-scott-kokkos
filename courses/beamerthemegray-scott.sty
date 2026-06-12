@@ -38,6 +38,12 @@
 }
 
 \renewenvironment{alertblock}[1]{%
+    \setbeamercolor*{itemize item}{fg=main-alert}%
+    \setbeamercolor*{itemize subitem}{fg=main-alert}%
+    \setbeamercolor*{enumerate item}{fg=main-alert}%
+    \setbeamercolor*{enumerate subitem}{fg=main-alert}%
+    \setbeamercolor*{description item}{fg=main-alert}%
+    \setbeamercolor*{description subitem}{fg=main-alert}%
     \begin{tcolorbox}[
         enhanced,
         boxsep=0.15cm,
@@ -53,6 +59,12 @@
 }
 
 \renewenvironment{exampleblock}[1]{%
+    \setbeamercolor*{itemize item}{fg=main-example}%
+    \setbeamercolor*{itemize subitem}{fg=main-example}%
+    \setbeamercolor*{enumerate item}{fg=main-example}%
+    \setbeamercolor*{enumerate subitem}{fg=main-example}%
+    \setbeamercolor*{description item}{fg=main-example}%
+    \setbeamercolor*{description subitem}{fg=main-example}%
     \begin{tcolorbox}[
         enhanced,
         boxsep=0.15cm,
