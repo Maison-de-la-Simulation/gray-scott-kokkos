@@ -239,8 +239,38 @@
 
 \section{Docker images}
 
-\begin{frame}{Docker images}
-    \missingfigure{Description of the images}
+\begin{frame}{Docker images (CPU images)}
+    \begin{itemize}
+        \item No editor (\texttt{x86\_64}, \texttt{aarch64})
+
+        {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive:latest}}
+        \item Jupyter (\texttt{x86\_64}, \texttt{aarch64})
+
+        {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive_jupyter:latest}}
+        \item VSCode (\texttt{x86\_64}, \texttt{aarch64})
+
+        {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive_vscode:latest}}
+        \item CodeServer (\texttt{x86\_64}, \texttt{aarch64})
+
+        {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_learning_platform_code_server:latest}}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Docker images (GPU images)}
+    \begin{itemize}
+        \item No editor (\texttt{x86\_64}, \texttt{aarch64})
+
+        {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive:latest}}
+        \item Jupyter (\texttt{x86\_64}, \texttt{aarch64})
+
+        {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive_jupyter:latest}}
+        \item VSCode (\texttt{x86\_64}, \texttt{aarch64})
+
+        {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive_vscode:latest}}
+        \item CodeServer (\texttt{x86\_64}, \texttt{aarch64})
+
+        {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_learning_platform_code_server:latest}}
+    \end{itemize}
 \end{frame}
 
 \begin{exerciseframe}{Initialization}
@@ -923,8 +953,8 @@
             \begin{itemize}
                 \item Duplicate the \texttt{sequential} folder to a different name
                 \item Add the Kokkos header
-                \item Use Kokkos views instead of plain-old-data arrays for \texttt{u} and \texttt{v} in \texttt{main} and in \texttt{compute}
-                \item For now, just pass a raw pointer when calling \texttt{print\_checksum} and \texttt{print\_field}
+                \item Use Kokkos views instead of plain-old-data arrays for \texttt{u} and \texttt{v} (and temporary arrays) in \texttt{main} and in \texttt{compute}
+                \item For now, just pass a raw pointer when calling \texttt{check} and \texttt{print\_field}
                 \item The checksum must remain the same!
             \end{itemize}
         \end{column}
@@ -1200,7 +1230,7 @@
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
-                \item Use Kokkos \texttt{parallel\_for} and \texttt{MDRangePolicy} instead of the nested loops in \texttt{compute}
+                \item Use Kokkos \texttt{parallel\_for} and \texttt{MDRangePolicy} instead of the nested loops in \texttt{compute} (additionally in \texttt{add\_drop})
                 \item The checksum must remain the same!
             \end{itemize}
         \end{column}
@@ -1402,7 +1432,7 @@
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
-                \item Use Kokkos \texttt{parallel\_reduce} and \texttt{MDRangePolicy} instead of the nested loops in \texttt{print\_checksum}
+                \item Use Kokkos \texttt{parallel\_reduce} and \texttt{MDRangePolicy} instead of the nested loops in \texttt{check}
                 \item The checksum must remain the same!
             \end{itemize}
         \end{column}
