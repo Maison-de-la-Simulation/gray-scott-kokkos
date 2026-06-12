@@ -1,4 +1,27 @@
+# LaTeX files
+*.fls
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.snm
+*.pdf
+*.nav
+*.fdb_latexmk
+*.xdv
+*.vrb
+*.dvi
+_minted*
+
+# builds
 build*/
+
+# HDF5 generated files
+*.h5
+
+# benchmark files
 *.qdstrm
 *.nsys-rep
-*.h5

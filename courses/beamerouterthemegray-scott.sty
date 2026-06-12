@@ -1,0 +1,42 @@
+\mode<presentation>
+
+% remove navigation bar so we can addit ourselves
+\setbeamertemplate{navigation symbols}{}
+
+% Frame title
+\defbeamertemplate*{frametitle}{gray-scott}{%
+    \begin{beamercolorbox}[wd=\paperwidth, ht=1em, dp=0em, leftskip=0.5cm, rightskip=0.5cm]{frametitle}
+        {\usebeamercolor{frametitle}\insertframetitle}%
+        \hfill%
+        {%
+            \usebeamerfont{page number in head/foot}%
+            \insertframenumber%
+            \textcolor{lightmain}{~/~}%
+            \inserttotalframenumber%
+        }%
+    \end{beamercolorbox}
+}
+
+% Frame footer
+\defbeamertemplate*{footline}{gray-scott}[1][]{%
+    \begin{beamercolorbox}[wd=\paperwidth, ht=0em, dp=1em, leftskip=0.5cm, rightskip=0.5cm]{footline}
+        {\usebeamerfont{title in head/foot}\insertshorttitle}%
+        \ifx\insertsection\empty%
+        \else%
+        \textcolor{lightmain}{~/~}%
+        {\usebeamerfont{section in head/foot}\insertsection}%
+        \fi%
+        \hfill%
+        \raisebox{-0.2em}{%
+            \usebeamercolor[fg]{navigation symbols}%
+            \insertslidenavigationsymbol%
+            \insertframenavigationsymbol%
+            \insertsubsectionnavigationsymbol%
+            \insertsectionnavigationsymbol%
+            \insertdocnavigationsymbol%
+            \insertbackfindforwardnavigationsymbol%
+        }%
+    \end{beamercolorbox}
+}
+
+\mode<all>
