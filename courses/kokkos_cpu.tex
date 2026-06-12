@@ -1981,12 +1981,40 @@ processor approximately constant.
     \end{minted}
 \end{frame}
 
-\begin{frame}{Strategy}
-    \missingfigure{explain the vectorization strategy}
+\begin{frame}{Strategy for the Gray Scott}
+    The Gray Scott is a 2D problem:
+    \begin{itemize}
+        \item Simplification: only consider the case where n\_columns is a multiple of the SIMD width
+        \item Identify the contiguous dimension
+        \item Update the iteration space relative to the contiguous dimension and compute the index
+        \item Construct SIMD objects from pointers of arrays \texttt{u} and \texttt{v}
+    \end{itemize}
 \end{frame}
 
 \begin{exerciseframe}{From your worktree or the cpu folder}
-    \missingfigure{Vectorize the CPU code}
+\begin{columns}
+    \begin{column}{0.5\linewidth}
+        \begin{minted}{C++}
+            #include <Kokkos_SIMD.hpp>
+
+            // ...
+
+            using simd_type =
+                Kokkos::Experimental::simd<real>;
+
+            View a("A", N, M);
+            simd_type a_simd(&a(0, 0));
+        \end{minted}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+        \begin{itemize}
+            \item Duplicate your worktree folder to a different name
+            \item Add the Kokkos SIMD header
+            \item Use Kokkos::Experimental::simd instead of scalars to compute the Gray Scott stencil
+            \item The checksum must remain the same!
+        \end{itemize}
+    \end{column}
+\end{columns}
 \end{exerciseframe}
 
 \begin{frame}[fragile]{Conditionals (bonus)}
