@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdlib>
+#include <iostream>
 
 /**
  * @brief Structure containing parameters of the program.
@@ -34,7 +35,7 @@ struct Parameters {
      * @param argc Number of arguments.
      * @param argv Pointer of array of arguments.
      */
-    Parameters(int argc, char *argv[]);
+    Parameters(int argc, char* argv[]);
 
     /**
      * @brief Describe the current parameters.
@@ -42,11 +43,20 @@ struct Parameters {
     void describe() const;
 
     /**
+     * @brief Show the size of elements for the number of arrays.
+     * @tparam real Type of data in the array.
+     * @param label Label to show (usually CPU, GPU, or CPU/GPU).
+     * @param n_arrys The number of arrays that will be used.
+     */
+    template <typename real>
+    void show_size(const char* label, const std::size_t n_arrays) const;
+
+    /**
      * @brief Populate parameters values from the command line.
      * @param argc Number of arguments.
      * @param argv Pointer of array of arguments.
      */
-    void parse(int argc, char *argv[]);
+    void parse(int argc, char* argv[]);
 
     /**
      * @brief Check the validity of the entered values.
@@ -54,3 +64,14 @@ struct Parameters {
      */
     void check() const;
 };
+
+// implementations
+
+template <typename real>
+void Parameters::show_size(const char* label,
+                           const std::size_t n_arrays) const {
+    std::cout << "Memory size for " << label << ": "
+              << n_arrays * this->n_rows_ext * this->n_columns_ext *
+                     sizeof(real)
+              << " bytes" << std::endl;
+}

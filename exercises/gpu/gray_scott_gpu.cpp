@@ -124,6 +124,7 @@ int main(int argc, char *argv[]) {
     Parameters parameters{argc, argv};
     parameters.check();
     parameters.describe();
+    parameters.show_size<real>("CPU/GPU", 2);
 
     // fields (with halo)
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);

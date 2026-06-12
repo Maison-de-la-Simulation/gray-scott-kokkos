@@ -123,6 +123,8 @@ int main(int argc, char *argv[]) {
     Parameters parameters{argc, argv};
     parameters.check();
     parameters.describe();
+    parameters.show_size<real>("CPU", 2);
+    parameters.show_size<real>("GPU", 3);
 
     const std::size_t n_images =
         parameters.n_iterations / parameters.images_interval;
