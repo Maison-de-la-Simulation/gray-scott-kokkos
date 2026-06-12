@@ -1,0 +1,7 @@
+[files]
+extend-exclude = [
+    "*.svg",
+]
+
+[default.extend-words]
+nd = "nd"

@@ -1,6 +1,7 @@
 # Gray-Scott School Kokkos
 
 [![Exercises](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/exercises.yml/badge.svg)](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/exercises.yml)
+[![Courses](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/courses.yml/badge.svg)](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/courses.yml)
 
 ## Presentation
 
@@ -13,12 +14,16 @@ This repository contains the Kokkos courses and exercises for the Gray-Scott Sch
   - The GPU course is `kokkos_gpu`.
 - The `exercises` folder contains the exercises associated to the course, based on the Gray-Scott equation:
   - The `common` folder contains common files for all implementations;
-  - The `sequential` folder contains the sequential implementation of the equation;
+  - The `hello_world` folder contains a simple test code to check the installation of Kokkos is successful;
+  - The `sequential` folder contains the sequential implementation of the Gray-Scott equation;
   - The `cpu` folder contains the Kokkos CPU implementation (note it cannot be run with a GPU backend);
   - The `cpu_simd` folder contains the Kokkos CPU implementation using SIMD (note it cannot be run with a GPU backend);
   - The `gpu` folder contains the Kokkos GPU implementation;
   - The `gpu_async` folder contains the Kokkos GPU implementation with asynchronous writing of the results;
-  - The `gpu_async_more` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results.
+  - The `gpu_async_more` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results;
+  - The `scripts` folder contains some tools to run the built implementations:
+    - `run_all.sh` runs all known implementations binaries given a build directory (useful for a top-level build only);
+    - `check_outcome.sh` run an implementation binary for the 10 × 10 case and check the checksums.
 
 ## Courses
 
@@ -75,7 +80,7 @@ You can still install HDF5 with your system package manager.
 ### Compilation
 
 ```sh
-cmake --build build --parallell ${number_of_jobs}
+cmake --build build --parallel ${number_of_jobs}
 ```
 
 ### Cluster configuration
@@ -98,3 +103,19 @@ When compiling Kokkos, you have to specify the GPU architecture among its flags:
 cmake -B build_kokkos \
           -DKokkos_ARCH_VOLTA70=ON \
           ${other_kokkos_flags}
+```
+
+## Images
+
+The following Docker images can be used:
+
+- CPU
+  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive:latest`
+  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive_jupyter:latest`
+  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive_vscode:latest`
+  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_learning_platform_code_server:latest`
+- GPU
+  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive:latest`
+  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive_jupyter:latest`
+  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive_vscode:latest`
+  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_learning_platform_code_server:latest`

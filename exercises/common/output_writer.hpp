@@ -37,7 +37,7 @@ class OutputWriter {
      * @brief Create and prepare the output writer in HDF5 format.
      * @param filename Name of the file.
      * @param n_images Number of images to store.
-     * @param field Field that will be outputed.
+     * @param field Field that will be outputted.
      * @see `prepare` method.
      */
     OutputWriter(const char *filename, const std::size_t n_images,
@@ -47,7 +47,7 @@ class OutputWriter {
      * @brief Prepare the output writer in HDF5 format.
      * @param filename Name of the file.
      * @param n_images Number of images to store.
-     * @param field Field that will be outputed. Only the shape of the view is
+     * @param field Field that will be outputted. Only the shape of the view is
      * used at this step.
      */
     void prepare(const char *filename, const std::size_t n_images,

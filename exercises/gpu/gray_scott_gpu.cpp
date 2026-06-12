@@ -22,7 +22,7 @@ constexpr real diffusion_rate_v{0.05};
 }  // namespace constants
 
 // views type
-using View = Kokkos::View<real **>;
+using View = Kokkos::View<real **, Kokkos::LayoutRight>;
 
 /**
  * @brief Add a drop at the center of the fields.
@@ -44,8 +44,9 @@ void add_drop(const View &u, const View &v) {
 
     Kokkos::parallel_for(
         "add drop",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({i_drop_first, j_drop_first},
-                                               {i_drop_last, j_drop_last}),
+        Kokkos::MDRangePolicy<
+            Kokkos::Rank<2, Kokkos::Iterate::Default, Kokkos::Iterate::Right>>(
+            {i_drop_first, j_drop_first}, {i_drop_last, j_drop_last}),
         KOKKOS_LAMBDA(const int i, const int j) {
             u(i, j) = 0;
             v(i, j) = 1;
@@ -66,7 +67,8 @@ void compute(const View &u, const View &v, const View &u_temp,
 
     Kokkos::parallel_for(
         "compute",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<
+            Kokkos::Rank<2, Kokkos::Iterate::Default, Kokkos::Iterate::Right>>(
             {1, 1},
             {n_rows_ext - 1, n_columns_ext - 1}),  // do not iterate on the halo
         KOKKOS_LAMBDA(const int i, const int j) {
@@ -105,7 +107,8 @@ View::value_type check(const View &field, const std::size_t iteration) {
     typename View::value_type checksum;
     Kokkos::parallel_reduce(
         "check fields",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+        Kokkos::MDRangePolicy<
+            Kokkos::Rank<2, Kokkos::Iterate::Default, Kokkos::Iterate::Right>>(
             {0, 0}, {field.extent(0), field.extent(1)}),
         KOKKOS_LAMBDA(const int i, const int j,
                       View::value_type &checksum_local) {
