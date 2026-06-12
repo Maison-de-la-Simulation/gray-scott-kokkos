@@ -37,6 +37,8 @@ for implementation in $IMPLEMENTATIONS
 do
         echo "------------- $build_dir/$implementation -------------"
         echo "Arguments: $arguments"
+        set +e
         # shellcheck disable=SC2086 # we want the arguments to be passed with spaces
         "$build_dir/$implementation/gray_scott_$implementation" $arguments
+        set -e
 done

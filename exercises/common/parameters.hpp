@@ -45,7 +45,7 @@ struct Parameters {
     /**
      * @brief Show the size of elements for the number of arrays.
      * @tparam real Type of data in the array.
-     * @param n_arrys The number of arrays that will be used.
+     * @param n_arrays The number of arrays that will be used.
      * @param label Label to show (usually CPU, GPU, or CPU/GPU).
      */
     template <typename real>
