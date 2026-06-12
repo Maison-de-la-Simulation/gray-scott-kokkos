@@ -1674,6 +1674,18 @@ processor approximately constant.
     \end{itemize}
 \end{exerciseframe}
 
+\begin{frame}[fragile]{Example of weak scaling}
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{weak_scaling_ruche.pdf}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Example of strong scaling}
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{strong_scaling_ruche.pdf}
+    \end{center}
+\end{frame}
+
 \section{SIMD and vectorization}
 
 \begin{frame}[fragile]{What is vectorization}
@@ -1685,7 +1697,7 @@ processor approximately constant.
             \begin{itemize}
                 \item Modern CPUs have instructions capable of doing multiple computations at the same time (e.g. do 4 distinct additions with a single instruction)
                 \item SIMD: \structure{S}ingle \structure{I}nstruction \structure{M}ultiple \structure{D}ata
-                \item Can get up to $N$ times faster with SIMD units of size $N$
+                \item Can get up to $M$ times faster with SIMD units of size $M$
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1952,17 +1964,18 @@ processor approximately constant.
 \begin{frame}[fragile]{Example: adding two views}
     The vectorized version is as follows
     \begin{minted}{C++}
-        using simd_type = Kokkos::Experimental::simd<double>;
+        using KE = Kokkos::Experimental;
+        using simd_type = KE::simd<double>;
         Kokkos::parallel_for("add", N / simd_type::size(),
             KOKKOS_LAMBDA(int i) {
                 std::size_t idx = i * simd_type::size();
                 // load the values
-                simd_type a(&A(idx), Kokkos::Experimental::simd_flag_default);
-                simd_type b(&B(idx), Kokkos::Experimental::simd_flag_default);
+                simd_type a(&A(idx), KE::simd_flag_default);
+                simd_type b(&B(idx), KE::simd_flag_default);
                 // perform the computation
                 a += b;
                 // store the result
-                Kokkos::Experimental::simd_unchecked_store(a, &A(idx), Kokkos::Experimental::simd_flag_default);
+                KE::simd_unchecked_store(a, &A(idx), KE::simd_flag_default);
             }
         );
     \end{minted}
