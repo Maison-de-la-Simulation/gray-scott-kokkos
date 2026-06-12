@@ -126,8 +126,13 @@ int main(int argc, char *argv[]) {
     Parameters parameters{argc, argv};
     parameters.check();
     parameters.describe();
-    parameters.show_size<real>("CPU", 2);
-    parameters.show_size<real>("GPU", 3);
+    if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                                 Kokkos::DefaultHostExecutionSpace>) {
+        parameters.show_size<real>(5);
+    } else {
+        parameters.show_size<real>(2, "CPU");
+        parameters.show_size<real>(5, "GPU");
+    }
 
     const std::size_t n_images =
         parameters.n_iterations / parameters.images_interval;

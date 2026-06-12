@@ -45,11 +45,12 @@ struct Parameters {
     /**
      * @brief Show the size of elements for the number of arrays.
      * @tparam real Type of data in the array.
-     * @param label Label to show (usually CPU, GPU, or CPU/GPU).
      * @param n_arrys The number of arrays that will be used.
+     * @param label Label to show (usually CPU, GPU, or CPU/GPU).
      */
     template <typename real>
-    void show_size(const char* label, const std::size_t n_arrays) const;
+    void show_size(const std::size_t n_arrays,
+                   const char* label = nullptr) const;
 
     /**
      * @brief Populate parameters values from the command line.
@@ -68,10 +69,16 @@ struct Parameters {
 // implementations
 
 template <typename real>
-void Parameters::show_size(const char* label,
-                           const std::size_t n_arrays) const {
-    std::cout << "Memory size for " << label << ": "
+void Parameters::show_size(const std::size_t n_arrays,
+                           const char* label) const {
+    std::cout << "Memory size (" << n_arrays << " arrays): "
               << n_arrays * this->n_rows_ext * this->n_columns_ext *
                      sizeof(real)
-              << " bytes" << std::endl;
+              << " bytes";
+
+    if (label) {
+        std::cout << "(" << label << ")";
+    }
+
+    std::cout << std::endl;
 }

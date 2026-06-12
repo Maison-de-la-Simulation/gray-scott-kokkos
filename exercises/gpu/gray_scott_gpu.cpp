@@ -127,7 +127,13 @@ int main(int argc, char *argv[]) {
     Parameters parameters{argc, argv};
     parameters.check();
     parameters.describe();
-    parameters.show_size<real>("CPU/GPU", 2);
+    if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                                 Kokkos::DefaultHostExecutionSpace>) {
+        parameters.show_size<real>(4);
+    } else {
+        parameters.show_size<real>(2, "CPU");
+        parameters.show_size<real>(4, "GPU");
+    }
 
     // fields (with halo)
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);
