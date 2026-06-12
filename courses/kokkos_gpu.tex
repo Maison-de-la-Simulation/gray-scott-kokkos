@@ -753,6 +753,119 @@
                 \item Try to run the code
             \end{itemize}
             \pause
+            \vspace{0.5em}
+            \begin{block}{Holly Molly}
+                It works!
+            \end{block}
+            \pause
+            \begin{itemize}
+            \item Run with the parameter \texttt{-n 20}
+            \end{itemize}
+            \pause
+            \vspace{0.5em}
+            \begin{block}{Holly Molly}
+                The results are wrong again!
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+%\section{Layout and iteration order}
+
+\begin{frame}{Reminder about Views layout}
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{layout_right_left.png}
+    \end{center}
+    \begin{itemize}
+        \item Layout is the way multidimensional indices map to linear memory
+        \item The default layout of a View depends on the backend
+        \begin{itemize}
+            \item Layout right on CPU
+            \item Layout left on GPU
+        \end{itemize}
+        \item This means data dumped to a file will differ depending on the backend
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{Iteration order}
+    \begin{center}
+        \includegraphics[width=0.75\textwidth]{iterate_right_left.png}
+    \end{center}
+    \begin{itemize}
+        \item Iteration order is the way multidimensional indices are traversed by threads
+        \item The default iterate order depends on the backend
+        \begin{itemize}
+            \item Order right on CPU
+            \item Order left on GPU
+        \end{itemize}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Iteration order(s) for Kokkos}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                using Rank = Kokkos::Rank<
+                    N,
+                    // outer
+                    Kokkos::Iterate::Default,
+                    // inner
+                    Kokkos::Iterate::Default
+                >;
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item \texttt{Range} to specify the iteration order
+                \item Kokkos iterates by tiles, so there are 2 iteration orders
+                \begin{description}[Outer order]
+                    \item[Outer order] Order of the tiles within the iteration space
+                    \item[Inner order] Order within the tile
+                \end{description}
+                \item Possible values
+                \begin{description}[\texttt{Default}]
+                    \item[\texttt{Default}] Depends on the backend
+                    \item[\texttt{Left}] Left order
+                    \item[\texttt{Right}] Right order
+                \end{description}
+                \item For best performance, the inner iteration order must match the memory layout of the accessed views
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{exerciseframe}{From your worktree}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[fontsize=\scriptsize]{C++}
+                using View =
+                    Kokkos::View<
+                        double**,
+                        Kokkos::LayoutRight
+                    >;
+
+                // ...
+
+                Kokkos::parallel_for(
+                    // ...
+                    Kokkos::MDrangePolicy<
+                        Kokkos::Range<
+                            2,
+                            Kokkos::Iterate::Default,
+                            Kokkos::Iterate::Right
+                        >
+                    >(/* ... */),
+                    // ...
+                );
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Use \texttt{Kokkos::LayoutRight} for the views
+                \item Use \texttt{Kokkos::Iterate::Right} for the range policies
+                \item Try to run the code with the parameter \texttt{-n 20}
+            \end{itemize}
+            \pause
             \vspace{1em}
             \begin{block}{Holly Molly}
                 It works!
