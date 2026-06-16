@@ -29,5 +29,10 @@ jobs:
       - run: |
           docker pull gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest
           docker buildx imagetools inspect gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest
-          docker run --rm gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest uname -m
-          docker run --rm gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest file /home/jovyan/.pixi/bin/g++
+          docker create --name inspectme gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest
+          docker export inspectme -o rootfs.tar
+          mkdir rootfs
+          tar -xf rootfs.tar -C rootfs
+          file rootfs/usr/bin/uname
+          file rootfs/bin/sh
+          file rootfs/home/jovyan/.pixi/bin/g++
