@@ -20,9 +20,9 @@ jobs:
       - name: Set up Git repository
         uses: actions/checkout@v4
       - run: |
-          docker pull gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/gray_scott_container_interactive:1.1.2@sha256:50e8f926ded069786a7bea91b937436edf129535a2b4ccfc54ae4ac5bb6e26bb
-          docker buildx imagetools inspect gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/gray_scott_container_interactive:1.1.2@sha256:50e8f926ded069786a7bea91b937436edf129535a2b4ccfc54ae4ac5bb6e26bb
-          docker create --name inspectme gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/gray_scott_container_interactive:1.1.2@sha256:50e8f926ded069786a7bea91b937436edf129535a2b4ccfc54ae4ac5bb6e26bb
+          docker pull gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive
+          docker buildx imagetools inspect gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive
+          docker create --name inspectme gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive
           docker export inspectme -o rootfs.tar
           mkdir rootfs
           tar -xf rootfs.tar -C rootfs
