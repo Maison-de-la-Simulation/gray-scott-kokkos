@@ -27,12 +27,11 @@ jobs:
       - name: Set up Git repository
         uses: actions/checkout@v4
       - run: |
-          docker pull gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest
-          docker buildx imagetools inspect gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest
-          docker create --name inspectme gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest
+          docker pull gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/${{ matrix.backend.image }}:1.1.3
+          docker buildx imagetools inspect gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/${{ matrix.backend.image }}:1.1.3
+          docker create --name inspectme gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/${{ matrix.backend.image }}:1.1.3
           docker export inspectme -o rootfs.tar
           mkdir rootfs
           tar -xf rootfs.tar -C rootfs
           file rootfs/usr/bin/uname
           file rootfs/bin/sh
-          file rootfs/home/jovyan/.pixi/bin/g++
