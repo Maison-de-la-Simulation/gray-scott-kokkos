@@ -13,8 +13,8 @@ jobs:
         arch:
           - name: x86_64
             os: ubuntu-24.04
-          # - name: aarch64
-          #   os: ubuntu-24.04-arm
+          - name: aarch64
+            os: ubuntu-24.04-arm
         backend:
           - name: openmp
             image: kokkos_cpu_interactive
