@@ -15,18 +15,14 @@ jobs:
             os: ubuntu-24.04
           - name: aarch64
             os: ubuntu-24.04-arm
-        backend:
-          - name: openmp
-            image: gray_scott_container_interactive:1.1.2@sha256:50e8f926ded069786a7bea91b937436edf129535a2b4ccfc54ae4ac5bb6e26bb
-            flags: -DKokkos_ENABLE_OPENMP=ON
     runs-on: ${{ matrix.arch.os }}
     steps:
       - name: Set up Git repository
         uses: actions/checkout@v4
       - run: |
-          docker pull gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/${{ matrix.backend.image }}
-          docker buildx imagetools inspect gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/${{ matrix.backend.image }}
-          docker create --name inspectme gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/${{ matrix.backend.image }}
+          docker pull ghcr.io/prefix-dev/pixi:0.70.2-bookworm-slim@sha256:bd560f9117d5f554a328eaa1506588109fc641f12005613019a824bb4b177399
+          docker buildx imagetools inspect ghcr.io/prefix-dev/pixi:0.70.2-bookworm-slim@sha256:bd560f9117d5f554a328eaa1506588109fc641f12005613019a824bb4b177399
+          docker create --name inspectme ghcr.io/prefix-dev/pixi:0.70.2-bookworm-slim@sha256:bd560f9117d5f554a328eaa1506588109fc641f12005613019a824bb4b177399
           docker export inspectme -o rootfs.tar
           mkdir rootfs
           tar -xf rootfs.tar -C rootfs
