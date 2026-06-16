@@ -95,6 +95,6 @@ jobs:
           OMP_PROC_BIND: spread
           OMP_PLACES: threads
           OMP_NUM_THREADS: 2
-          KOKKOS_TOOLS_LIBS: /opt/kokkos_tools/leb/libkp_kernel_timer.so
+          KOKKOS_TOOLS_LIBS: /opt/kokkos_tools/lib/libkp_kernel_timer.so
         run: exercises/scripts/run_all.sh /tmp/build/exercises
         if: ${{ matrix.backend.name == 'openmp' }}
