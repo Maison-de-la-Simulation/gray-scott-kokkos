@@ -50,6 +50,23 @@ jobs:
           cmake \
             --install /tmp/build/kokkos \
             --prefix /opt/kokkos
+      - name: Prepare Kokkos-Tools
+        run: |
+          cmake \
+            -B /tmp/build/kokkos_tools \
+            -S /src/kokkos-tools \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DKokkos_ROOT=/opt/kokkos
+      - name: Build Kokkos-Tools
+        run: |
+          cmake \
+            --build /tmp/build/kokkos_tools\
+            --parallel $(($(nproc) * 2 + 1))
+      - name: Install Kokkos-Tools
+        run: |
+          cmake \
+            --install /tmp/build/kokkos_tools \
+            --prefix /opt/kokkos_tools
       - name: Prepare all exercices
         run: |
           cmake \
@@ -78,5 +95,6 @@ jobs:
           OMP_PROC_BIND: spread
           OMP_PLACES: threads
           OMP_NUM_THREADS: 2
+          KOKKOS_TOOLS_LIBS: /opt/kokkos_tools/leb/libkp_kernel_timer.so
         run: exercises/scripts/run_all.sh /tmp/build/exercises
         if: ${{ matrix.backend.name == 'openmp' }}
