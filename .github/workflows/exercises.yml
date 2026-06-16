@@ -15,17 +15,86 @@ jobs:
             os: ubuntu-24.04
           - name: aarch64
             os: ubuntu-24.04-arm
+        backend:
+          - name: openmp
+            image: kokkos_cpu_interactive
+            flags: -DKokkos_ENABLE_OPENMP=ON
+          # - name: cuda
+          #   image: kokkos_gpu_interactive
+          #   flags: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
     runs-on: ${{ matrix.arch.os }}
+    container:
+      image: gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest
+      options: --user root
     steps:
       - name: Set up Git repository
         uses: actions/checkout@v4
-      - run: |
-          docker pull gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive
-          docker run gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive g++ --version
-          docker buildx imagetools inspect gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive
-          docker create --name inspectme gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive
-          docker export inspectme -o rootfs.tar
-          mkdir rootfs
-          tar -xf rootfs.tar -C rootfs
-          file rootfs/usr/bin/uname
-          file rootfs/bin/sh
+      - name: Set ownership of sources in the image
+        run: |
+          git config --global --add safe.directory /src/kokkos
+          git config --global --add safe.directory /src/kokkos-tools
+      - name: Prepare Kokkos
+        run: |
+          cmake \
+            -B /tmp/build/kokkos \
+            -S /src/kokkos \
+            -DCMAKE_BUILD_TYPE=Release \
+            ${{ matrix.backend.flags }}
+      - name: Build Kokkos
+        run: |
+          cmake \
+            --build /tmp/build/kokkos \
+            --parallel $(($(nproc) * 2 + 1))
+      - name: Install Kokkos
+        run: |
+          cmake \
+            --install /tmp/build/kokkos \
+            --prefix /opt/kokkos
+      - name: Prepare Kokkos-Tools
+        run: |
+          cmake \
+            -B /tmp/build/kokkos_tools \
+            -S /src/kokkos-tools \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DKokkos_ROOT=/opt/kokkos
+      - name: Build Kokkos-Tools
+        run: |
+          cmake \
+            --build /tmp/build/kokkos_tools\
+            --parallel $(($(nproc) * 2 + 1))
+      - name: Install Kokkos-Tools
+        run: |
+          cmake \
+            --install /tmp/build/kokkos_tools \
+            --prefix /opt/kokkos_tools
+      - name: Prepare all exercices
+        run: |
+          cmake \
+            -B /tmp/build/exercises \
+            -S exercises \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DKokkos_ROOT=/opt/kokkos \
+            -DENABLE_TESTS=ON
+      - name: Build all exercises
+        run: |
+          cmake \
+            --build /tmp/build/exercises \
+            --parallel $(($(nproc) * 2 + 1))
+      - name: Test all exercises
+        env:
+          OMP_PROC_BIND: spread
+          OMP_PLACES: threads
+          OMP_NUM_THREADS: 2
+        run: |
+          ctest \
+            --test-dir /tmp/build/exercises \
+            --output-on-failure
+        if: ${{ matrix.backend.name == 'openmp' }}
+      - name: Run all exercises with run_all
+        env:
+          OMP_PROC_BIND: spread
+          OMP_PLACES: threads
+          OMP_NUM_THREADS: 2
+          KOKKOS_TOOLS_LIBS: /opt/kokkos_tools/leb/libkp_kernel_timer.so
+        run: exercises/scripts/run_all.sh /tmp/build/exercises
+        if: ${{ matrix.backend.name == 'openmp' }}
