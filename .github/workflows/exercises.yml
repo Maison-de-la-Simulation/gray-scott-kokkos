@@ -10,7 +10,14 @@ on:
 
 jobs:
   build_test_exercises:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch:
+          - name: x86_64
+            os: ubuntu-24.04
+          - name: aarch64
+            os: ubuntu-24.04-arm
+    runs-on: ${{ matrix.arch.os }}
     container:
       image: gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive:latest
       options: --user root
