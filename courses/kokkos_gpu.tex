@@ -342,6 +342,7 @@
         \begin{column}{0.475\linewidth}
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
+                    -S /src/kokkos \
                     -B build/cuda \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ENABLE_CUDA=ON \
@@ -1425,6 +1426,7 @@
         \begin{column}{0.6\linewidth}
             \begin{minted}[breakafter={=,/}, fontsize=\scriptsize]{C++}
                 cmake \
+                    -S /src/kokkos-tools \
                     -B build/cuda \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ROOT=$HOME/opt/kokkos/cuda
