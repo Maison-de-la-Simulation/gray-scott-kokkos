@@ -8,6 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Set up Git repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
     - name: Check spelling
       uses: crate-ci/typos@v1.29.7
