@@ -4,4 +4,5 @@ extend-exclude = [
 ]
 
 [default.extend-words]
+cours = "cours"
 nd = "nd"
