@@ -485,6 +485,7 @@
         \begin{column}{0.55\linewidth}
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
+                    -S /src/kokkos \
                     -B build/serial \
                     -DCMAKE_BUILD_TYPE=Release
 
@@ -1521,6 +1522,7 @@
         \begin{column}{0.55\linewidth}
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
+                    -S /src/kokkos \
                     -B build/openmp \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ENABLE_OPENMP=ON \
