@@ -1,4 +1,4 @@
-FROM gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/gray_scott_interactive_vscode:1.1.3@sha256:06a820ca0999ab4f46e28208711f25b738c523b7d19584f6081f6883c87d6fe0
+FROM gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbasecontainer/gray_scott_interactive_vscode:2.0.3@sha256:36156df938b1f7abb95569868a142caf681d6a7e8ab4b6fcb73fc80eeb89309d
 
 USER root
 
