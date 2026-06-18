@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdlib>
+#include <iomanip>
+#include <iostream>
 
 /**
  * @brief Structure containing parameters of the program.
@@ -34,7 +35,7 @@ struct Parameters {
      * @param argc Number of arguments.
      * @param argv Pointer of array of arguments.
      */
-    Parameters(int argc, char *argv[]);
+    Parameters(int argc, char* argv[]);
 
     /**
      * @brief Describe the current parameters.
@@ -42,11 +43,21 @@ struct Parameters {
     void describe() const;
 
     /**
+     * @brief Show the memory size of used arrays in mebibytes.
+     * @tparam real Type of data in the array.
+     * @param n_arrays The number of arrays that will be used.
+     * @param label Label to show (usually CPU, GPU, or CPU/GPU).
+     */
+    template <typename real>
+    void show_size(const std::size_t n_arrays,
+                   const char* label = nullptr) const;
+
+    /**
      * @brief Populate parameters values from the command line.
      * @param argc Number of arguments.
      * @param argv Pointer of array of arguments.
      */
-    void parse(int argc, char *argv[]);
+    void parse(int argc, char* argv[]);
 
     /**
      * @brief Check the validity of the entered values.
@@ -54,3 +65,27 @@ struct Parameters {
      */
     void check() const;
 };
+
+// implementations
+
+template <typename real>
+void Parameters::show_size(const std::size_t n_arrays,
+                           const char* label) const {
+    // set precision
+    const auto default_precision{std::cout.precision()};
+    std::cout << std::setprecision(3) << std::fixed;
+
+    std::cout << "Memory size (" << n_arrays << " arrays): "
+              << 1.0 * n_arrays * this->n_rows_ext * this->n_columns_ext *
+                     sizeof(real) / 1024 / 1024
+              << " MiB";
+
+    // reset precision
+    std::cout << std::setprecision(default_precision);
+
+    if (label) {
+        std::cout << "(" << label << ")";
+    }
+
+    std::cout << std::endl;
+}

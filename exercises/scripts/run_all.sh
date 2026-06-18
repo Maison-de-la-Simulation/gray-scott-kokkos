@@ -6,7 +6,7 @@ print_usage () {
     cat <<EOF
 run_all.sh [-h] DIRECTORY [ARGS]
 
-Run all Gray-Scott Kokkos implementation executables.
+Run all Gray-Scott Kokkos implementation executables in their directory.
 
 Positional arguments:
     DIRECTORY
@@ -37,6 +37,11 @@ for implementation in $IMPLEMENTATIONS
 do
         echo "------------- $build_dir/$implementation -------------"
         echo "Arguments: $arguments"
-        # shellcheck disable=SC2086 # we want the arguments to be passed with spaces
-        "$build_dir/$implementation/gray_scott_$implementation" $arguments
+        (
+            cd "$build_dir"
+            # shellcheck disable=SC2086 # we want the arguments to be passed with spaces
+            "$implementation/gray_scott_$implementation" $arguments || {
+                echo "Error when running $build_dir/$implementation $arguments"
+            }
+        ) 
 done

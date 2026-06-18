@@ -114,6 +114,7 @@ int main(int argc, char *argv[]) {
     Parameters parameters{argc, argv};
     parameters.check();
     parameters.describe();
+    parameters.show_size<real>(4);
 
     // fields (with halo)
     real *u = new real[parameters.n_rows_ext * parameters.n_columns_ext];
