@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdlib>
+#include <iomanip>
 #include <iostream>
 
 /**
@@ -71,10 +71,17 @@ struct Parameters {
 template <typename real>
 void Parameters::show_size(const std::size_t n_arrays,
                            const char* label) const {
+    // set precision
+    const auto default_precision{std::cout.precision()};
+    std::cout << std::setprecision(3) << std::fixed;
+
     std::cout << "Memory size (" << n_arrays << " arrays): "
-              << n_arrays * this->n_rows_ext * this->n_columns_ext *
+              << 1.0 * n_arrays * this->n_rows_ext * this->n_columns_ext *
                      sizeof(real) / 1024 / 1024
               << " MiB";
+
+    // reset precision
+    std::cout << std::setprecision(default_precision);
 
     if (label) {
         std::cout << "(" << label << ")";
