@@ -1,9 +1,24 @@
 #!/bin/env python3
 
+from argparse import ArgumentParser
+from pathlib import Path
+from json import loads
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-niter = 100
+parser = ArgumentParser(description="Plot performance in point-updates/s vs size")
+
+parser.add_argument("-n", "--niter", help="number of iterations", type=int, default=100)
+parser.add_argument("file", help="performance data file", type=Path)
+
+args = parser.parse_args()
+
+niter = args.niter
+data = loads(args.file.read_text())
+
+for benchmark in data:
+    runtime = np.array(benchmark)
 
 runtime_skx = np.array([0.002307, 0.002384, 0.006999, 0.018525, 0.137146, 0.570825, 2.296378, 9.337727])
 runtime_v100 = np.array([0.001703, 0.001152, 0.001521, 0.004234, 0.012876, 0.047868, 0.186844, 0.746483])
