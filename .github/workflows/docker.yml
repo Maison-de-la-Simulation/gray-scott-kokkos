@@ -16,7 +16,7 @@ env:
   registry: gitlab-registry.in2p3.fr
 
 jobs:
-  qemu:
+  build:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
