@@ -1523,10 +1523,11 @@
         \begin{column}{0.55\linewidth}
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
-                -B build/openmp \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DKokkos_ENABLE_OPENMP=ON \
-                -DKokkos_ARCH_NATIVE=ON
+                    -S /src/kokkos \
+                    -B build/openmp \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ENABLE_OPENMP=ON \
+                    -DKokkos_ARCH_NATIVE=ON
 
                 cmake \
                 --build build/openmp \

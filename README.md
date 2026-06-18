@@ -2,6 +2,7 @@
 
 [![Exercises](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/exercises.yml/badge.svg)](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/exercises.yml)
 [![Courses](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/courses.yml/badge.svg)](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/courses.yml)
+[![Images](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/docker.yml/badge.svg)](https://github.com/Maison-de-la-Simulation/gray-scott-kokkos/actions/workflows/docker.yml)
 
 ## Presentation
 
