@@ -624,7 +624,7 @@
     \end{columns}
 \end{frame}
 
-\begin{exerciseframe}{From the hello\_world folder}
+\begin{exerciseframe}{From the "hello\_world" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}[breakafter={=}]{sh}
@@ -639,8 +639,8 @@
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
-                \item Spin up the environment
                 \item Build the hello world code
+                \item Run with the \texttt{--kokkos-print-configuration} argument
             \end{itemize}
         \end{column}
     \end{columns}
@@ -648,7 +648,7 @@
 
 \section{Sequential implementation of the Gray--Scott equation}
 
-\begin{exerciseframe}{From the sequential folder}
+\begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}[breakafter={=}]{sh}
@@ -870,72 +870,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Subviews description}
-  \begin{itemize}
-    \item A subview is a ’slice’ of a View that behaves as a View
-      \pause
-      \begin{itemize}
-        \item Same syntax as a View - access data using (multi-)index entries
-          \pause
-        \item The ’slice’ and original View point to the same data - no extra
-          memory allocation or copying
-      \end{itemize}
-      \pause
-    \item Can be constructed on host or within a kernel (no allocation
-      of memory occurs)
-      \pause
-    \item Similar capability as provided by Matlab, Fortran, Python, etc.
-      using ’colon’ notation
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]{Usage demo}
-  Begin with a View:
-  \begin{minted}{C++}
-    Kokkos::View<double ***> v("v", N0, N1, N2);
-  \end{minted}
-  \pause
-  Say we want a 2-dimensional slice at an index i0 in the first
-  dimension - that is, in Matlab/Fortran/Python notation:
-  \begin{minted}{python}
-    slicei0 = v[i0, :, :]
-  \end{minted}
-  \pause
-  This can be accomplished in Kokkos using a subview as follows:
-  \begin{minted}{C++}
-    auto slice = Kokkos::subview(v, i0, Kokkos::ALL, Kokkos::ALL);
-  \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]{Syntax}
-  \begin{minted}{C++}
-    Kokkos::subview(view, arg0, ...);
-  \end{minted}
-  \begin{itemize}
-    \item \texttt{view}: First argument to the subview is the view of which a slice will be taken
-    \item \texttt{argN}: Slice info for rank $N$ - provide same number of arguments as rank
-    \item Options for \texttt{argN}:
-      \begin{description}[partial range]
-        \item[index] integral type single value
-        \item[partial range] \texttt{std::pair} or \texttt{Kokkos::pair} of integral types to provide sub-range of a rank’s range $[0, N)$
-        \item[full range] use \texttt{Kokkos::ALL} rather than providing the full range as a pair
-      \end{description}
-    \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]{Subviews suggested usage}
-  \begin{itemize}
-    \item Use \texttt{auto} to determine the return type of a subview
-    \item A subview can help with encapsulation - e.g. can pass into functions expecting a lower-dimensional View
-    \item Use \texttt{Kokkos::pair} for partial ranges if subview created within a kernel
-    \item Avoid usage if very few data accesses will be made to the subview
-      \begin{itemize}
-        \item Construction of subview costs 20-40 operations
-      \end{itemize}
-  \end{itemize}
-\end{frame}
-
-\begin{exerciseframe}{From the sequential folder}
+\begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}{C++}
@@ -961,6 +896,72 @@
         \end{column}
     \end{columns}
 \end{exerciseframe}
+
+
+\begin{frame}{Subviews description (bonus)}
+    \begin{itemize}
+        \item A subview is a ’slice’ of a View that behaves as a View
+        \pause
+        \begin{itemize}
+            \item Same syntax as a View - access data using (multi-)index entries
+            \pause
+            \item The ’slice’ and original View point to the same data - no extra
+            memory allocation or copying
+        \end{itemize}
+        \pause
+        \item Can be constructed on host or within a kernel (no allocation
+        of memory occurs)
+        \pause
+        \item Similar capability as provided by Matlab, Fortran, Python, etc.
+        using ’colon’ notation
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Usage demo}
+    Begin with a View:
+    \begin{minted}{C++}
+        Kokkos::View<double ***> v("v", N0, N1, N2);
+    \end{minted}
+    \pause
+    Say we want a 2-dimensional slice at an index i0 in the first
+    dimension - that is, in Matlab/Fortran/Python notation:
+    \begin{minted}{python}
+        slicei0 = v[i0, :, :]
+    \end{minted}
+    \pause
+    This can be accomplished in Kokkos using a subview as follows:
+    \begin{minted}{C++}
+        auto slice = Kokkos::subview(v, i0, Kokkos::ALL, Kokkos::ALL);
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Syntax}
+    \begin{minted}{C++}
+        Kokkos::subview(view, arg0, ...);
+    \end{minted}
+    \begin{itemize}
+        \item \texttt{view}: First argument to the subview is the view of which a slice will be taken
+        \item \texttt{argN}: Slice info for rank $N$ - provide same number of arguments as rank
+        \item Options for \texttt{argN}:
+        \begin{description}[partial range]
+            \item[index] integral type single value
+            \item[partial range] \texttt{std::pair} or \texttt{Kokkos::pair} of integral types to provide sub-range of a rank’s range $[0, N)$
+            \item[full range] use \texttt{Kokkos::ALL} rather than providing the full range as a pair
+        \end{description}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Subviews suggested usage}
+    \begin{itemize}
+        \item Use \texttt{auto} to determine the return type of a subview
+        \item A subview can help with encapsulation - e.g. can pass into functions expecting a lower-dimensional View
+        \item Use \texttt{Kokkos::pair} for partial ranges if subview created within a kernel
+        \item Avoid usage if very few data accesses will be made to the subview
+        \begin{itemize}
+            \item Construction of subview costs 20-40 operations
+        \end{itemize}
+    \end{itemize}
+\end{frame}
 
 \section{Parallel loops}
 
@@ -1517,6 +1518,80 @@
     \end{columns}
 \end{frame}
 
+\begin{exerciseframe}{Build Kokkos for the OpenMP backend}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                -B build/openmp \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DKokkos_ENABLE_OPENMP=ON \
+                -DKokkos_ARCH_NATIVE=ON
+
+                cmake \
+                --build build/openmp \
+                --parallel 4
+
+                cmake \
+                --install build/openmp \
+                --prefix $HOME/opt/kokkos/openmp
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \begin{itemize}
+                \item Build and install Kokkos with the OpenMP backend
+                \item Pay attention to the \texttt{Kokkos\_ARCH\_NATIVE=ON} flag
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\begin{exerciseframe}{From the "hello\_world" folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/serial \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ROOT=$HOME/opt/kokkos/openmp
+
+                cmake \
+                    --build build/openmp
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Build the hello world code
+                \item Run with the \texttt{--kokkos-print-configuration} argument
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\begin{exerciseframe}{From your worktree or the "cpu" folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                -B build/openmp \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DKokkos_ROOT=$HOME/opt/kokkos/openmp
+
+                cmake \
+                --build build/openmp
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \begin{itemize}
+                \item Build your code using this OpenMP instance of Kokkos
+                \item Run with and without I/Os with the \texttt{time} command
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\section{Performance on CPU}
+
 \begin{frame}[fragile]{Performance scaling in parallel computing}
 
 \textbf{Scaling} describes how application performance changes as more compute
@@ -1618,58 +1693,7 @@ processor approximately constant.
 
 \end{frame}
 
-\begin{exerciseframe}{Build Kokkos for the OpenMP backend}
-    \begin{columns}
-        \begin{column}{0.55\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -S /src/kokkos \
-                    -B build/openmp \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ENABLE_OPENMP=ON \
-                    -DKokkos_ARCH_NATIVE=ON
-
-                cmake \
-                    --build build/openmp \
-                    --parallel 4
-
-                cmake \
-                    --install build/openmp \
-                    --prefix $HOME/opt/kokkos/openmp
-            \end{minted}
-        \end{column}
-        \begin{column}{0.45\linewidth}
-            \begin{itemize}
-                \item Build and install Kokkos with the OpenMP backend
-                \item Pay attention to the \texttt{Kokkos\_ARCH\_NATIVE=ON} flag
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{exerciseframe}
-
-\begin{exerciseframe}{From your worktree or the cpu folder}
-    \begin{columns}
-        \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/openmp \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=$HOME/opt/kokkos/openmp
-
-                cmake \
-                    --build build/openmp
-            \end{minted}
-        \end{column}
-        \begin{column}{0.45\linewidth}
-            \begin{itemize}
-                \item Build your code using this OpenMP instance of Kokkos
-                \item Run with and without I/Os with the \texttt{time} command
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{exerciseframe}
-
-\begin{exerciseframe}{From your worktree or the cpu folder}
+\begin{exerciseframe}{From your worktree or the "cpu" folder}
     \begin{itemize}
         \item Perform a strong scaling
         \item Perform a weak scaling
@@ -1993,7 +2017,7 @@ processor approximately constant.
     \end{itemize}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree or the cpu folder}
+\begin{exerciseframe}{From your worktree or the "cpu" folder}
 \begin{columns}
     \begin{column}{0.5\linewidth}
         \begin{minted}{C++}
@@ -2012,7 +2036,7 @@ processor approximately constant.
         \begin{itemize}
             \item Duplicate your worktree folder to a different name
             \item Add the Kokkos SIMD header
-            \item Use Kokkos::Experimental::simd instead of scalars to compute the Gray Scott stencil
+            \item Use \texttt{simd} instead of scalars to compute the Gray--Scott stencil
             \item The checksum must remain the same!
         \end{itemize}
     \end{column}

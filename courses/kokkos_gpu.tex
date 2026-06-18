@@ -380,7 +380,30 @@
     \end{columns}
 \end{exerciseframe}
 
-\begin{exerciseframe}{From the cpu folder}
+
+\begin{exerciseframe}{From the "hello\_world" folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/serial \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ROOT=$HOME/opt/kokkos/cuda
+
+                cmake \
+                    --build build/cuda
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Build the hello world code
+                \item Run with the \texttt{--kokkos-print-configuration} argument
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\begin{exerciseframe}{From the "cpu" folder}
     \begin{columns}
         \begin{column}{0.55\linewidth}
             \begin{minted}[breakafter={=}]{sh}
@@ -771,7 +794,7 @@
     \end{columns}
 \end{exerciseframe}
 
-%\section{Layout and iteration order}
+\section{Layout and iteration order}
 
 \begin{frame}{Reminder about Views layout}
     \begin{center}
@@ -1703,7 +1726,7 @@
     \end{center}
 \end{frame}
 
-\begin{exerciseframe}{From the cpu\_simd folder (optional)}
+\begin{exerciseframe}{From the "cpu\_simd" folder (optional)}
     \begin{itemize}
         \item Apply the same modifications we have done so far in the \texttt{cpu\_simd} folder
     \end{itemize}
@@ -1878,7 +1901,7 @@
     \end{uncoverenv}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree or the gpu folder}
+\begin{exerciseframe}{From your worktree or the "gpu" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \centering
@@ -2062,7 +2085,7 @@
     \end{uncoverenv}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree or the gpu\_async folder}
+\begin{exerciseframe}{From your worktree or the "gpu\_async" folder}
     \begin{columns}
         \begin{column}{0.6\linewidth}
             \centering
