@@ -822,7 +822,7 @@
         \begin{column}{0.5\linewidth}
             \begin{minted}{C++}
                 Kokkos::View<int**, Layout>
-                  my_matrix("matrix", 10, 10);
+                    my_matrix("matrix", 10, 10);
             \end{minted}
         \end{column}
         \begin{column}{0.5\linewidth}
@@ -2001,8 +2001,8 @@ processor approximately constant.
 
             // ...
 
-            using simd_type =
-                Kokkos::Experimental::simd<real>;
+            using KE = Kokkos::Experimental;
+            using simd_type = KE::simd<real>;
 
             View a("A", N, M);
             simd_type a_simd(&a(0, 0));
