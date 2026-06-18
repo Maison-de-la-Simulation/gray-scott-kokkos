@@ -43,7 +43,7 @@ struct Parameters {
     void describe() const;
 
     /**
-     * @brief Show the size of elements for the number of arrays.
+     * @brief Show the memory size of used arrays in mebibytes.
      * @tparam real Type of data in the array.
      * @param n_arrays The number of arrays that will be used.
      * @param label Label to show (usually CPU, GPU, or CPU/GPU).
@@ -73,8 +73,8 @@ void Parameters::show_size(const std::size_t n_arrays,
                            const char* label) const {
     std::cout << "Memory size (" << n_arrays << " arrays): "
               << n_arrays * this->n_rows_ext * this->n_columns_ext *
-                     sizeof(real)
-              << " bytes";
+                     sizeof(real) / 1024 / 1024
+              << " MiB";
 
     if (label) {
         std::cout << "(" << label << ")";
