@@ -48,7 +48,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{env.registry}}/thomas.padioleau/gray-scott-kokkos/test_kokkos_${{matrix.architecture}}_${{matrix.image}}
+          images: ${{env.registry}}/thomas.padioleau/gray-scott-kokkos/kokkos_${{matrix.architecture}}_${{matrix.image}}
           tags: |
             type=sha
             type=ref,event=branch
