@@ -2,8 +2,6 @@
 
 BASE_REGISTRY=gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
 
-cd ..
-
 docker buildx build --push --platform linux/amd64,linux/arm64 --tag $BASE_REGISTRY/kokkos_cpu_interactive:latest -f docker/cpu/interactive/Dockerfile .
 docker buildx build --push --platform linux/amd64,linux/arm64 --tag $BASE_REGISTRY/kokkos_cpu_interactive_jupyter:latest -f docker/cpu/interactive_jupyter/Dockerfile .
 docker buildx build --push --platform linux/amd64,linux/arm64 --tag $BASE_REGISTRY/kokkos_cpu_interactive_vscode:latest -f docker/cpu/interactive_vscode/Dockerfile .
