@@ -2607,6 +2607,7 @@
         double alpha = 1.0, beta  = 0.0;
         KokkosBlas::gemv("N", alpha, A, x, beta, y);
 
+        // check outcome
         auto y_host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), y);
         for (int i = 0; i < n; i++) {
             std::cout << "y(" << i << ") = " << y_host(i) << std::endl;
@@ -2657,14 +2658,13 @@
     \begin{columns}
         \begin{column}{0.8\linewidth}
             \begin{minted}[fontsize=\tiny]{C++}
-                // Handle wrapping Kokkos exec space + comm object (e.g. MPI_Comm, ncclComm_t, etc.)
                 KokkosComm::Handle handle(exec_space, comm_object);
 
                 Kokkos::View<double**> A("A", local_m, global_n); // 1D row-wise partitioning
                 Kokkos::View<double*> x("x", global_n);
                 Kokkos::View<double*> y("y", local_m);
 
-                // Initialize local part of vector x
+                // Initialize local part of vector x on each process
                 Kokkos::parallel_for(
                     "init local x",
                     Kokkos::RangePolicy(exec_space, handle.rank() * local_m, (handle.rank() + 1) * local_m),
@@ -2672,9 +2672,9 @@
                 );
                 exec_space.fence();
 
-                // Initiate in-place all-gather communication of x
                 auto allgather_req = KokkosComm::allgather(handle, x, x);
-                // Initialize local part of `A` on each process
+
+                // Initialize local part of A on each process
                 Kokkos::parallel_for(
                     "init local A",
                     Kokkos::MDRangePolicy({0, 0}, {local_m, global_n}),
@@ -2682,9 +2682,8 @@
                 );
                 exec_space.fence();
 
-                // Wait for all-gather of x to finish
                 KokkosComm::wait(allgather_req);
-                // Perform local matrix-vector multiplication
+
                 KokkosBlas::gemv("N", alpha, A, x, beta, y);
             \end{minted}
         \end{column}
