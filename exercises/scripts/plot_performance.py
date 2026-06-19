@@ -22,7 +22,7 @@ plt.semilogx(size, perf_v100, '-o', linewidth=2, label='Nvidia V100')
 plt.semilogx(size, perf_a100, '-o', linewidth=2, label='Nvidia A100')
 
 plt.xlabel('Problem size')
-plt.ylabel('Performance (Mpoint-updates/s')
+plt.ylabel('Performance (Mpoint-updates/s)')
 plt.title('Performance of different architectures')
 
 # Legend and grid
