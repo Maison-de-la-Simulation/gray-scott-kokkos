@@ -1,5 +1,4 @@
 #include <Kokkos_Core.hpp>
-#include <Kokkos_Graph.hpp>
 #include <utility>
 
 #include "helpers.hpp"

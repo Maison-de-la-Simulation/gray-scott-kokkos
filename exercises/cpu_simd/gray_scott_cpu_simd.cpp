@@ -8,8 +8,8 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_SIMD.hpp>
-#include <utility>
 #include <iostream>
+#include <utility>
 
 #include "helpers.hpp"
 #include "output_writer.hpp"
