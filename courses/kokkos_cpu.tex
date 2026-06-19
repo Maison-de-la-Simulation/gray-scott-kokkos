@@ -6,6 +6,7 @@
 
 \usepackage{minted}
 \usepackage{todonotes}
+\usepackage{makecell}
 
 \usetheme{gray-scott}
 
@@ -1601,11 +1602,11 @@ resources (CPU cores, nodes, GPUs) are added.
 \vspace{0.5em}
 
 \begin{center}
-    \begin{table}{Two Fundamental Types}{ll}
-        \textbf{Strong Scaling} & \textbf{Weak Scaling} \\\hline
-        Fixed problem size & Problem size grows with processor count \\
-        Increase processor count & Work per processor remains constant \\
-        Goal: reduce time-to-solution & Goal: maintain runtime while solving larger problems \\
+    \begin{table}{Two Fundamental Types}{l|ll}
+        \textbf{Aspect} & \textbf{Strong Scaling} & \textbf{Weak Scaling} \\\hline
+        Problem size & Fixed & Grows with processor count \\
+        Work per processor & Decreases & Remains constant \\
+        Goal & Reduce time-to-solution & \makecell[l]{Maintain runtime while solving\\larger problems} \\
     \end{table}
 \end{center}
 
@@ -1623,7 +1624,7 @@ resources (CPU cores, nodes, GPUs) are added.
 
 \begin{block}{Definition}
 Strong scaling measures how execution time decreases when solving a
-\textbf{fixed-size problem} using more processors.
+\textbf{fixed-size problem} using more processors
 \end{block}
 
 \begin{columns}
@@ -1660,15 +1661,15 @@ Strong scaling measures how execution time decreases when solving a
 \begin{frame}[fragile]{Weak Scaling}
 
 \begin{block}{Definition}
-Weak scaling measures how runtime changes when both the number of processors
-and the total problem size increase proportionally, keeping the workload per
-processor approximately constant.
+Weak scaling measures how runtime changes when \textbf{both the number of processors
+and the total problem size} increase proportionally, keeping the workload per
+processor approximately constant
 \end{block}
 
 \vspace{0.5em}
 
 \begin{columns}
-    \begin{column}{0.5\linewidth}
+    \begin{column}{0.4\linewidth}
         \textbf{Ideal weak scaling}
 
         \[
@@ -1681,7 +1682,7 @@ processor approximately constant.
         E(P) = \frac{T(1)}{T(P)}
         \]
     \end{column}
-    \begin{column}{0.5\linewidth}
+    \begin{column}{0.6\linewidth}
         \textbf{Common limitations}
         \begin{itemize}
             \item Communication growth
@@ -1696,18 +1697,30 @@ processor approximately constant.
 
 \begin{exerciseframe}{From your worktree or the "cpu" folder}
     \begin{itemize}
-        \item Perform a strong scaling
-        \item Perform a weak scaling
+        \item Perform scalings
+        \begin{itemize}
+            \item Strong scaling
+            \item Weak scaling
+        \end{itemize}
+        \item From 1 core to the maximum number of cores in the node
     \end{itemize}
 \end{exerciseframe}
 
-\begin{frame}[fragile]{Example of weak scaling on the Ruche supercomputer}
+\begin{frame}{Scalings on the Ruche supercomputer}
+    \begin{description}[Location]
+        \item[Name] Ruche cluster
+        \item[Location] IDRIS, Moulon, Île-de-France
+        \item[CPU] Intel Xeon Gold 6230, 2.1 GHz, 20 cores per socket, 2 sockets per node
+    \end{description}
+\end{frame}
+
+\begin{frame}[fragile]{Example of weak scaling on Ruche}
     \begin{center}
         \includegraphics[width=0.8\textwidth]{weak_scaling_ruche.pdf}
     \end{center}
 \end{frame}
 
-\begin{frame}[fragile]{Example of strong scaling on the Ruche supercomputer}
+\begin{frame}[fragile]{Example of strong scaling on Ruche}
     \begin{center}
         \includegraphics[width=0.8\textwidth]{strong_scaling_ruche.pdf}
     \end{center}
