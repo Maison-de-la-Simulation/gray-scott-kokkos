@@ -2,7 +2,6 @@
 #include <utility>
 
 #include "helpers.hpp"
-#include "helpers_pod.hpp"
 #include "macros_pod.hpp"
 #include "output_writer.hpp"
 #include "parameters.hpp"
@@ -140,10 +139,10 @@ int main(int argc, char *argv[]) {
 
     // print init if requested
     if (parameters.display_fields) {
-        helpers_pod::print_field(u, "u", parameters.n_rows_ext,
-                                 parameters.n_columns_ext, 0);
-        helpers_pod::print_field(v, "v", parameters.n_rows_ext,
-                                 parameters.n_columns_ext, 0);
+        helpers::print_field(u, "u", parameters.n_rows_ext,
+                             parameters.n_columns_ext, 0);
+        helpers::print_field(v, "v", parameters.n_rows_ext,
+                             parameters.n_columns_ext, 0);
     }
 
     // write init
@@ -178,12 +177,10 @@ int main(int argc, char *argv[]) {
 
     // print last if requested
     if (parameters.display_fields) {
-        helpers_pod::print_field(u, "u", parameters.n_rows_ext,
-                                 parameters.n_columns_ext,
-                                 parameters.n_iterations);
-        helpers_pod::print_field(v, "v", parameters.n_rows_ext,
-                                 parameters.n_columns_ext,
-                                 parameters.n_iterations);
+        helpers::print_field(u, "u", parameters.n_rows_ext,
+                             parameters.n_columns_ext, parameters.n_iterations);
+        helpers::print_field(v, "v", parameters.n_rows_ext,
+                             parameters.n_columns_ext, parameters.n_iterations);
     }
 
     // free memory

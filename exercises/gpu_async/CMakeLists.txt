@@ -21,7 +21,7 @@ target_link_libraries(
     gray_scott_gpu_async
     PRIVATE
         Kokkos::kokkos
-        common_kokkos
+        common
 )
 
 add_test(
