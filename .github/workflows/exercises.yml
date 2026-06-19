@@ -69,7 +69,7 @@ jobs:
           cmake \
             --install /tmp/build/kokkos-tools \
             --prefix /opt/kokkos-tools
-      - name: Prepare all exercices
+      - name: Prepare all exercises
         run: |
           cmake \
             -B /tmp/build/exercises \
