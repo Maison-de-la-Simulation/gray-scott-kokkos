@@ -14,10 +14,10 @@
     \begin{frame}{Outline}
         \begin{columns}
             \begin{column}{0.5\linewidth}
-                \tableofcontents[currentsection, sections=1-8]
+                \tableofcontents[currentsection, sections=1-7]
             \end{column}
             \begin{column}{0.5\linewidth}
-                \tableofcontents[currentsection, sections=9-16]
+                \tableofcontents[currentsection, sections=8-16]
             \end{column}
         \end{columns}
     \end{frame}
@@ -120,10 +120,10 @@
 \begin{frame}{Outline}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \tableofcontents[sections=1-8]
+            \tableofcontents[sections=1-7]
         \end{column}
         \begin{column}{0.5\linewidth}
-            \tableofcontents[sections=9-16]
+            \tableofcontents[sections=8-16]
         \end{column}
     \end{columns}
 \end{frame}
@@ -2171,7 +2171,7 @@
 
 \section{Atomics}
 
-\begin{frame}[fragile]{Race condition (bonus)}
+\begin{frame}[fragile]{Race condition}
     Porting a code creating a histogram:
     \begin{columns}
         \begin{column}{0.5\linewidth}
@@ -2506,7 +2506,7 @@
 
 \section{Kokkos ecosystem}
 
-\begin{frame}{Kokkos ekosystem (bonus)}
+\begin{frame}{Kokkos ekosystem}
     \begin{center}
         \includegraphics[width=0.9\textwidth]{ekokkosystem}
     \end{center}
@@ -2766,9 +2766,11 @@
         \item Kokkos-Tools
         \item Explicit memory management with mirrors
         \item GPU optimization with asynchronous execution
+        \item Atomic operations
+        \item Algorithms API
+        \item Kokkos ecosystem
     \end{itemize}
     \pause
-    \vspace{2em}
     \begin{block}{Congratulations}
         You can now write Kokkos portable code!
     \end{block}
