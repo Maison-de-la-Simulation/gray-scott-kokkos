@@ -6,6 +6,7 @@ USER root
 
 RUN mkdir -p /src \
  && chown -R $MAMBA_USER:$MAMBA_USER /src
+RUN date > /version.txt
 
 RUN case "$TARGETPLATFORM" in \
         "linux/amd64") archive_url="https://developer.nvidia.com/downloads/assets/tools/secure/nsight-systems/2025_1/NsightSystems-linux-public-2025.1.1.131-3554042.run" ;; \
@@ -19,7 +20,6 @@ RUN case "$TARGETPLATFORM" in \
 
 USER $MAMBA_USER
 
-RUN date > /version.txt
 RUN git clone --branch 5.1.1 https://github.com/kokkos/kokkos.git /src/kokkos
 RUN git clone https://github.com/kokkos/kokkos-tools.git /src/kokkos-tools && git -C /src/kokkos-tools checkout 3d33d0a783c5321d6981b3b4e43d3c157d2ca887
 COPY exercises /home/$MAMBA_USER/Examples/exercises
