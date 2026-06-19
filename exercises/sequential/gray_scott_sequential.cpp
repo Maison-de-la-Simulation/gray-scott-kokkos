@@ -99,8 +99,8 @@ void compute(real const *u, real const *v, real *u_temp, real *v_temp,
 real check(const real *field, const char *label, const std::size_t n_rows_ext,
            const std::size_t n_columns_ext, const std::size_t iteration) {
     real checksum = 0;
-    for (int i = 0; i < n_rows_ext; i++) {
-        for (int j = 0; j < n_columns_ext; j++) {
+    for (int i = 1; i < n_rows_ext - 1; i++) {
+        for (int j = 1; j < n_columns_ext - 1; j++) {
             checksum += field[ACCESS(i, j)];
         }
     }
