@@ -6,7 +6,7 @@ USER root
 
 RUN mkdir -p /src \
  && chown -R $MAMBA_USER:$MAMBA_USER /src
-RUN date > /version.txt
+RUN date -I > /version.txt
 
 RUN case "$TARGETPLATFORM" in \
         "linux/amd64") archive_url="https://developer.nvidia.com/downloads/assets/tools/secure/nsight-systems/2025_1/NsightSystems-linux-public-2025.1.1.131-3554042.run" ;; \

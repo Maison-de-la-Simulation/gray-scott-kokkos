@@ -4,7 +4,7 @@ USER root
 
 RUN mkdir -p /src \
  && chown -R $MAMBA_USER:$MAMBA_USER /src
-RUN date > /version.txt
+RUN date -I > /version.txt
 
 USER $MAMBA_USER
 
