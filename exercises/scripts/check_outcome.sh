@@ -56,7 +56,7 @@ output=$("$program" -n "$size_n" -m "$size_m")
 
 # check checksums
 checksums=$(get_checksums "$output")
-checksums_expected="97.58
+checksums_expected="53.58
 0.60"
 if [[ "$checksums" = "$checksums_expected" ]]
 then

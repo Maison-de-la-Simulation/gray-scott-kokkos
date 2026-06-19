@@ -229,7 +229,7 @@ View::value_type check(const View &field, const std::size_t iteration) {
         "check fields",
         Kokkos::MDRangePolicy<
             Kokkos::Rank<2, Kokkos::Iterate::Default, Kokkos::Iterate::Right>>(
-            {0, 0}, {field.extent(0), field.extent(1)}),
+            {1, 1}, {field.extent(0) - 1, field.extent(1) - 1}),
         KOKKOS_LAMBDA(const int i, const int j,
                       View::value_type &checksum_local) {
             checksum_local += field(i, j);
