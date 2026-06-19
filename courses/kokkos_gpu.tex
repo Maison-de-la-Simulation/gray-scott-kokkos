@@ -122,10 +122,6 @@
     \begin{columns}
         \begin{column}{0.65\linewidth}
             \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
-                git clone https://github.com/Maison-de-la-Simulation/gray-scott-kokkos.git
-
-                cd gray-scott-kokkos
-
                 srun ... --pty /bin/bash
 
                 REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
@@ -135,11 +131,15 @@
                 apptainer run --nv $REPO/kokkos_gpu_interactive_jupyter
                 apptainer run --nv $REPO/kokkos_gpu_interactive_vscode
                 apptainer run --nv $REPO/kokkos_gpu_learning_platform_code_server
+
+                # if needed (you shouldn't have to)
+                cp -rn /home/jovyan/Examples $HOME/gray_scott_kokkos
+
+                cd $HOME/gray_scott_kokkos
             \end{minted}
         \end{column}
         \begin{column}{0.35\linewidth}
             \begin{itemize}
-                \item Clone the Gray-Scott Kokkos repository (if not already)
                 \item Reserve a job for the day/half a day (ask your satellite staff)
                 \item Run Apptainer with the desired image
                 \begin{itemize}
@@ -148,6 +148,7 @@
                     \item VSCode
                     \item CodeServer
                 \end{itemize}
+                \item \structure{If you didn't follow last week session,} duplicate the exercises in your home directory
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1748,10 +1749,6 @@
     \begin{columns}
         \begin{column}{0.65\linewidth}
             \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
-                git clone https://github.com/Maison-de-la-Simulation/gray-scott-kokkos.git
-
-                cd gray-scott-kokkos
-
                 srun ... --pty /bin/bash
 
                 REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
@@ -1761,11 +1758,12 @@
                 apptainer run --nv $REPO/kokkos_gpu_interactive_jupyter
                 apptainer run --nv $REPO/kokkos_gpu_interactive_vscode
                 apptainer run --nv $REPO/kokkos_gpu_learning_platform_code_server
+
+                cd $HOME/gray_scott_kokkos
             \end{minted}
         \end{column}
         \begin{column}{0.35\linewidth}
             \begin{itemize}
-                \item Clone the Gray-Scott Kokkos repository (if not already)
                 \item Reserve a job for half a day (if needed, ask your satellite staff)
                 \item Run Apptainer with the desired image
                 \begin{itemize}
