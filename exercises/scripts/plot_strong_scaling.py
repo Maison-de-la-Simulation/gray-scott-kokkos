@@ -9,8 +9,8 @@ num_threads = 2**np.arange(6)
 speedup = runtime[0] / runtime
 
 plt.figure(figsize=(8, 5))
-plt.loglog(num_threads, speedup, '-o', linewidth=2, label='Measured speedup')
-plt.loglog(num_threads, num_threads, '--', linewidth=2, label='Ideal speedup')
+plt.plot(num_threads, speedup, '-o', linewidth=2, label='Measured speedup')
+plt.plot(num_threads, num_threads, '--', linewidth=2, label='Ideal speedup')
 
 plt.xlabel('Number of threads')
 plt.ylabel('Speedup')
