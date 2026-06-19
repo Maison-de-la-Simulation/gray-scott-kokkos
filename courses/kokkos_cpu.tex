@@ -2001,7 +2001,7 @@ processor approximately constant
 \begin{frame}[fragile]{Example: adding two views}
     The vectorized version is as follows
     \begin{minted}{C++}
-        using KE = Kokkos::Experimental;
+        namespace KE = Kokkos::Experimental;
         using simd_type = KE::simd<double>;
         Kokkos::parallel_for("add", N / simd_type::size(),
             KOKKOS_LAMBDA(int i) {
