@@ -107,6 +107,13 @@
 
 \section{Introduction to Kokkos}
 
+\begin{frame}{What do we want?}
+    \begin{itemize}
+        \item There are many programming models available
+        \item How to choose one?
+    \end{itemize}
+\end{frame}
+
 \begin{frame}{Performance, portability and productivity}
     \begin{columns}[T]
         \begin{column}{0.45\linewidth}
@@ -177,7 +184,7 @@
     \end{center}
     \begin{itemize}
         \item Kokkos provides data structures and functions based on modern C++ to build your application
-        \item Developers never directly use underlying backends (no Cuda kernels for instance)
+        \item Developers never directly use underlying backends (no CUDA kernels, no OpenMP pragmas for instance)
     \end{itemize}
 \end{frame}
 
@@ -248,7 +255,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Institutions working on Kokkos}
+\begin{frame}{Institutions contributing to Kokkos}
     \centering
     \begin{tabular}{cccc}
         \includegraphics[width=8em, height=3em, keepaspectratio]{anl} &
@@ -261,7 +268,7 @@
     \end{tabular}
 \end{frame}
 
-\begin{frame}{The CExA project at CEA}
+\begin{frame}{The \textcolor{lightmain}{C}ExA project at CEA}
     \begin{columns}
         \begin{column}{0.8\linewidth}
             \begin{itemize}
@@ -291,6 +298,13 @@
         \item[Slack channel] \url{https://kokkosteam.slack.com}
         \item[Cheat sheet] \url{https://cexa-project.org/documents}
     \end{description}
+
+    \pause
+    \vspace{1em}
+
+    \begin{block}{New version incoming!}
+        Kokkos v5.2.0 to be released this July
+    \end{block}
 \end{frame}
 
 \section{Docker images}
@@ -371,6 +385,7 @@
         \item Kokkos is compiled to target a specific backend
         \item Kokkos is portable until you compile it
         \item You need one compilation per backend
+        \item Compilation managed by CMake (no Makefiles!)
     \end{itemize}
     \begin{center}
         \includegraphics[width=0.6\textwidth]{kokkos_backend.png}
@@ -584,6 +599,7 @@
                 \item Include the Kokkos header file (like any other library)
                 \item Use the Kokkos namespace \texttt{Kokkos::}
                 \item Initialize and finalize Kokkos (like MPI)
+                \item Takes \texttt{argc} and \texttt{argv} to be interacted from the command line
             \end{itemize}
         \end{column}
     \end{columns}
@@ -702,7 +718,7 @@
     \end{columns}
 \end{exerciseframe}
 
-\section{Sequential implementation}
+\section{Gray--Scott sequential implementation}
 
 \begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
@@ -929,6 +945,13 @@
 \begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
+            \begin{minted}{sh}
+                cp -r sequential my_gs
+                cd my_gs
+                mv CMakeLists.txt{.sample,}
+                mv gray_scott{_sequential,}.cpp
+            \end{minted}
+
             \begin{minted}{C++}
                 #include <Kokkos_Core.hpp>
 
@@ -944,6 +967,7 @@
         \begin{column}{0.5\linewidth}
             \begin{itemize}
                 \item Duplicate the \texttt{sequential} folder to a different name
+                \item Rename the CMake list sample file and the C++ file
                 \item Add the Kokkos header
                 \item Use Kokkos views instead of plain-old-data arrays for \texttt{u} and \texttt{v} (and temporary arrays) in \texttt{main} and in \texttt{compute}
                 \item For now, just pass a raw pointer when calling \texttt{check} and \texttt{print\_field}
