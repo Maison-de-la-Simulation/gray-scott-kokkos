@@ -12,8 +12,14 @@
 
 \AtBeginSection{
     \begin{frame}{Outline}
-        \renewcommand{\baselinestretch}{0.25}
-        \tableofcontents[currentsection]
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+                \tableofcontents[currentsection, sections=1-6]
+            \end{column}
+            \begin{column}{0.5\linewidth}
+                \tableofcontents[currentsection, sections=7-16]
+            \end{column}
+        \end{columns}
     \end{frame}
 }
 
@@ -32,7 +38,6 @@
     fontsize=\scriptsize,
 }
 
-% Captions
 % Captions
 \renewcommand{\caption}[1]{%
     \begin{center}
@@ -82,8 +87,14 @@
 \end{frame}
 
 \begin{frame}{Outline}
-    \renewcommand{\baselinestretch}{0.5}
-    \tableofcontents
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \tableofcontents[sections=1-7]
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \tableofcontents[sections=8-16]
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \section{Introduction to Kokkos}
@@ -197,7 +208,7 @@
 
 \begin{frame}{Kokkos ecosystem}
     \begin{center}
-        \includegraphics[width=0.9\textwidth]{kokkos-ecosystem.png}
+        \includegraphics[width=0.9\textwidth]{ekokkosystem}
     \end{center}
 \end{frame}
 
@@ -225,6 +236,42 @@
                 \item Not a purely American project anymore
                 \item Sustainability of the development for the long run
             \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Institutions working on Kokkos}
+    \centering
+    \begin{tabular}{cccc}
+        \includegraphics[width=8em, height=3em, keepaspectratio]{anl} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{cea} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{cscs} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{lanl} \\
+        \includegraphics[width=8em, height=3em, keepaspectratio]{lbl} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{ornl} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{snl}
+    \end{tabular}
+\end{frame}
+
+\begin{frame}{The CExA project at CEA}
+    \begin{columns}
+        \begin{column}{0.8\linewidth}
+            \begin{itemize}
+                \item \structure{C}omputing at \structure{Ex}ascale with \structure{A}ccelerators at CEA
+                \item Started in 2023
+                \item Alice Recoque exascale supercomputer in 2027, at CEA
+                \item Joint effort at CEA to help the migration of HPC codes to GPU
+                \begin{itemize}
+                    \item Provide GPU programming model (long term, sustainable)
+                    \item Support application demonstrators (CEA codes)
+                    \item Propose dissemination of information (training, meetings)
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.2\linewidth}
+            \centering
+
+            \includegraphics[width=0.8\linewidth]{CExA_logo}
         \end{column}
     \end{columns}
 \end{frame}
@@ -647,7 +694,7 @@
     \end{columns}
 \end{exerciseframe}
 
-\section{Sequential implementation of the Gray--Scott equation}
+\section{Sequential implementation}
 
 \begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
