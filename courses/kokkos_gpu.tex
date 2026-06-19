@@ -380,7 +380,30 @@
     \end{columns}
 \end{exerciseframe}
 
-\begin{exerciseframe}{From the cpu folder}
+
+\begin{exerciseframe}{From the "hello\_world" folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/serial \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ROOT=$HOME/opt/kokkos/cuda
+
+                cmake \
+                    --build build/cuda
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Build the hello world code
+                \item Run with the \texttt{--kokkos-print-configuration} argument
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\begin{exerciseframe}{From the "cpu" folder}
     \begin{columns}
         \begin{column}{0.55\linewidth}
             \begin{minted}[breakafter={=}]{sh}
@@ -771,7 +794,7 @@
     \end{columns}
 \end{exerciseframe}
 
-%\section{Layout and iteration order}
+\section{Layout and iteration order}
 
 \begin{frame}{Reminder about Views layout}
     \begin{center}
@@ -1674,10 +1697,22 @@
     \end{center}
 \end{frame}
 
-\section{Performance?}
+\section{Performance}
 
-\begin{frame}{Performance}
-    \missingfigure{Performance}
+\begin{frame}{The Ruche supercomputer}
+    \begin{description}[Location]
+        \item[Name] Ruche cluster
+        \item[Location] IDRIS, Moulon, Île-de-France
+        \item[CPU] Intel Xeon Gold 6230, 2.1 GHz, 20 cores per socket, 2 sockets per node
+        \item[GPU] NVIDIA V100, 4 devices per node
+        \item[GPU] NVIDIA A100, 4 devices per node
+    \end{description}
+\end{frame}
+
+\begin{frame}{Performance result on Ruche}
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{performance_ruche.pdf}
+    \end{center}
 \end{frame}
 
 \section{SIMD on GPU}
@@ -1701,7 +1736,7 @@
     \end{center}
 \end{frame}
 
-\begin{exerciseframe}{From the cpu\_simd folder (optional)}
+\begin{exerciseframe}{From the "cpu\_simd" folder (optional)}
     \begin{itemize}
         \item Apply the same modifications we have done so far in the \texttt{cpu\_simd} folder
     \end{itemize}
@@ -1876,7 +1911,7 @@
     \end{uncoverenv}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree or the gpu folder}
+\begin{exerciseframe}{From your worktree or the "gpu" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \centering
@@ -1914,6 +1949,7 @@
                 \item Roll the operations of the loop
                 \item Take care of the boundary effects
                 \item Adjust the fences
+                \item Beware, there is a subtlety on CPU
             \end{itemize}
         \end{column}
     \end{columns}
@@ -2059,7 +2095,7 @@
     \end{uncoverenv}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree or the gpu\_async folder}
+\begin{exerciseframe}{From your worktree or the "gpu\_async" folder}
     \begin{columns}
         \begin{column}{0.6\linewidth}
             \centering
@@ -2100,7 +2136,7 @@
                 \end{itemize}
                 \item Differentiate the \texttt{deep\_copy} for the duplication and for the synchronization
                 \item Adjust the fences
-                \item Beware, there is a subtlety
+                \item Beware, there is a subtlety on CPU
             \end{itemize}
         \end{column}
     \end{columns}

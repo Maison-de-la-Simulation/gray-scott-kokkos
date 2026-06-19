@@ -6,6 +6,7 @@
 
 \usepackage{minted}
 \usepackage{todonotes}
+\usepackage{makecell}
 
 \usetheme{gray-scott}
 
@@ -624,7 +625,7 @@
     \end{columns}
 \end{frame}
 
-\begin{exerciseframe}{From the hello\_world folder}
+\begin{exerciseframe}{From the "hello\_world" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}[breakafter={=}]{sh}
@@ -639,8 +640,8 @@
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
-                \item Spin up the environment
                 \item Build the hello world code
+                \item Run with the \texttt{--kokkos-print-configuration} argument
             \end{itemize}
         \end{column}
     \end{columns}
@@ -648,7 +649,7 @@
 
 \section{Sequential implementation of the Gray--Scott equation}
 
-\begin{exerciseframe}{From the sequential folder}
+\begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}[breakafter={=}]{sh}
@@ -822,7 +823,7 @@
         \begin{column}{0.5\linewidth}
             \begin{minted}{C++}
                 Kokkos::View<int**, Layout>
-                  my_matrix("matrix", 10, 10);
+                    my_matrix("matrix", 10, 10);
             \end{minted}
         \end{column}
         \begin{column}{0.5\linewidth}
@@ -870,72 +871,7 @@
     \end{columns}
 \end{frame}
 
-\begin{frame}{Subviews description}
-  \begin{itemize}
-    \item A subview is a ’slice’ of a View that behaves as a View
-      \pause
-      \begin{itemize}
-        \item Same syntax as a View - access data using (multi-)index entries
-          \pause
-        \item The ’slice’ and original View point to the same data - no extra
-          memory allocation or copying
-      \end{itemize}
-      \pause
-    \item Can be constructed on host or within a kernel (no allocation
-      of memory occurs)
-      \pause
-    \item Similar capability as provided by Matlab, Fortran, Python, etc.
-      using ’colon’ notation
-  \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]{Usage demo}
-  Begin with a View:
-  \begin{minted}{C++}
-    Kokkos::View<double ***> v("v", N0, N1, N2);
-  \end{minted}
-  \pause
-  Say we want a 2-dimensional slice at an index i0 in the first
-  dimension - that is, in Matlab/Fortran/Python notation:
-  \begin{minted}{python}
-    slicei0 = v[i0, :, :]
-  \end{minted}
-  \pause
-  This can be accomplished in Kokkos using a subview as follows:
-  \begin{minted}{C++}
-    auto slice = Kokkos::subview(v, i0, Kokkos::ALL, Kokkos::ALL);
-  \end{minted}
-\end{frame}
-
-\begin{frame}[fragile]{Syntax}
-  \begin{minted}{C++}
-    Kokkos::subview(view, arg0, ...);
-  \end{minted}
-  \begin{itemize}
-    \item \texttt{view}: First argument to the subview is the view of which a slice will be taken
-    \item \texttt{argN}: Slice info for rank $N$ - provide same number of arguments as rank
-    \item Options for \texttt{argN}:
-      \begin{description}[partial range]
-        \item[index] integral type single value
-        \item[partial range] \texttt{std::pair} or \texttt{Kokkos::pair} of integral types to provide sub-range of a rank’s range $[0, N)$
-        \item[full range] use \texttt{Kokkos::ALL} rather than providing the full range as a pair
-      \end{description}
-    \end{itemize}
-\end{frame}
-
-\begin{frame}[fragile]{Subviews suggested usage}
-  \begin{itemize}
-    \item Use \texttt{auto} to determine the return type of a subview
-    \item A subview can help with encapsulation - e.g. can pass into functions expecting a lower-dimensional View
-    \item Use \texttt{Kokkos::pair} for partial ranges if subview created within a kernel
-    \item Avoid usage if very few data accesses will be made to the subview
-      \begin{itemize}
-        \item Construction of subview costs 20-40 operations
-      \end{itemize}
-  \end{itemize}
-\end{frame}
-
-\begin{exerciseframe}{From the sequential folder}
+\begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}{C++}
@@ -961,6 +897,72 @@
         \end{column}
     \end{columns}
 \end{exerciseframe}
+
+
+\begin{frame}{Subviews description (bonus)}
+    \begin{itemize}
+        \item A subview is a ’slice’ of a View that behaves as a View
+        \pause
+        \begin{itemize}
+            \item Same syntax as a View - access data using (multi-)index entries
+            \pause
+            \item The ’slice’ and original View point to the same data - no extra
+            memory allocation or copying
+        \end{itemize}
+        \pause
+        \item Can be constructed on host or within a kernel (no allocation
+        of memory occurs)
+        \pause
+        \item Similar capability as provided by Matlab, Fortran, Python, etc.
+        using ’colon’ notation
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Usage demo}
+    Begin with a View:
+    \begin{minted}{C++}
+        Kokkos::View<double ***> v("v", N0, N1, N2);
+    \end{minted}
+    \pause
+    Say we want a 2-dimensional slice at an index i0 in the first
+    dimension - that is, in Matlab/Fortran/Python notation:
+    \begin{minted}{python}
+        slicei0 = v[i0, :, :]
+    \end{minted}
+    \pause
+    This can be accomplished in Kokkos using a subview as follows:
+    \begin{minted}{C++}
+        auto slice = Kokkos::subview(v, i0, Kokkos::ALL, Kokkos::ALL);
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Syntax}
+    \begin{minted}{C++}
+        Kokkos::subview(view, arg0, ...);
+    \end{minted}
+    \begin{itemize}
+        \item \texttt{view}: First argument to the subview is the view of which a slice will be taken
+        \item \texttt{argN}: Slice info for rank $N$ - provide same number of arguments as rank
+        \item Options for \texttt{argN}:
+        \begin{description}[partial range]
+            \item[index] integral type single value
+            \item[partial range] \texttt{std::pair} or \texttt{Kokkos::pair} of integral types to provide sub-range of a rank’s range $[0, N)$
+            \item[full range] use \texttt{Kokkos::ALL} rather than providing the full range as a pair
+        \end{description}
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Subviews suggested usage}
+    \begin{itemize}
+        \item Use \texttt{auto} to determine the return type of a subview
+        \item A subview can help with encapsulation - e.g. can pass into functions expecting a lower-dimensional View
+        \item Use \texttt{Kokkos::pair} for partial ranges if subview created within a kernel
+        \item Avoid usage if very few data accesses will be made to the subview
+        \begin{itemize}
+            \item Construction of subview costs 20-40 operations
+        \end{itemize}
+    \end{itemize}
+\end{frame}
 
 \section{Parallel loops}
 
@@ -1529,12 +1531,12 @@
                     -DKokkos_ARCH_NATIVE=ON
 
                 cmake \
-                    --build build/openmp \
-                    --parallel 4
+                --build build/openmp \
+                --parallel 4
 
                 cmake \
-                    --install build/openmp \
-                    --prefix $HOME/opt/kokkos/openmp
+                --install build/openmp \
+                --prefix $HOME/opt/kokkos/openmp
             \end{minted}
         \end{column}
         \begin{column}{0.45\linewidth}
@@ -1546,17 +1548,39 @@
     \end{columns}
 \end{exerciseframe}
 
-\begin{exerciseframe}{From your worktree or the cpu folder}
+\begin{exerciseframe}{From the "hello\_world" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
-                    -B build/openmp \
+                    -B build/serial \
                     -DCMAKE_BUILD_TYPE=Release \
                     -DKokkos_ROOT=$HOME/opt/kokkos/openmp
 
                 cmake \
                     --build build/openmp
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Build the hello world code
+                \item Run with the \texttt{--kokkos-print-configuration} argument
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\begin{exerciseframe}{From your worktree or the "cpu" folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                -B build/openmp \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DKokkos_ROOT=$HOME/opt/kokkos/openmp
+
+                cmake \
+                --build build/openmp
             \end{minted}
         \end{column}
         \begin{column}{0.45\linewidth}
@@ -1568,12 +1592,139 @@
     \end{columns}
 \end{exerciseframe}
 
-\begin{exerciseframe}{From your worktree or the cpu folder}
+\section{Performance on CPU}
+
+\begin{frame}[fragile]{Performance scaling in parallel computing}
+
+\textbf{Scaling} describes how application performance changes as more compute
+resources (CPU cores, nodes, GPUs) are added.
+
+\vspace{0.5em}
+
+\begin{center}
+    \begin{table}{Two Fundamental Types}{l|ll}
+        \textbf{Aspect} & \textbf{Strong Scaling} & \textbf{Weak Scaling} \\\hline
+        Problem size & Fixed & Grows with processor count \\
+        Work per processor & Decreases & Remains constant \\
+        Goal & Reduce time-to-solution & \makecell[l]{Maintain runtime while solving\\larger problems} \\
+    \end{table}
+\end{center}
+
+\begin{center}
+\begin{tabular}{c|c|c}
+\textbf{Processors} & \textbf{Strong Scaling} & \textbf{Weak Scaling} \\
+\hline
+1   & 1M points   & 1M points \\
+10  & 1M points   & 10M points \\
+\end{tabular}
+\end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Strong Scaling}
+
+\begin{block}{Definition}
+Strong scaling measures how execution time decreases when solving a
+\textbf{fixed-size problem} using more processors
+\end{block}
+
+\begin{columns}
+    \begin{column}{0.5\linewidth}
+        \textbf{Ideal strong scaling}
+
+        \[
+        T(P) = \frac{T(1)}{P}
+        \]
+
+        \begin{itemize}
+            \item $T(1)$: runtime on one thread
+            \item $T(P)$: runtime on $P$ threads
+        \end{itemize}
+
+        \textbf{Strong scaling speedup}
+
+        \[
+        S(P) = \frac{T(1)}{T(P)}
+        \]
+    \end{column}
+    \begin{column}{0.5\linewidth}
+        \textbf{Common limitations}
+        \begin{itemize}
+            \item Communication overhead
+            \item Synchronization costs
+            \item Load imbalance
+            \item Serial code sections (Amdahl's Law)
+        \end{itemize}
+    \end{column}
+\end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Weak Scaling}
+
+\begin{block}{Definition}
+Weak scaling measures how runtime changes when \textbf{both the number of processors
+and the total problem size} increase proportionally, keeping the workload per
+processor approximately constant
+\end{block}
+
+\vspace{0.5em}
+
+\begin{columns}
+    \begin{column}{0.4\linewidth}
+        \textbf{Ideal weak scaling}
+
+        \[
+        T(P) \approx T(1)
+        \]
+
+        \textbf{Weak scaling efficiency}
+
+        \[
+        E(P) = \frac{T(1)}{T(P)}
+        \]
+    \end{column}
+    \begin{column}{0.6\linewidth}
+        \textbf{Common limitations}
+        \begin{itemize}
+            \item Communication growth
+            \item Network contention
+            \item Collective operations (reductions, barriers)
+            \item Memory and I/O bottlenecks
+        \end{itemize}
+    \end{column}
+\end{columns}
+
+\end{frame}
+
+\begin{exerciseframe}{From your worktree or the "cpu" folder}
     \begin{itemize}
-        \item Perform a strong scaling
-        \item Perform a weak scaling
+        \item Perform scalings
+        \begin{itemize}
+            \item Strong scaling
+            \item Weak scaling
+        \end{itemize}
+        \item From 1 core to the maximum number of cores in the node
     \end{itemize}
 \end{exerciseframe}
+
+\begin{frame}{The Ruche supercomputer}
+    \begin{description}[Location]
+        \item[Name] Ruche cluster
+        \item[Location] IDRIS, Moulon, Île-de-France
+        \item[CPU] Intel Xeon Gold 6230, 2.1 GHz, 20 cores per socket, 2 sockets per node
+    \end{description}
+\end{frame}
+
+\begin{frame}[fragile]{Example of weak scaling on Ruche}
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{weak_scaling_ruche.pdf}
+    \end{center}
+\end{frame}
+
+\begin{frame}[fragile]{Example of strong scaling on Ruche}
+    \begin{center}
+        \includegraphics[width=0.8\textwidth]{strong_scaling_ruche.pdf}
+    \end{center}
+\end{frame}
 
 \section{SIMD and vectorization}
 
@@ -1586,7 +1737,7 @@
             \begin{itemize}
                 \item Modern CPUs have instructions capable of doing multiple computations at the same time (e.g. do 4 distinct additions with a single instruction)
                 \item SIMD: \structure{S}ingle \structure{I}nstruction \structure{M}ultiple \structure{D}ata
-                \item Can get up to $N$ times faster with SIMD units of size $N$
+                \item Can get up to $M$ times faster with SIMD units of size $M$
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1853,28 +2004,57 @@
 \begin{frame}[fragile]{Example: adding two views}
     The vectorized version is as follows
     \begin{minted}{C++}
-        using simd_type = Kokkos::Experimental::simd<double>;
+        using KE = Kokkos::Experimental;
+        using simd_type = KE::simd<double>;
         Kokkos::parallel_for("add", N / simd_type::size(),
             KOKKOS_LAMBDA(int i) {
                 std::size_t idx = i * simd_type::size();
                 // load the values
-                simd_type a(&A(idx), Kokkos::Experimental::simd_flag_default);
-                simd_type b(&B(idx), Kokkos::Experimental::simd_flag_default);
+                simd_type a(&A(idx), KE::simd_flag_default);
+                simd_type b(&B(idx), KE::simd_flag_default);
                 // perform the computation
                 a += b;
                 // store the result
-                Kokkos::Experimental::simd_unchecked_store(a, &A(idx), Kokkos::Experimental::simd_flag_default);
+                KE::simd_unchecked_store(a, &A(idx), KE::simd_flag_default);
             }
         );
     \end{minted}
 \end{frame}
 
-\begin{frame}{Strategy}
-    \missingfigure{explain the vectorization strategy}
+\begin{frame}{Strategy for the Gray Scott}
+    The Gray Scott is a 2D problem:
+    \begin{itemize}
+        \item Simplification: only consider the case where n\_columns is a multiple of the SIMD width
+        \item Identify the contiguous dimension
+        \item Update the iteration space relative to the contiguous dimension and compute the index
+        \item Construct SIMD objects from pointers of arrays \texttt{u} and \texttt{v}
+    \end{itemize}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree or the cpu folder}
-    \missingfigure{Vectorize the CPU code}
+\begin{exerciseframe}{From your worktree or the "cpu" folder}
+\begin{columns}
+    \begin{column}{0.5\linewidth}
+        \begin{minted}{C++}
+            #include <Kokkos_SIMD.hpp>
+
+            // ...
+
+            using KE = Kokkos::Experimental;
+            using simd_type = KE::simd<real>;
+
+            View a("A", N, M);
+            simd_type a_simd(&a(0, 0));
+        \end{minted}
+    \end{column}
+    \begin{column}{0.5\linewidth}
+        \begin{itemize}
+            \item Duplicate your worktree folder to a different name
+            \item Add the Kokkos SIMD header
+            \item Use \texttt{simd} instead of scalars to compute the Gray--Scott stencil
+            \item The checksum must remain the same!
+        \end{itemize}
+    \end{column}
+\end{columns}
 \end{exerciseframe}
 
 \begin{frame}[fragile]{Conditionals (bonus)}
