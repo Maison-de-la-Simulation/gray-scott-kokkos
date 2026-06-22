@@ -376,32 +376,62 @@
     \begin{columns}
         \begin{column}{0.6\linewidth}
             \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
-                srun ... --pty /bin/bash
-
                 REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
 
                 # pick one
-                apptainer run $REPO/kokkos_cpu_interactive
-                apptainer run $REPO/kokkos_cpu_interactive_jupyter
-                apptainer run $REPO/kokkos_cpu_interactive_vscode
-                apptainer run $REPO/kokkos_cpu_learning_platform_code_server
+                IMAGE=kokkos_gpu_interactive
+                IMAGE=kokkos_gpu_interactive_jupyter
+                IMAGE=kokkos_gpu_interactive_vscode
+                IMAGE=kokkos_gpu_learning_platform_code_server
+
+                apptainer pull $REPO/$IMAGE:latest
+
+                srun ... --pty /bin/bash
+
+                apptainer run ${IMAGE}_latest.sif
 
                 cp -r /home/jovyan/Examples $HOME/gray_scott_kokkos
 
-                cd $HOME/gray_scott_kokkos
+                cd $HOME/gray_scott_kokkos/exercises
             \end{minted}
         \end{column}
         \begin{column}{0.4\linewidth}
             \begin{itemize}
-                \item Reserve a job for the day/half a day (ask your satellite staff)
-                \item Run Apptainer with the desired image
+                \item Pull the desired image
                 \begin{itemize}
                     \item No editor
                     \item Jupyter
                     \item VSCode
                     \item CodeServer
                 \end{itemize}
+                \item Reserve a job for the day/half a day (ask your satellite staff)
+                \item Run Apptainer with the downloaded SIF image
                 \item Duplicate the exercises in your home directory
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
+\section{Gray--Scott sequential implementation}
+
+\begin{exerciseframe}{From the "sequential" folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/serial \
+                    -DCMAKE_BUILD_TYPE=Release
+
+                cmake \
+                    --build build/serial
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Check the implementation
+                \item Build the code
+                \item No need for Kokkos here
+                \item Run it
             \end{itemize}
         \end{column}
     \end{columns}
@@ -742,31 +772,6 @@
             \begin{itemize}
                 \item Build the hello world code
                 \item Run with the \texttt{--kokkos-print-configuration} argument
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{exerciseframe}
-
-\section{Gray--Scott sequential implementation}
-
-\begin{exerciseframe}{From the "sequential" folder}
-    \begin{columns}
-        \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/serial \
-                    -DCMAKE_BUILD_TYPE=Release
-
-                cmake \
-                    --build build/serial
-            \end{minted}
-        \end{column}
-        \begin{column}{0.5\linewidth}
-            \begin{itemize}
-                \item Check the implementation
-                \item Build the code
-                \item No need for Kokkos here
-                \item Run it
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1556,29 +1561,30 @@
     \begin{columns}
         \begin{column}{0.6\linewidth}
             \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
+                # pick one
+                IMAGE=kokkos_gpu_interactive
+                IMAGE=kokkos_gpu_interactive_jupyter
+                IMAGE=kokkos_gpu_interactive_vscode
+                IMAGE=kokkos_gpu_learning_platform_code_server
+
                 srun ... --pty /bin/bash
 
-                REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
+                apptainer run ${IMAGE}_latest.sif
 
-                # pick one
-                apptainer run $REPO/kokkos_cpu_interactive
-                apptainer run $REPO/kokkos_cpu_interactive_jupyter
-                apptainer run $REPO/kokkos_cpu_interactive_vscode
-                apptainer run $REPO/kokkos_cpu_learning_platform_code_server
-
-                cd $HOME/gray_scott_kokkos
+                cd $HOME/gray_scott_kokkos/exercises
             \end{minted}
         \end{column}
         \begin{column}{0.4\linewidth}
             \begin{itemize}
-                \item Reserve a job for half a day (if needed, ask your satellite staff)
-                \item Run Apptainer with the desired image
+                \item Take the desired image:
                 \begin{itemize}
                     \item No editor
                     \item Jupyter
                     \item VSCode
                     \item CodeServer
                 \end{itemize}
+                \item Reserve a job for the day/half a day (ask your satellite staff)
+                \item Run Apptainer with the downloaded SIF image
             \end{itemize}
         \end{column}
     \end{columns}

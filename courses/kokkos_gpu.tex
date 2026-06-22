@@ -135,32 +135,30 @@
     \begin{columns}
         \begin{column}{0.65\linewidth}
             \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
-                srun ... --pty /bin/bash
-
                 REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
 
                 # pick one
-                apptainer run --nv $REPO/kokkos_gpu_interactive
-                apptainer run --nv $REPO/kokkos_gpu_interactive_jupyter
-                apptainer run --nv $REPO/kokkos_gpu_interactive_vscode
-                apptainer run --nv $REPO/kokkos_gpu_learning_platform_code_server
+                IMAGE=kokkos_gpu_interactive
+                IMAGE=kokkos_gpu_interactive_jupyter
+                IMAGE=kokkos_gpu_interactive_vscode
+                IMAGE=kokkos_gpu_learning_platform_code_server
 
-                # if needed (you shouldn't have to)
-                cp -rn /home/jovyan/Examples $HOME/gray_scott_kokkos
+                apptainer pull $REPO/$IMAGE:latest
 
-                cd $HOME/gray_scott_kokkos
+                srun ... --pty /bin/bash
+
+                apptainer run --nv ${IMAGE}_latest.sif
+
+                # if you didn't attend last week session
+                cp -r /home/jovyan/Examples $HOME/gray_scott_kokkos
+
+                cd $HOME/gray_scott_kokkos/exercises
             \end{minted}
         \end{column}
         \begin{column}{0.35\linewidth}
             \begin{itemize}
                 \item Reserve a job for the day/half a day (ask your satellite staff)
-                \item Run Apptainer with the desired image
-                \begin{itemize}
-                    \item No editor
-                    \item Jupyter
-                    \item VSCode
-                    \item CodeServer
-                \end{itemize}
+                \item Run Apptainer with the downloaded SIF image
                 \item \structure{If you didn't follow last week session,} duplicate the exercises in your home directory
             \end{itemize}
         \end{column}
@@ -1762,29 +1760,30 @@
     \begin{columns}
         \begin{column}{0.65\linewidth}
             \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
+                # pick one
+                IMAGE=kokkos_gpu_interactive
+                IMAGE=kokkos_gpu_interactive_jupyter
+                IMAGE=kokkos_gpu_interactive_vscode
+                IMAGE=kokkos_gpu_learning_platform_code_server
+
                 srun ... --pty /bin/bash
 
-                REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
+                apptainer run --nv ${IMAGE}_latest.sif
 
-                # pick one
-                apptainer run --nv $REPO/kokkos_gpu_interactive
-                apptainer run --nv $REPO/kokkos_gpu_interactive_jupyter
-                apptainer run --nv $REPO/kokkos_gpu_interactive_vscode
-                apptainer run --nv $REPO/kokkos_gpu_learning_platform_code_server
-
-                cd $HOME/gray_scott_kokkos
+                cd $HOME/gray_scott_kokkos/exercises
             \end{minted}
         \end{column}
         \begin{column}{0.35\linewidth}
             \begin{itemize}
-                \item Reserve a job for half a day (if needed, ask your satellite staff)
-                \item Run Apptainer with the desired image
+                \item Take the desired image:
                 \begin{itemize}
                     \item No editor
                     \item Jupyter
                     \item VSCode
                     \item CodeServer
                 \end{itemize}
+                \item Reserve a job for the day/half a day (ask your satellite staff)
+                \item Run Apptainer with the downloaded SIF image
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1811,7 +1810,7 @@
 
 \begin{frame}{When to use asynchronism}
     \begin{itemize}
-        \item As mentioned in the Fencing section, GPU code is asynchronous by default
+        \item As mentioned in the Fencing section, most GPU code is asynchronous by default
         \item When starting the porting to GPU, a synchronous behavior is preferred (simpler workflow, easier to debug)
         \item Asynchronous execution comes into play for optimization
         \item It is useful to hide a task that takes time by running it concurrently
