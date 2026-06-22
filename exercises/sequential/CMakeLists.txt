@@ -21,7 +21,7 @@ target_sources(
 target_link_libraries(
     gray_scott_sequential
     PRIVATE
-        common_pod
+        common
 )
 
 add_test(

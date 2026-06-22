@@ -8,14 +8,21 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_SIMD.hpp>
+#include <iostream>
 #include <utility>
 
 #include "helpers.hpp"
 #include "output_writer.hpp"
 #include "parameters.hpp"
 
+namespace KE = Kokkos::Experimental;
+
 // data type
 using real = double;
+
+// SIMD types
+using simd_t = KE::simd<real>;
+using simd_scalar_t = KE::basic_simd<real, KE::simd_abi::scalar>;
 
 /**
  * @brief Constants for the Gray-Scott equation.
@@ -191,11 +198,6 @@ void compute_simd_kernel(const View &u, const View &v, const View &u_temp,
  */
 void compute(const View &u, const View &v, const View &u_temp,
              const View &v_temp) {
-    namespace KE = Kokkos::Experimental;
-
-    using simd_t = KE::simd<real>;
-    using simd_scalar_t = KE::basic_simd<real, KE::simd_abi::scalar>;
-
     const auto simd_width = simd_t::size();
 
     const int n_cols = u.extent(1);
@@ -246,6 +248,7 @@ int main(int argc, char *argv[]) {
     parameters.check();
     parameters.describe();
     parameters.show_size<real>(4);
+    std::cout << "SIMD lane size: " << simd_t::size() << std::endl;
 
     // fields (with halo)
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);

@@ -4,16 +4,23 @@
     aspectratio=169,
 ]{beamer}
 
+\usepackage[table]{xcolor}
 \usepackage{minted}
 \usepackage{diagbox}
-\usepackage{todonotes}
+\usepackage{makecell}
 
 \usetheme{gray-scott}
 
 \AtBeginSection{
     \begin{frame}{Outline}
-        \renewcommand{\baselinestretch}{0.25}
-        \tableofcontents[currentsection]
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+                \tableofcontents[currentsection, sections=1-7]
+            \end{column}
+            \begin{column}{0.5\linewidth}
+                \tableofcontents[currentsection, sections=8-16]
+            \end{column}
+        \end{columns}
     \end{frame}
 }
 
@@ -112,8 +119,14 @@
 \end{frame}
 
 \begin{frame}{Outline}
-    \renewcommand{\baselinestretch}{0.5}
-    \tableofcontents
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \tableofcontents[sections=1-7]
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \tableofcontents[sections=8-16]
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \section{Moving to a GPU backend}
@@ -361,7 +374,7 @@
         \begin{column}{0.525\linewidth}
             \begin{itemize}
                 \item Build and install Kokkos with the CUDA backend
-                \item Enable CUDA architecture \texttt{XXX}
+                \item Enable CUDA architecture \texttt{XXX} (not required if you are on a GPU node)
             \end{itemize}
             \vspace{1em}
 
@@ -1855,7 +1868,7 @@
             \centering
             \begin{tikzpicture}[node distance=1em]
                 \node (compute) {compute $\times$ 10};
-                \node[below=of compute] (copy-d-to-h) {copy-d-to-h};
+                \node[below=of compute] (copy-d-to-h) {copy-D-to-H};
                 \node[below=of copy-d-to-h] (write) {write};
 
                 \draw[->] (compute) -- (copy-d-to-h);
@@ -1947,7 +1960,9 @@
                 \item Roll the operations of the loop
                 \item Take care of the boundary effects
                 \item Adjust the fences
+                \pause
                 \item Beware, there is a subtlety on CPU
+                \item Make it run correctly on CPU
             \end{itemize}
         \end{column}
     \end{columns}
@@ -2134,7 +2149,9 @@
                 \end{itemize}
                 \item Differentiate the \texttt{deep\_copy} for the duplication and for the synchronization
                 \item Adjust the fences
+                \pause
                 \item Beware, there is a subtlety on CPU
+                \item Make it run correctly on CPU
             \end{itemize}
         \end{column}
     \end{columns}
@@ -2153,6 +2170,595 @@
     \end{itemize}
 \end{frame}
 
+\section{Atomics}
+
+\begin{frame}[fragile]{Race condition}
+    Porting a code creating a histogram:
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                double histo[5] = {0};
+
+                for (int i=0; i < N; i++) {
+                    histo[i % 5] += i;
+                }
+            \end{minted}
+        \end{column}
+        \pause
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                Kokkos::View<double*> histo(5);
+
+                Kokkos::parallel_for(
+                N,
+                KOKKOS_LAMBDA(int i) {
+                    histo(i % 5) += i;
+                });
+            \end{minted}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\colorlet{lightmain2}{lightmain!50}
+
+\begin{frame}[fragile]{Race condition}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            Even simple instructions like increment are decomposed into several smaller assembly instructions:
+            \begin{minted}{C++}
+                histo(i % 5) += i;
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \small
+            \begin{table}{Operations}{llcl}
+                \textbf{Thread 1} & \textbf{Thread 6} &  & \textbf{Result} \\\hline
+                & & & 0 \\
+                \rowcolor{lightmain}read value & & $\leftarrow$ & 0 \\
+                \rowcolor{lightmain}add 1 & &  & 0 \\
+                \rowcolor{lightmain}write value & & $\rightarrow$ & 1 \\
+                & & & 1 \\
+                \rowcolor{lightmain2}& read value & $\leftarrow$ & 1 \\
+                \rowcolor{lightmain2}& add 6 &  & 1 \\
+                \rowcolor{lightmain2}& write value & $\rightarrow$ & 7 \\
+                & & & 7 \\
+            \end{table}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Race condition}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            Execution between threads is independent. There is no guarantee over the order of instructions:
+            \begin{minted}{C++}
+                histo(i % 5) += i;
+            \end{minted}
+
+            When several threads are accessing the same data, it will generate \structure{race conditions}.
+        \end{column}
+        \begin{column}{0.45\linewidth}\\
+            \small
+            \begin{table}{Operations}{llcl}
+                \textbf{Thread 1} & \textbf{Thread 6} &  & \textbf{Result} \\\hline
+                & & & 0 \\
+                \rowcolor{lightmain}read value & & $\leftarrow$ & 0 \\
+                \rowcolor{lightmain2}& read value & $\leftarrow$ & 0 \\
+                \rowcolor{lightmain}add 1 & & & 0 \\
+                \rowcolor{lightmain}write value & & $\rightarrow$ & 1 \\
+                & & & 1 \\
+                \rowcolor{lightmain2}& add 6 & & 1 \\
+                \rowcolor{lightmain2}& write value & $\rightarrow$ & 6 \\
+                & & & 6 \\
+            \end{table}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Atomic operation}
+    Replacing the addition with its atomic counterpart solves the problem:
+    \begin{columns}
+        \begin{column}{0.40\linewidth}
+            \begin{minted}{C++}
+                Kokkos::parallel_for(
+                    N,
+                    KOKKOS_LAMBDA(int i) {
+                        histo(i % 5) += i;
+                    }
+                );
+            \end{minted}
+        \end{column}
+        \begin{column}{0.56\linewidth}
+            \begin{minted}{C++}
+                Kokkos::parallel_for(
+                    N,
+                    KOKKOS_LAMBDA(int i) {
+                        Kokkos::atomic_add(&histo(i % 5), i);
+                    }
+                );
+            \end{minted}
+        \end{column}
+    \end{columns}
+    \structure{Note:} \texttt{atomic\_add} takes a pointer and not a
+    reference as first argument, as the instruction needs to have an access to
+    the actual memory address of the modified variable.
+\end{frame}
+
+\begin{frame}[fragile]{Atomic operation}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            \texttt{atomic\_add} executes the write, read and add in a single atomic step,
+            guarantying the absence of race conditions during the operation:
+            \begin{minted}{C++}
+                Kokkos::atomic_add(&histo(i % 5), i);
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \vspace{-0.5em}
+
+            \small
+            \begin{table}{Operations}{llcl}
+                \textbf{Thread 1} & \textbf{Thread 6} &  & \textbf{Result} \\\hline
+                & & & 0 \\
+                \rowcolor{lightmain}atomic add & & $\leftrightarrow$ & 1 \\
+                \rowcolor{lightmain2}& atomic add & $\leftrightarrow$ & 7 \\
+                &  &  & 7 \\
+            \end{table}
+            \pause
+            \begin{table}{Operations}{llcl}
+                \textbf{Thread 1} & \textbf{Thread 6} &  & \textbf{Result} \\\hline
+                & & & 0 \\
+                \rowcolor{lightmain}& atomic add & $\leftrightarrow$ & 6 \\
+                \rowcolor{lightmain2}atomic add & & $\leftrightarrow$ & 7 \\
+                &  &  & 7 \\
+            \end{table}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Operations}
+    \begin{columns}
+        \begin{column}{0.35\linewidth}
+            Other common operations are available with the format \texttt{Kokkos::atomic\_[op]}:
+        \end{column}
+        \begin{column}{0.75\linewidth}
+            \footnotesize
+            \begin{table}{Atomic operators}{ll}
+                Operation & Replaces \\\hline
+                \texttt{Kokkos::atomic\_add(\&x, y)}    & \texttt{x += y} \\
+                \texttt{Kokkos::atomic\_sub(\&x, y)}    & \texttt{x -= y} \\
+                \texttt{Kokkos::atomic\_mul(\&x, y)}    & \texttt{x *= y} \\
+                \texttt{Kokkos::atomic\_div(\&x, y)}    & \texttt{x /= y} \\
+                \texttt{Kokkos::atomic\_and(\&x, y)}    & \texttt{x \&= y} \\
+                \texttt{Kokkos::atomic\_or(\&x, y)}     & \texttt{x |= y} \\
+                \texttt{Kokkos::atomic\_xor(\&x, y)}    & \texttt{x \^{}= y} \\
+                \texttt{Kokkos::atomic\_max(\&x, y)}    & \texttt{x = std::max(x, y)} \\
+                \texttt{Kokkos::atomic\_min(\&x, y)}    & \texttt{x = std::min(x, y)} \\
+                \texttt{Kokkos::atomic\_store(\&x, y)}  & \texttt{x = y} \\
+                ... & ... \\
+            \end{table}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Atomic Memory Trait}
+    \begin{columns}
+        \begin{column}{0.40\linewidth}
+            \begin{itemize}
+                \item If you need to access a View exclusively through atomic operations, you
+                can also create an alias with the \texttt{Atomic} memory trait
+                \item It guarantees that any operation done through the alias are done atomically
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.6\linewidth}
+            \vspace{-0.5em}
+
+            \begin{minted}{C++}
+                Kokkos::View<double*> histo(5);
+
+                Kokkos::View<
+                    double*,
+                    Kokkos::MemoryTraits<Kokkos::Atomic>
+                > histo_atomic = histo;
+
+                Kokkos::parallel_for(
+                    N,
+                    KOKKOS_LAMBDA(int i) {
+                        histo_atomic(i % 5) += i;
+                    }
+                );
+            \end{minted}
+        \end{column}
+    \end{columns}
+    \structure{Note:} It is preferable to give an explicit name to the alias because it will be the only way to know that the operations performed on it are atomics.
+\end{frame}
+
+\begin{frame}[fragile]{Performances}
+    \begin{columns}
+        \begin{column}{0.45\linewidth}
+            Atomics can have a huge impact on performance:
+            \begin{itemize}
+                \item The instruction itself is slower than the one it replaces
+                \item They may generate extra synchronisation points
+                \item They bypass and invalidate cache lines
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.55\linewidth}
+            \begin{block}{Remarks}
+                \begin{itemize}
+                    \item Atomics should be used with care and only when strictly
+                    necessary
+                    \item Algorithm can sometime be changed when porting from CPU to GPU
+                    in order to remove the need for atomics (coloring, replacing in
+                    place algorithm with out of place algorithm, etc.)
+                \end{itemize}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\section{Algorithms API}
+
+\begin{frame}[fragile]{Acknowledgment}
+    Francesco Rizzi, \emph{Implementing the C++ std algorithms library in
+    Kokkos: an overview of the main challenges, API differences and
+    some implementation details}, Café Kokkos @ CEA, Feb. 2024.
+\end{frame}
+
+\begin{frame}[fragile]{Inspired by STL Algorithms in C++}
+    \begin{itemize}
+        \item Free functions that operate on a range of elements:
+        sorting, searching, counting, transforming etc
+        \item Goal: Ready to use and reliable
+        \begin{itemize}
+            \item Internally use \texttt{Kokkos::parallel\_\{for, reduce, scan\}}
+        \end{itemize}
+        \item Higher abstraction in user code: Function call with a range of elements, operations etc
+        \item Mostly in \texttt{Kokkos::Experimental} namespace
+        \begin{itemize}
+            \item Except for Sort
+            \item Also, there is Random in \texttt{Kokkos} namespace
+        \end{itemize}
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]{Currently available functions}
+    \vspace{-0.5em}
+
+    \small
+    \begin{table}{Functions}{ll}
+        Algorithm family & Functions \\\hline
+        Sorting and related & \texttt{sort}, \texttt{sort\_by\_key}, \texttt{is\_sorted}, \texttt{is\_sorted\_until} \\
+        Minimum/maximum  & \texttt{min\_element}, \texttt{max\_element}, \texttt{minmax\_element} \\
+        Modifying sequence  & \makecell[l]{\texttt{copy}, \texttt{move}, \texttt{fill}, \texttt{transform}, \texttt{remove}, \texttt{replace}, \texttt{reverse}, \\\texttt{rotate}, \texttt{unique}, ...} \\
+        Non-modifying sequence & \texttt{count}, \texttt{equal}, \texttt{all\_of}, \texttt{any\_of}, \texttt{find}, \texttt{for\_each}, \texttt{search}, ... \\
+        Numeric & \makecell[l]{\texttt{adjacent\_difference}, \texttt{reduce}, \texttt{exclusive\_scan}, \\\texttt{inclusive\_scan}, ...} \\
+        Partitioning & \texttt{is\_partitioned}, \texttt{partition\_point}, \texttt{partition\_copy} \\
+        Iterators & \texttt{begin}, \texttt{cbegin}, \texttt{end}, \texttt{cend}, \texttt{distance}, \texttt{iter\_swap} \\
+        Random & \texttt{Random\_XorShift64\_Pool}, ...
+    \end{table}
+
+    \vspace{0.5em}
+
+    More in the \href{https://kokkos.org/kokkos-core-wiki/API/algorithms-index.html}{documentation}
+\end{frame}
+
+\begin{frame}[fragile]{API usage}
+    Pass to the function:
+    \begin{itemize}
+        \item Execution space instance
+        \begin{itemize}
+            \item Team Handle under Hierarchical parallelism also possible
+            \item Not elegant. For now, needed by algorithms in \texttt{Kokkos::Experimental} namespace
+            \item Deducing execution space from Views or Iterators is the better way
+        \end{itemize}
+        \item A Rank-1 View or begin and end Iterators
+        \begin{itemize}
+            \item View must be accessible from the execution space
+            \item The Iterators are random access, obtained via \texttt{Kokkos::Experimental::\{begin, cbegin, end, cend\}}
+        \end{itemize}
+        \item Additional function specific arguments
+    \end{itemize}
+    \begin{minted}{C++}
+        auto ret_val_view = algo_name(label, space, view(s), extra_args);
+        auto ret_val_iterator =
+            algo_name(label, space, iterator(s), extra_args);
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Example usage}
+    \begin{minted}{C++}
+        namespace KE = Kokkos::Experimental;
+
+        Kokkos::View<double*> my_view("my_view", 13);
+        // In general, View must be accessible from execution space
+        // Fill my_view
+
+        const double old_val{2}, new_val{34};
+        auto def_exec_space = Kokkos::DefaultExecutionSpace();
+
+        // act on the entire view
+        KE::replace(def_exec_space, my_view, old_val, new_val);
+
+        // act on just a subset
+        auto start_at = KE::begin(my_view) + 4;
+        auto end_at = KE::begin(my_view) + 10;
+        KE::replace(def_exec_space, start_at, end_at, old_val, new_val);
+    \end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Example usage}
+    \begin{minted}{C++}
+        struct MyStruct { /* ... */ }; // Custom type
+
+        struct MyStructLessThanComparator {
+            bool operator()(const MyStruct& a, const MyStruct& b) const {
+                // custom comparator logic
+            }
+        };
+
+        int main() {
+            Kokkos::View<MyStruct*> my_view("my_view", N);
+            // ...
+            KE::min_element(
+                def_exec_space, my_view, MyStructLessThanComparator());
+            // ...
+        }
+    \end{minted}
+\end{frame}
+
+\section{Kokkos ecosystem}
+
+\begin{frame}{Kokkos ekosystem}
+    \begin{center}
+        \includegraphics[width=0.9\textwidth]{ekokkosystem}
+    \end{center}
+\end{frame}
+
+\begin{frame}{Kokkos-FFT}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item What is it?
+                \begin{itemize}
+                    \item Fast Fourier Transform (FFT) interface integrated into the Kokkos ecosystem
+                    \item Enables portable FFT computations on heterogeneous systems
+                \end{itemize}
+                \item Why it matters?
+                \begin{itemize}
+                    \item FFT libraries are usually hardware-specific
+                    \item Managing CPU/GPU differences is complex
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Key features
+                \begin{itemize}
+                    \item Supports 1D, 2D, and 3D FFTs
+                    \item Works directly with Kokkos Views
+                    \item Backend abstraction (e.g., FFTW, cuFFT)
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{2D FFT example}
+    \begin{minted}[fontsize=\small]{C++}
+        const Kokkos::complex<double> z(1.0, 1.0);
+
+        // 2D C2C FFT (Forward and Backward)
+        const Kokkos::View<Kokkos::complex<double>**>
+            xc2c("xc2c", n0, n1),
+            xc2c_hat("xc2c_hat", n0, n1),
+            xc2c_inv("xc2c_inv", n0, n1);
+
+        Kokkos::Random_XorShift64_Pool<> random_pool(12345);
+        Kokkos::DefaultExecutionSpace exec_space;
+        Kokkos::fill_random(exec_space, xc2c, random_pool, z);
+
+        KokkosFFT::fft2(exec_space, xc2c, xc2c_hat);
+        KokkosFFT::ifft2(exec_space, xc2c_hat, xc2c_inv);
+    \end{minted}
+\end{frame}
+
+\begin{frame}{Kokkos Kernels}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item What is it?
+                \begin{itemize}
+                    \item Library of optimized parallel kernels built on Kokkos
+                    \item Provides standard HPC building blocks (BLAS, sparse, graph)
+                \end{itemize}
+                \item Why it matters?
+                \begin{itemize}
+                    \item Avoid reimplementing performance-critical kernels
+                    \item Tuned for CPUs, GPUs, and manycore systems
+                    \item Ensures portability without sacrificing performance
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Key features
+                \begin{itemize}
+                    \item Dense linear algebra (BLAS-level operations)
+                    \item Sparse matrix operations (SpMV, SpGEMM, triangular solves)
+                    \item Graph kernels and utilities
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{GEMV example}
+    \begin{minted}[fontsize=\scriptsize]{C++}
+        Kokkos::View<double**> A("A", n, m);
+        Kokkos::View<double*> x("x", m), y("y", n);
+
+        Kokkos::parallel_for("InitA", N, KOKKOS_LAMBDA(int i) {
+            for (int j = 0; j < m; j++) {
+                A(i,j) = i + j + 1.0;
+            }
+        });
+
+        Kokkos::parallel_for("InitX", m, KOKKOS_LAMBDA(int i) { x(i) = 1.0; });
+        Kokkos::parallel_for("InitY", n, KOKKOS_LAMBDA(int i) { y(i) = 0.0; });
+
+        double alpha = 1.0, beta  = 0.0;
+        KokkosBlas::gemv("N", alpha, A, x, beta, y);
+
+        // check outcome
+        auto y_host = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), y);
+        for (int i = 0; i < n; i++) {
+            std::cout << "y(" << i << ") = " << y_host(i) << std::endl;
+        }
+    \end{minted}
+\end{frame}
+
+\begin{frame}{Kokkos Comm}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item What is it?
+                \begin{itemize}
+                    \item A lightweight C++ library for distributed communication on Kokkos
+                    \item Designed for performance portability across heterogeneous systems (CPU, GPU, multi-node)
+                \end{itemize}
+                \item Why it matters?
+                \begin{itemize}
+                    \item Kokkos handles intra-node parallelism, but inter-node communication is still complex
+                    \item Traditional MPI usage with Kokkos leads to:
+                    \item Code duplication
+                    \item Manual data packing/unpacking
+                    \item Difficult GPU-aware communication
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Key features
+                \begin{itemize}
+                    \item Performance-portable communication API
+                    \item Asynchronous operations (non-blocking send/recv, collectives)
+                    \item Automatic handling of:
+                    \item GPU-aware communication
+                    \item Non-contiguous data (Kokkos Views)
+                    \item Minimal, composable, modern C++20 interface
+                    \item Built on top of existing 	communication libraries:
+                    \item MPI, NCCL (others under exploration)
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Distributed GEMV example}
+    \vspace{-1em}
+
+    \begin{columns}
+        \begin{column}{0.8\linewidth}
+            \begin{minted}[fontsize=\tiny]{C++}
+                KokkosComm::Handle handle(exec_space, comm_object);
+
+                Kokkos::View<double**> A("A", local_m, global_n); // 1D row-wise partitioning
+                Kokkos::View<double*> x("x", global_n);
+                Kokkos::View<double*> y("y", local_m);
+
+                // Initialize local part of vector x on each process
+                Kokkos::parallel_for(
+                    "init local x",
+                    Kokkos::RangePolicy(exec_space, handle.rank() * local_m, (handle.rank() + 1) * local_m),
+                    KOKKOS_LAMBDA(int i) { x(i) = static_cast<double>(handle.rank * i); }
+                );
+                exec_space.fence();
+
+                auto allgather_req = KokkosComm::allgather(handle, x, x);
+
+                // Initialize local part of A on each process
+                Kokkos::parallel_for(
+                    "init local A",
+                    Kokkos::MDRangePolicy({0, 0}, {local_m, global_n}),
+                    KOKKOS_LAMBDA(int i, int j) { A(i, j) = static_cast<double>(handle.rank() + j); }
+                );
+                exec_space.fence();
+
+                KokkosComm::wait(allgather_req);
+
+                KokkosBlas::gemv("N", alpha, A, x, beta, y);
+            \end{minted}
+        \end{column}
+        \begin{column}{0.2\linewidth}
+            \includegraphics[width=\linewidth]{kokkos_comm_gemv}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{Kokkos-Fortran Interop}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item What is it?
+                \begin{itemize}
+                    \item Interoperability library
+                    \item Allows Fortran programs to use Kokkos data structures and call Kokkos C++ parallel constructs
+                \end{itemize}
+                \item Why it matters?
+                \begin{itemize}
+                    \item There are large Fortran HPC codes (1 M+ lines of code)
+                    \item Rewriting mature Fortran applications in C++ is costly and risky
+                    \item Local impact on the code
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Key features
+                \begin{itemize}
+                    \item Enable portable GPU acceleration for Fortran programs
+                    \item Interoperability via \texttt{ISO\_C\_BINDING} module
+                    \item Fortran derived-types to handle Kokkos Views, accessible with Fortran pointer arrays
+                    \item SharedSpace memory for data synchronization
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}{PyKokkos}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item What is it?
+                \begin{itemize}
+                    \item Interoperability library
+                    \item Translation layer
+                \end{itemize}
+                \item Why it matters?
+                \begin{itemize}
+                    \item Python is a popular and good prototyping language
+                    \item Lowers the barrier to using Kokkos
+                    \item Improves productivity for scientists and data analysts working in Python
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Key features
+                \begin{itemize}
+                    \item Enable portable GPU acceleration for Python programs
+                    \item Interoperability with Numpy and Cupy
+                    \item Use main Kokkos concepts directly in Python
+                    \item JIT compilation of Python code for CPU and GPU
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \section{Conclusion}
 
 \begin{frame}{Conclusion}
@@ -2163,9 +2769,11 @@
         \item Kokkos-Tools
         \item Explicit memory management with mirrors
         \item GPU optimization with asynchronous execution
+        \item Atomic operations
+        \item Algorithms API
+        \item Kokkos ecosystem
     \end{itemize}
     \pause
-    \vspace{2em}
     \begin{block}{Congratulations}
         You can now write Kokkos portable code!
     \end{block}

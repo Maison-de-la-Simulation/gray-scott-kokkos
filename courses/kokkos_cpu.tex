@@ -5,15 +5,20 @@
 ]{beamer}
 
 \usepackage{minted}
-\usepackage{todonotes}
 \usepackage{makecell}
 
 \usetheme{gray-scott}
 
 \AtBeginSection{
     \begin{frame}{Outline}
-        \renewcommand{\baselinestretch}{0.25}
-        \tableofcontents[currentsection]
+        \begin{columns}
+            \begin{column}{0.5\linewidth}
+                \tableofcontents[currentsection, sections=1-8]
+            \end{column}
+            \begin{column}{0.5\linewidth}
+                \tableofcontents[currentsection, sections=9-16]
+            \end{column}
+        \end{columns}
     \end{frame}
 }
 
@@ -32,7 +37,6 @@
     fontsize=\scriptsize,
 }
 
-% Captions
 % Captions
 \renewcommand{\caption}[1]{%
     \begin{center}
@@ -81,12 +85,33 @@
     \end{columns}
 \end{frame}
 
+\begin{frame}{Acknowledgments}
+    David Chamont, for his SYCL course which was a great source of inspiration
+
+    \vspace{1em}
+
+    Francesco Rizzi, for his slides for the Kokkos algorithms API
+\end{frame}
+
 \begin{frame}{Outline}
-    \renewcommand{\baselinestretch}{0.5}
-    \tableofcontents
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \tableofcontents[sections=1-8]
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \tableofcontents[sections=9-16]
+        \end{column}
+    \end{columns}
 \end{frame}
 
 \section{Introduction to Kokkos}
+
+\begin{frame}{What do we want?}
+    \begin{itemize}
+        \item There are many programming models available
+        \item How to choose one?
+    \end{itemize}
+\end{frame}
 
 \begin{frame}{Performance, portability and productivity}
     \begin{columns}[T]
@@ -158,7 +183,7 @@
     \end{center}
     \begin{itemize}
         \item Kokkos provides data structures and functions based on modern C++ to build your application
-        \item Developers never directly use underlying backends (no Cuda kernels for instance)
+        \item Developers never directly use underlying backends (no CUDA kernels, no OpenMP pragmas for instance)
     \end{itemize}
 \end{frame}
 
@@ -197,7 +222,7 @@
 
 \begin{frame}{Kokkos ecosystem}
     \begin{center}
-        \includegraphics[width=0.9\textwidth]{kokkos-ecosystem.png}
+        \includegraphics[width=0.9\textwidth]{ekokkosystem}
     \end{center}
 \end{frame}
 
@@ -229,6 +254,42 @@
     \end{columns}
 \end{frame}
 
+\begin{frame}{Institutions contributing to Kokkos}
+    \centering
+    \begin{tabular}{cccc}
+        \includegraphics[width=8em, height=3em, keepaspectratio]{anl} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{cea} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{cscs} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{lanl} \\
+        \includegraphics[width=8em, height=3em, keepaspectratio]{lbl} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{ornl} &
+        \includegraphics[width=8em, height=3em, keepaspectratio]{snl}
+    \end{tabular}
+\end{frame}
+
+\begin{frame}{The \textcolor{lightmain}{C}ExA project at CEA}
+    \begin{columns}
+        \begin{column}{0.8\linewidth}
+            \begin{itemize}
+                \item \structure{C}omputing at \structure{Ex}ascale with \structure{A}ccelerators at CEA
+                \item Started in 2023
+                \item Alice Recoque exascale supercomputer in 2027, at CEA
+                \item Joint effort at CEA to help the migration of HPC codes to GPU
+                \begin{itemize}
+                    \item Provide GPU programming model (long term, sustainable)
+                    \item Support application demonstrators (CEA codes)
+                    \item Propose dissemination of information (training, meetings)
+                \end{itemize}
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.2\linewidth}
+            \centering
+
+            \includegraphics[width=0.8\linewidth]{CExA_logo}
+        \end{column}
+    \end{columns}
+\end{frame}
+
 \begin{frame}{Kokkos useful resources}
     \begin{description}[GitHub repository]
         \item[GitHub repository] \url{https://github.com/kokkos}
@@ -236,6 +297,13 @@
         \item[Slack channel] \url{https://kokkosteam.slack.com}
         \item[Cheat sheet] \url{https://cexa-project.org/documents}
     \end{description}
+
+    \pause
+    \vspace{1em}
+
+    \begin{block}{New version incoming!}
+        Kokkos v5.2.0 to be released this July
+    \end{block}
 \end{frame}
 
 \section{Docker images}
@@ -272,6 +340,36 @@
 
         {\tiny \url{gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_learning_platform_code_server:latest}}
     \end{itemize}
+\end{frame}
+
+\begin{frame}{What the images provide}
+    \begin{columns}[t]
+        \begin{column}{0.5\linewidth}
+            \begin{center}
+                \textbf{CPU and GPU images}
+            \end{center}
+            \begin{itemize}
+                \item Kokkos 5.1.1 sources
+                \item Kokkos-tools dev (3d33d0) sources
+                \item GCC 14.3.0
+                \item HDF5 1.14.6
+                \item CLI11 2.6.2
+                \item CMake 3.31.8
+                \item Exercises folder
+            \end{itemize}
+        \end{column}
+        \pause
+        \begin{column}{0.5\linewidth}
+            \begin{center}
+                \textbf{GPU images}
+            \end{center}
+            \begin{itemize}
+                \item CUDA 12.8
+                \item Nsight Systems 2025.1.1
+            \end{itemize}
+        \end{column}
+    \end{columns}
+
 \end{frame}
 
 \begin{exerciseframe}{Initialization}
@@ -316,6 +414,7 @@
         \item Kokkos is compiled to target a specific backend
         \item Kokkos is portable until you compile it
         \item You need one compilation per backend
+        \item Compilation managed by CMake (no Makefiles!)
     \end{itemize}
     \begin{center}
         \includegraphics[width=0.6\textwidth]{kokkos_backend.png}
@@ -529,6 +628,7 @@
                 \item Include the Kokkos header file (like any other library)
                 \item Use the Kokkos namespace \texttt{Kokkos::}
                 \item Initialize and finalize Kokkos (like MPI)
+                \item Takes \texttt{argc} and \texttt{argv} to be interacted from the command line
             \end{itemize}
         \end{column}
     \end{columns}
@@ -647,7 +747,7 @@
     \end{columns}
 \end{exerciseframe}
 
-\section{Sequential implementation of the Gray--Scott equation}
+\section{Gray--Scott sequential implementation}
 
 \begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
@@ -874,6 +974,13 @@
 \begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
+            \begin{minted}{sh}
+                cp -r sequential my_gs
+                cd my_gs
+                mv CMakeLists.txt{.sample,}
+                mv gray_scott{_sequential,}.cpp
+            \end{minted}
+
             \begin{minted}{C++}
                 #include <Kokkos_Core.hpp>
 
@@ -889,6 +996,7 @@
         \begin{column}{0.5\linewidth}
             \begin{itemize}
                 \item Duplicate the \texttt{sequential} folder to a different name
+                \item Rename the CMake list sample file and the C++ file
                 \item Add the Kokkos header
                 \item Use Kokkos views instead of plain-old-data arrays for \texttt{u} and \texttt{v} (and temporary arrays) in \texttt{main} and in \texttt{compute}
                 \item For now, just pass a raw pointer when calling \texttt{check} and \texttt{print\_field}

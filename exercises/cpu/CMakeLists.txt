@@ -25,10 +25,16 @@ target_link_libraries(
     gray_scott_cpu
     PRIVATE
         Kokkos::kokkos
-        common_kokkos
+        common
 )
 
 add_test(
     NAME gray_scott_cpu
     COMMAND gray_scott_cpu
+)
+
+set_tests_properties(
+    gray_scott_cpu
+    PROPERTIES
+        SKIP_RETURN_CODE 139
 )

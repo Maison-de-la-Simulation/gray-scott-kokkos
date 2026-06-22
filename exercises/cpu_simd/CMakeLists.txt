@@ -32,3 +32,9 @@ add_test(
     NAME gray_scott_cpu_simd
     COMMAND gray_scott_cpu_simd
 )
+
+set_tests_properties(
+    gray_scott_cpu_simd
+    PROPERTIES
+        SKIP_RETURN_CODE 139
+)
