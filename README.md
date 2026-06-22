@@ -10,7 +10,7 @@ This repository contains the Kokkos courses and exercises for the Gray-Scott Sch
 
 ## Repository structure
 
-- The `courses` folder contains the courses that are presented online:
+- The `courses` folder contains the courses that are presented online (not present in the images):
   - The CPU course is `kokkos_cpu`;
   - The GPU course is `kokkos_gpu`.
 - The `exercises` folder contains the exercises associated to the course, based on the Gray-Scott equation:
@@ -24,7 +24,10 @@ This repository contains the Kokkos courses and exercises for the Gray-Scott Sch
   - The `gpu_async_more` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results;
   - The `scripts` folder contains some tools to run the built implementations:
     - `run_all.sh` runs all known implementations binaries given a build directory (useful for a top-level build only);
-    - `check_outcome.sh` run an implementation binary for the 10 × 10 case and check the checksums.
+    - `check_outcome.sh` run an implementation binary for the 10 × 10 case and check the checksums;
+- The `docker` folder contains the Dockerfiles for the different editors (not present in the images):
+    - The `cpu` folder contains the CPU Dockerfiles;
+    - The `gpu` folder contains the GPU Dockerfiles for NVIDIA GPUs.
 
 ## Courses
 
@@ -104,6 +107,18 @@ When compiling Kokkos, you have to specify the GPU architecture among its flags:
 cmake -B build_kokkos \
           -DKokkos_ARCH_VOLTA70=ON \
           ${other_kokkos_flags}
+```
+
+### Doing the exercises
+
+You should duplicate the `sequential` directory to start your work.
+Then rename the template CMake list file and the C++ source file:
+
+```sh
+cp -r sequential my_gs
+cd my_gs
+mv CMakeLists.txt{.sample,}
+mv gray_scott{_sequential,}.cpp
 ```
 
 ## Images
