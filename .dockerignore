@@ -26,5 +26,8 @@ build*/
 *.qdstrm
 *.nsys-rep
 
+# Vim stuff
+*.sw*
+
 # Python stuff
 __pycache__/
