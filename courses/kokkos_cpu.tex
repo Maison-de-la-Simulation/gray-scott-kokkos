@@ -412,6 +412,31 @@
     \end{columns}
 \end{exerciseframe}
 
+\section{Gray--Scott sequential implementation}
+
+\begin{exerciseframe}{From the "sequential" folder}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}[breakafter={=}]{sh}
+                cmake \
+                    -B build/serial \
+                    -DCMAKE_BUILD_TYPE=Release
+
+                cmake \
+                    --build build/serial
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item Check the implementation
+                \item Build the code
+                \item No need for Kokkos here
+                \item Run it
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{exerciseframe}
+
 \section{Starting with the serial backend}
 
 \begin{frame}{The notion of backend in Kokkos}
@@ -747,31 +772,6 @@
             \begin{itemize}
                 \item Build the hello world code
                 \item Run with the \texttt{--kokkos-print-configuration} argument
-            \end{itemize}
-        \end{column}
-    \end{columns}
-\end{exerciseframe}
-
-\section{Gray--Scott sequential implementation}
-
-\begin{exerciseframe}{From the "sequential" folder}
-    \begin{columns}
-        \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/serial \
-                    -DCMAKE_BUILD_TYPE=Release
-
-                cmake \
-                    --build build/serial
-            \end{minted}
-        \end{column}
-        \begin{column}{0.5\linewidth}
-            \begin{itemize}
-                \item Check the implementation
-                \item Build the code
-                \item No need for Kokkos here
-                \item Run it
             \end{itemize}
         \end{column}
     \end{columns}
