@@ -4,9 +4,10 @@
     aspectratio=169,
 ]{beamer}
 
+\usepackage[table]{xcolor}
 \usepackage{minted}
 \usepackage{diagbox}
-\usepackage{todonotes}
+\usepackage{makecell}
 
 \usetheme{gray-scott}
 
@@ -2198,26 +2199,28 @@
     \end{columns}
 \end{frame}
 
+\colorlet{lightmain2}{lightmain!50}
+
 \begin{frame}[fragile]{Race condition}
     \begin{columns}
-        \begin{column}{0.5\linewidth}
+        \begin{column}{0.55\linewidth}
             Even simple instructions like increment are decomposed into several smaller assembly instructions:
             \begin{minted}{C++}
                 histo(i % 5) += i;
             \end{minted}
         \end{column}
-        \begin{column}{0.5\linewidth}
+        \begin{column}{0.45\linewidth}
             \small
             \begin{table}{Operations}{llcl}
                 \textbf{Thread 1} & \textbf{Thread 6} &  & \textbf{Result} \\\hline
                 & & & 0 \\
-                read value & & ← & 0 \\
-                add 1 & &  & 0 \\
-                write value & & → & 1 \\
+                \rowcolor{lightmain}read value & & $\leftarrow$ & 0 \\
+                \rowcolor{lightmain}add 1 & &  & 0 \\
+                \rowcolor{lightmain}write value & & $\rightarrow$ & 1 \\
                 & & & 1 \\
-                & read value & ← & 1 \\
-                & add 6 &  & 1 \\
-                & write value & → & 7 \\
+                \rowcolor{lightmain2}& read value & $\leftarrow$ & 1 \\
+                \rowcolor{lightmain2}& add 6 &  & 1 \\
+                \rowcolor{lightmain2}& write value & $\rightarrow$ & 7 \\
                 & & & 7 \\
             \end{table}
         \end{column}
@@ -2226,7 +2229,7 @@
 
 \begin{frame}[fragile]{Race condition}
     \begin{columns}
-        \begin{column}{0.5\linewidth}
+        \begin{column}{0.55\linewidth}
             Execution between threads is independent. There is no guarantee over the order of instructions:
             \begin{minted}{C++}
                 histo(i % 5) += i;
@@ -2234,18 +2237,18 @@
 
             When several threads are accessing the same data, it will generate \structure{race conditions}.
         \end{column}
-        \begin{column}{0.5\linewidth}\\
+        \begin{column}{0.45\linewidth}\\
             \small
             \begin{table}{Operations}{llcl}
                 \textbf{Thread 1} & \textbf{Thread 6} &  & \textbf{Result} \\\hline
                 & & & 0 \\
-                read value & & ← & 0 \\
-                & read value & ← & 0 \\
-                add 1 & & & 0 \\
-                write value & & → & 1 \\
+                \rowcolor{lightmain}read value & & $\leftarrow$ & 0 \\
+                \rowcolor{lightmain2}& read value & $\leftarrow$ & 0 \\
+                \rowcolor{lightmain}add 1 & & & 0 \\
+                \rowcolor{lightmain}write value & & $\rightarrow$ & 1 \\
                 & & & 1 \\
-                & add 6 & & 1 \\
-                & write value & → & 6 \\
+                \rowcolor{lightmain2}& add 6 & & 1 \\
+                \rowcolor{lightmain2}& write value & $\rightarrow$ & 6 \\
                 & & & 6 \\
             \end{table}
         \end{column}
@@ -2290,24 +2293,23 @@
                 Kokkos::atomic_add(&histo(i % 5), i);
             \end{minted}
         \end{column}
-        \begin{column}{0.5\linewidth}
-            \vspace{-1em}
+        \begin{column}{0.45\linewidth}
+            \vspace{-0.5em}
 
             \small
-            \vspace{0.5em}
             \begin{table}{Operations}{llcl}
                 \textbf{Thread 1} & \textbf{Thread 6} &  & \textbf{Result} \\\hline
                 & & & 0 \\
-                atomic add & & ←→ & 1 \\
-                & atomic add & ←→ & 7 \\
+                \rowcolor{lightmain}atomic add & & $\leftrightarrow$ & 1 \\
+                \rowcolor{lightmain2}& atomic add & $\leftrightarrow$ & 7 \\
                 &  &  & 7 \\
             \end{table}
             \pause
             \begin{table}{Operations}{llcl}
                 \textbf{Thread 1} & \textbf{Thread 6} &  & \textbf{Result} \\\hline
                 & & & 0 \\
-                & atomic add & ←→ & 6 \\
-                atomic add & & ←→ & 7 \\
+                \rowcolor{lightmain}& atomic add & $\leftrightarrow$ & 6 \\
+                \rowcolor{lightmain2}atomic add & & $\leftrightarrow$ & 7 \\
                 &  &  & 7 \\
             \end{table}
         \end{column}
@@ -2422,14 +2424,16 @@
 \end{frame}
 
 \begin{frame}[fragile]{Currently available functions}
+    \vspace{-0.5em}
+
     \small
     \begin{table}{Functions}{ll}
-        Algorithm family & Functions \\
+        Algorithm family & Functions \\\hline
         Sorting and related & \texttt{sort}, \texttt{sort\_by\_key}, \texttt{is\_sorted}, \texttt{is\_sorted\_until} \\
         Minimum/maximum  & \texttt{min\_element}, \texttt{max\_element}, \texttt{minmax\_element} \\
-        Modifying sequence    & \texttt{copy}, \texttt{move}, \texttt{fill}, \texttt{transform}, \texttt{remove}, \texttt{replace}, \texttt{reverse}, \texttt{rotate}, \texttt{unique}, ... \\
+        Modifying sequence  & \makecell[l]{\texttt{copy}, \texttt{move}, \texttt{fill}, \texttt{transform}, \texttt{remove}, \texttt{replace}, \texttt{reverse}, \\\texttt{rotate}, \texttt{unique}, ...} \\
         Non-modifying sequence & \texttt{count}, \texttt{equal}, \texttt{all\_of}, \texttt{any\_of}, \texttt{find}, \texttt{for\_each}, \texttt{search}, ... \\
-        Numeric & \texttt{adjacent\_difference}, \texttt{reduce}, \texttt{exclusive\_scan}, \texttt{inclusive\_scan}, ... \\
+        Numeric & \makecell[l]{\texttt{adjacent\_difference}, \texttt{reduce}, \texttt{exclusive\_scan}, \\\texttt{inclusive\_scan}, ...} \\
         Partitioning & \texttt{is\_partitioned}, \texttt{partition\_point}, \texttt{partition\_copy} \\
         Iterators & \texttt{begin}, \texttt{cbegin}, \texttt{end}, \texttt{cend}, \texttt{distance}, \texttt{iter\_swap} \\
         Random & \texttt{Random\_XorShift64\_Pool}, ...
