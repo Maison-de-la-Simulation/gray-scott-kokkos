@@ -2253,7 +2253,7 @@ processor approximately constant
             KE::simd_mask<double> m;       // uninitialized
             KE::simd_mask<double> m(true); // every value is true
             // true on even indices, false on odd ones
-            KE::simd_mask<double> m(KOKKOS_LAMBDA(int i) { return i % 2 == 0; });
+            KE::simd_mask<double> m([](int i) { return i % 2 == 0; });
         \end{minted}
         \item This is the type returned by comparison operations
         \begin{minted}{C++}
