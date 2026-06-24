@@ -1554,11 +1554,12 @@
         \end{column}
     \end{columns}
 \end{exerciseframe}
+
 \section{Parallel scans}
 
 \begin{frame}[fragile]{Anatomy of a scan loop}
     \begin{columns}
-        \begin{column}{0.5\linewidth}
+        \begin{column}{0.55\linewidth}
             \begin{minted}[texcomments]{C++}
                 result(0) = A(0);
                 for (int i = 1; i < N; i++) {
@@ -1566,7 +1567,7 @@
                 }
             \end{minted}
         \end{column}
-        \begin{column}{0.5\linewidth}
+        \begin{column}{0.45\linewidth}
             \begin{itemize}
                 \item Cumulative reduction, similar to \texttt{numpy.cumsum}
                 \item Inclusive (shown here) and exclusive scan algorithms
@@ -1600,7 +1601,7 @@
             \begin{itemize}
                 \item \mintinline{c++}{parallel_scan} to perform reductions
                 \item Works only with 1D execution policies
-                \item For other types of scan operations, need to provide \texttt{init} and \texttt{join} in a functor (and the function call operator).
+                \item For other types of scan operations, need to provide \texttt{init} and \texttt{join} in a functor (and the function call operator)
                 \item Beware, the functor might be called multiple times (\texttt{is\_final})!
             \end{itemize}
         \end{column}
