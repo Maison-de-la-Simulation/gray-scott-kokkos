@@ -379,10 +379,10 @@
                 REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
 
                 # pick one
-                IMAGE=kokkos_gpu_interactive
-                IMAGE=kokkos_gpu_interactive_jupyter
-                IMAGE=kokkos_gpu_interactive_vscode
-                IMAGE=kokkos_gpu_learning_platform_code_server
+                IMAGE=kokkos_cpu_interactive
+                IMAGE=kokkos_cpu_interactive_jupyter
+                IMAGE=kokkos_cpu_interactive_vscode
+                IMAGE=kokkos_cpu_learning_platform_code_server
 
                 apptainer pull $REPO/$IMAGE:latest
 
@@ -1562,10 +1562,10 @@
         \begin{column}{0.6\linewidth}
             \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
                 # pick one
-                IMAGE=kokkos_gpu_interactive
-                IMAGE=kokkos_gpu_interactive_jupyter
-                IMAGE=kokkos_gpu_interactive_vscode
-                IMAGE=kokkos_gpu_learning_platform_code_server
+                IMAGE=kokkos_cpu_interactive
+                IMAGE=kokkos_cpu_interactive_jupyter
+                IMAGE=kokkos_cpu_interactive_vscode
+                IMAGE=kokkos_cpu_learning_platform_code_server
 
                 srun ... --pty /bin/bash
 
