@@ -2283,13 +2283,14 @@ processor approximately constant
 \begin{frame}[fragile]{Example: vectorizing with conditionals}
     Here is the vectorized version
     \begin{minted}{C++}
-        using simd_type = Kokkos::Experimental::simd<double>;
+        namespace KE = Kokkos::Experimental;
+        using simd_type = KE::simd<double>;
         Kokkos::parallel_for("sqrt", N / simd_type::size(),
             KOKKOS_LAMBDA(int i) {
                 std::size_t idx = i * simd_type::size();
-                simd_type a(&A(idx), Kokkos::Experimental::simd_flag_default);
-                a = Kokkos::Experimental::condition(a > 0, Kokkos::sqrt(a), 0.);
-                Kokkos::Experimental::simd_unchecked_store(a, &A(idx), Kokkos::Experimental::simd_flag_default);
+                simd_type a(&A(idx), KE::simd_flag_default);
+                a = KE::condition(a > 0, Kokkos::sqrt(a), 0.);
+                KE::simd_unchecked_store(a, &A(idx), KE::simd_flag_default);
             }
         );
     \end{minted}
