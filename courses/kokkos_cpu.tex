@@ -1599,10 +1599,10 @@
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
-                \item \mintinline{c++}{parallel_scan} to perform reductions
+                \item \mintinline{c++}{parallel_scan} to perform prefix reductions
                 \item Works only with 1D execution policies
-                \item For other types of scan operations, need to provide \texttt{init} and \texttt{join} in a functor (and the function call operator)
-                \item Beware, the functor might be called multiple times (\texttt{is\_final})!
+                \item In custom scan operations the functor needs to provide \texttt{init}, \texttt{join} and \texttt{operator()}
+                \item Beware, the functor may be called multiple times (\texttt{is\_final})!
             \end{itemize}
         \end{column}
     \end{columns}
