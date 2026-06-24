@@ -1686,12 +1686,12 @@
         \begin{column}{0.5\linewidth}
             \begin{minted}[breakafter={=}]{sh}
                 cmake \
-                -B build/openmp \
-                -DCMAKE_BUILD_TYPE=Release \
-                -DKokkos_ROOT=$HOME/opt/kokkos/openmp
+                    -B build/openmp \
+                    -DCMAKE_BUILD_TYPE=Release \
+                    -DKokkos_ROOT=$HOME/opt/kokkos/openmp
 
                 cmake \
-                --build build/openmp
+                    --build build/openmp
             \end{minted}
         \end{column}
         \begin{column}{0.45\linewidth}
