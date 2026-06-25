@@ -1695,12 +1695,12 @@
                     -DKokkos_ARCH_NATIVE=ON
 
                 cmake \
-                --build build/openmp \
-                --parallel 4
+                    --build build/openmp \
+                    --parallel 4
 
                 cmake \
-                --install build/openmp \
-                --prefix $HOME/opt/kokkos/openmp
+                    --install build/openmp \
+                    --prefix $HOME/opt/kokkos/openmp
             \end{minted}
         \end{column}
         \begin{column}{0.45\linewidth}
@@ -2315,7 +2315,7 @@ processor approximately constant
 \begin{frame}{Conclusion}
     \begin{itemize}
         \item Kokkos provides views as useful data containers
-        \item \texttt{parall\_for} and \texttt{parallel\_reduce} for parallel constructs
+        \item \texttt{parallel\_for}, \texttt{parallel\_reduce}, and \texttt{parallel\_scan} for parallel constructs
         \item \texttt{RangePolicy} and \texttt{MDRangePolicy} for loop dimensionality
         \item CPU optimization with SIMD
     \end{itemize}
