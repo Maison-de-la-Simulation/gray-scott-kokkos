@@ -2,9 +2,8 @@ FROM gitlab-registry.in2p3.fr/cta-lapp/cours/gray_scott_revolutions/grayscottbas
 
 USER root
 
-RUN mkdir -p /src
-RUN git clone --branch 5.1.1 https://github.com/kokkos/kokkos.git /src/kokkos
-RUN git clone https://github.com/kokkos/kokkos-tools.git /src/kokkos-tools && git -C /src/kokkos-tools checkout 3d33d0a783c5321d6981b3b4e43d3c157d2ca887
+ADD --checksum=267ebc25fc5c8b96bb321f34d78f97b1c30f8830 https://github.com/kokkos/kokkos.git#5.1.1 /src/kokkos
+ADD --checksum=3d33d0a783c5321d6981b3b4e43d3c157d2ca887 https://github.com/kokkos/kokkos-tools.git#3d33d0a783c5321d6981b3b4e43d3c157d2ca887 /src/kokkos-tools
 
 RUN date -I > /version.txt
 
