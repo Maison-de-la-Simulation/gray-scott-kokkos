@@ -39,7 +39,6 @@ void initialize(real *u, real *v, const std::size_t n_rows_ext,
         }
     }
 
-    // add a drop at the center of the domain
     // find drop location
     // central cell + 1
     const std::size_t i_center = n_rows_ext / 2;

@@ -41,13 +41,25 @@ constexpr real diffusion_rate_v{0.05};
 using View = Kokkos::View<real **, Kokkos::LayoutRight>;
 
 /**
- * @brief Add a drop at the center of the fields.
+ * @brief Initialize the fields and add a drop at the center.
  * @param u U field.
  * @param v V field.
  */
-void add_drop(const View &u, const View &v) {
+void initialize(const View &u, const View &v) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
+
+    // initialize all fields
+    Kokkos::parallel_for(
+        "initialize",
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0},
+                                               {n_rows_ext, n_columns_ext}),
+        KOKKOS_LAMBDA(const int i, const int j) {
+            u(i, j) = 1;
+            v(i, j) = 0;
+        });
+
+    // add a drop at the center of the domain
 
     // find drop location
     // central cell + 1
@@ -263,11 +275,7 @@ int main(int argc, char *argv[]) {
     }
 
     // initialize fields
-    Kokkos::deep_copy(u, 1);
-    Kokkos::deep_copy(v, 0);
-
-    // add a drop at the center of the domain
-    add_drop(u, v);
+    initialize(u, v);
 
     // print init if requested
     if (parameters.display_fields) {
@@ -285,7 +293,8 @@ int main(int argc, char *argv[]) {
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
     // time loop
-    for (int iteration = 1; iteration <= parameters.n_iterations; iteration++) {
+    for (std::size_t iteration = 1; iteration <= parameters.n_iterations;
+         iteration++) {
         compute(u, v, u_temp, v_temp);
         std::swap(u, u_temp);
         std::swap(v, v_temp);
