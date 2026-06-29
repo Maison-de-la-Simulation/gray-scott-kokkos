@@ -36,6 +36,12 @@ update_cmake_files () {
         $files
 }
 
+update_course_version_file () {
+    local version=$1
+    local file=$2
+    echo "$version" > "$file"
+}
+
 dry_run=false
 force_run=false
 
@@ -84,16 +90,22 @@ then
 fi
 
 # update version in files
-echo "Bumping CMakeLists.txt files to version $version"
+
+echo "Bumping exercise CMakeLists.txt files to version $version"
 cmake_files=$(get_cmake_files)
 # shellcheck disable=SC2086 # allow to pass the list of files
 update_cmake_files "$version" $cmake_files
+
+echo "Bumping course version file to version $version"
+course_version_file=courses/version.txt
+update_course_version_file "$version" "$course_version_file"
 
 if ! $dry_run
 then
     echo "Creating commit and tag for version $version"
     # shellcheck disable=SC2086 # allow to pass the list of files
     git add $cmake_files
+    git add "$course_version_file"
     git commit -m "Version $version"
     git tag "$version"
 fi
