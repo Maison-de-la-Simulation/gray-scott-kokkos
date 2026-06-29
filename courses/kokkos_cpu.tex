@@ -976,16 +976,9 @@
     \end{columns}
 \end{frame}
 
-\begin{exerciseframe}{From the "sequential" folder}
+\begin{exerciseframe}{From the "gray\_scott" folder (aka the worktree)}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}{sh}
-                cp -r sequential my_gs
-                cd my_gs
-                mv CMakeLists.txt{.sample,}
-                mv gray_scott{_sequential,}.cpp
-            \end{minted}
-
             \begin{minted}{C++}
                 #include <Kokkos_Core.hpp>
 
@@ -1000,8 +993,7 @@
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
-                \item Duplicate the \texttt{sequential} folder to a different name
-                \item Rename the CMake list sample file and the C++ file
+                \item Same code as in the \texttt{sequential} folder
                 \item Add the Kokkos header
                 \item Use Kokkos views instead of plain-old-data arrays for \texttt{u} and \texttt{v} (and temporary arrays) in \texttt{main} and in \texttt{compute}
                 \item For now, just pass a raw pointer when calling \texttt{check} and \texttt{print\_field}
@@ -1326,7 +1318,7 @@
     \end{columns}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree}
+\begin{exerciseframe}{\small From your worktree or the "cpu\_base\_0\_views" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}{C++}
@@ -1528,7 +1520,7 @@
     \end{minted}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree}
+\begin{exerciseframe}{\small From your worktree or the "cpu\_base\_1\_parallel\_for" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}{C++}
@@ -1734,7 +1726,7 @@
     \end{columns}
 \end{exerciseframe}
 
-\begin{exerciseframe}{From your worktree or the "cpu" folder}
+\begin{exerciseframe}{\small From your worktree or the "cpu\_base" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
             \begin{minted}[breakafter={=}]{sh}
@@ -1859,7 +1851,7 @@ processor approximately constant
 
 \end{frame}
 
-\begin{exerciseframe}{From your worktree or the "cpu" folder}
+\begin{exerciseframe}{\small From your worktree or the "cpu\_base" folder}
     \begin{itemize}
         \item Perform scalings
         \begin{itemize}
@@ -2195,7 +2187,7 @@ processor approximately constant
     \end{itemize}
 \end{frame}
 
-\begin{exerciseframe}{From your worktree or the "cpu" folder}
+\begin{exerciseframe}{\small From your worktree or the "cpu\_base" folder}
 \begin{columns}
     \begin{column}{0.5\linewidth}
         \begin{minted}{C++}
