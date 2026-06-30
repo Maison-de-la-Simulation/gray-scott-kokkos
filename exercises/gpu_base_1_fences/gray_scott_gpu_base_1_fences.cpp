@@ -1,3 +1,11 @@
+/**
+ * WARNING
+ *
+ * This Kokkos implementation is incomplete and can only run on CPU. This is
+ * not valid Kokkos code! It requires modifications to be fully portable on
+ * GPU.
+ */
+
 #include <Kokkos_Core.hpp>
 #include <utility>
 
@@ -22,17 +30,30 @@ constexpr real diffusion_rate_v{0.05};
 }  // namespace constants
 
 // views type
-using View = Kokkos::View<real **>;
+using View = Kokkos::View<real **, Kokkos::SharedSpace>;
 
 /**
- * @brief Add a drop at the center of the fields.
+ * @brief Initialize the fields and add a drop at the center.
  * @param u U field.
  * @param v V field.
  */
-void add_drop(const View &u, const View &v) {
+void initialize(const View &u, const View &v) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
+    // initialize all fields
+    Kokkos::parallel_for(
+        "initialize",
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0},
+                                               {n_rows_ext, n_columns_ext}),
+        KOKKOS_LAMBDA(const int i, const int j) {
+            u(i, j) = 1;
+            v(i, j) = 0;
+        });
+
+    Kokkos::fence("wait for initialize");
+
+    // add a drop at the center of the domain
     // find drop location
     // central cell + 1
     const std::size_t i_center = n_rows_ext / 2;
@@ -44,33 +65,32 @@ void add_drop(const View &u, const View &v) {
 
     Kokkos::parallel_for(
         "add drop",
-        Kokkos::MDRangePolicy<
-            Kokkos::Rank<2, Kokkos::Iterate::Default, Kokkos::Iterate::Right>>(
-            {i_drop_first, j_drop_first}, {i_drop_last, j_drop_last}),
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({i_drop_first, j_drop_first},
+                                               {i_drop_last, j_drop_last}),
         KOKKOS_LAMBDA(const int i, const int j) {
             u(i, j) = 0;
             v(i, j) = 1;
         });
+
+    Kokkos::fence("wait for add drop");
 }
 
 /**
  * @brief Compute the Gray-Scott equation for one iteration.
- * @param space Execution space for the computation.
  * @param u U field.
  * @param v V field.
  * @param u_temp U temporary field.
  * @param v_temp V temporary field.
  */
-void compute(Kokkos::DefaultExecutionSpace const &space, const View &u,
-             const View &v, const View &u_temp, const View &v_temp) {
+void compute(const View &u, const View &v, const View &u_temp,
+             const View &v_temp) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
     Kokkos::parallel_for(
         "compute",
-        Kokkos::MDRangePolicy<
-            Kokkos::Rank<2, Kokkos::Iterate::Default, Kokkos::Iterate::Right>>(
-            space, {1, 1},
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
+            {1, 1},
             {n_rows_ext - 1, n_columns_ext - 1}),  // do not iterate on the halo
         KOKKOS_LAMBDA(const int i, const int j) {
             // clang-format off
@@ -94,6 +114,8 @@ void compute(Kokkos::DefaultExecutionSpace const &space, const View &u,
             u_temp(i, j) = u(i, j) + u_delta * constants::dt;
             v_temp(i, j) = v(i, j) + v_delta * constants::dt;
         });
+
+    Kokkos::fence("wait for compute");
 }
 
 /**
@@ -106,8 +128,7 @@ View::value_type check(const View &field, const std::size_t iteration) {
     typename View::value_type checksum;
     Kokkos::parallel_reduce(
         "check fields",
-        Kokkos::MDRangePolicy<
-            Kokkos::Rank<2, Kokkos::Iterate::Default, Kokkos::Iterate::Right>>(
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
             {1, 1}, {field.extent(0) - 1, field.extent(1) - 1}),
         KOKKOS_LAMBDA(const int i, const int j,
                       View::value_type &checksum_local) {
@@ -126,28 +147,11 @@ int main(int argc, char *argv[]) {
     Parameters parameters{argc, argv};
     parameters.check();
     parameters.describe();
-    if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
-                                 Kokkos::DefaultHostExecutionSpace>) {
-        parameters.show_size<real>(5);
-    } else {
-        parameters.show_size<real>(2, "CPU");
-        parameters.show_size<real>(5, "GPU");
-    }
-
-    const std::size_t n_images =
-        parameters.n_iterations / parameters.images_interval;
+    parameters.show_size<real>(4);
 
     // fields (with halo)
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);
     View v("v", parameters.n_rows_ext, parameters.n_columns_ext);
-
-    // output fields (with halo)
-    View v_out("v_out", parameters.n_rows_ext, parameters.n_columns_ext);
-
-    // mirrors of the fields (with halo)
-    auto u_h = Kokkos::create_mirror_view(u);
-    // beware that v_h is the mirror of the output v
-    auto v_h = Kokkos::create_mirror_view(v_out);
 
     // create writer
     OutputWriter<real> writer;
@@ -158,73 +162,44 @@ int main(int argc, char *argv[]) {
     }
 
     // initialize fields
-    Kokkos::deep_copy(u, 1);
-    Kokkos::deep_copy(v, 0);
-
-    // add a drop at the center of the domain
-    add_drop(u, v);
-
-    // transfer fields
-    Kokkos::deep_copy(u_h, u);
-    Kokkos::deep_copy(v_h, v);
+    initialize(u, v);
 
     // print init if requested
     if (parameters.display_fields) {
-        helpers::print_field(u_h, 0);
-        helpers::print_field(v_h, 0);
+        helpers::print_field(u, 0);
+        helpers::print_field(v, 0);
+    }
+
+    // write init
+    if (parameters.write_results) {
+        writer.write(v.data());
     }
 
     // temporary fields (with halo)
     View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
-    // create one space for compute, and one for data
-    auto [space_compute, space_data] = Kokkos::Experimental::partition_space(
-        Kokkos::DefaultExecutionSpace{}, 1, 1);
+    // time loop
+    for (std::size_t iteration = 1; iteration <= parameters.n_iterations;
+         iteration++) {
+        compute(u, v, u_temp, v_temp);
+        std::swap(u, u_temp);
+        std::swap(v, v_temp);
 
-    // loop on images
-    for (int image = 0; image < n_images; image++) {
-        // start duplicate image n - 1 on the device (blocking for everybody)
-        if (parameters.write_results) {
-            Kokkos::deep_copy(v_out, v);
+        // write image every images_interval iterations
+        if (iteration % parameters.images_interval == 0 and
+            parameters.write_results) {
+            writer.write(v.data());
         }
-
-        // then batch compute image n (non-blocking)
-        for (int iteration = 1; iteration <= parameters.images_interval;
-             iteration++) {
-            compute(space_compute, u, v, u_temp, v_temp);
-            std::swap(u, u_temp);
-            std::swap(v, v_temp);
-        }
-
-        if (parameters.write_results) {
-            // then synchronize image n - 1 (blocking in its own space and for
-            // the host)
-            Kokkos::deep_copy(space_data, v_h, v_out);
-            space_data.fence("waiting for deep_copy");
-
-            // finally write image n - 1 (blocking)
-            writer.write(v_h.data());
-        }
-    }
-
-    // write final image
-    if (parameters.write_results) {
-        Kokkos::deep_copy(v_h, v);
-        writer.write(v_h.data());
     }
 
     // checksum
     check(u, parameters.n_iterations);
     check(v, parameters.n_iterations);
 
-    // transfer fields
-    Kokkos::deep_copy(u_h, u);
-    Kokkos::deep_copy(v_h, v);
-
     // print last if requested
     if (parameters.display_fields) {
-        helpers::print_field(u_h, parameters.n_iterations);
-        helpers::print_field(v_h, parameters.n_iterations);
+        helpers::print_field(u, parameters.n_iterations);
+        helpers::print_field(v, parameters.n_iterations);
     }
 }

@@ -17,11 +17,17 @@ This repository contains the Kokkos courses and exercises for the Gray-Scott Sch
   - The `common` folder contains common files for all implementations;
   - The `hello_world` folder contains a simple test code to check the installation of Kokkos is successful;
   - The `sequential` folder contains the sequential implementation of the Gray-Scott equation;
-  - The `cpu` folder contains the Kokkos CPU implementation (note it cannot be run with a GPU backend);
-  - The `cpu_simd` folder contains the Kokkos CPU implementation using SIMD (note it cannot be run with a GPU backend);
-  - The `gpu` folder contains the Kokkos GPU implementation;
-  - The `gpu_async` folder contains the Kokkos GPU implementation with asynchronous writing of the results;
-  - The `gpu_async_more` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results;
+  - The `gray_scott` folder is your starting point for porting the sequential implementation of the Gray-Scott equation to Kokkos;
+  - The `cpu_base_0_views` folder contains the sequential implementation with Kokkos Views (note it cannot be run with a GPU backend);
+  - The `cpu_base_1_parallel_for` folder contains the sequential implementation with Kokkos Views and parallel for constructs (note it cannot be run with a GPU backend);
+  - The `cpu_base` folder contains the Kokkos CPU full implementation (note it cannot be run with a GPU backend);
+  - The `cpu_more_simd` folder contains the Kokkos CPU implementation using SIMD (note it cannot be run with a GPU backend);
+  - The `gpu_base_0_shared_space` folder contains the Kokkos implementation with Kokkos `SharedSpace` views (note it gives incorrect results when run on GPU);
+  - The `gpu_base_1_fences` folder contains the Kokkos implementation with Kokkos `SharedSpace` views and fences (note it gives incorrect results when run on GPU);
+  - The `gpu_base_2_layout_iterate` folder contains the Kokkos implementation with Kokkos `SharedSpace` views, fences, and right layout and iteration order;
+  - The `gpu_base` folder contains the Kokkos GPU full implementation;
+  - The `gpu_more_async_0_write` folder contains the Kokkos GPU implementation with asynchronous writing of the results;
+  - The `gpu_more_async` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results;
   - The `scripts` folder contains some tools to run the built implementations:
     - `run_all.sh` runs all known implementations binaries given a build directory (useful for a top-level build only);
     - `check_outcome.sh` run an implementation binary for the 10 × 10 case and check the checksums;
@@ -43,8 +49,8 @@ make
 
 ## Exercises
 
-The exercises have a common `CMakeLists.txt` that allows to build all implementations at the same time.
-You can also build each implementation independently.
+Each folder in the `exercises` directory should be built independently.
+The exercises have a common `CMakeLists.txt` that allows to build all implementations at the same time, but this is probably not what you want, as such global build is reserved for maintenance.
 
 ### Configuration
 
