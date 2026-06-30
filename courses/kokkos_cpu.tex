@@ -376,25 +376,12 @@
 \begin{exerciseframe}{Initialization}
     \begin{columns}
         \begin{column}{0.6\linewidth}
-            \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
-                REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
-
-                # pick one
-                IMAGE=kokkos_cpu_interactive
-                IMAGE=kokkos_cpu_interactive_jupyter
-                IMAGE=kokkos_cpu_interactive_vscode
-                IMAGE=kokkos_cpu_learning_platform_code_server
-
-                apptainer pull $REPO/$IMAGE:latest
-
-                srun ... --pty /bin/bash
-
-                apptainer run ${IMAGE}_latest.sif
-
-                cp -r /home/jovyan/Examples $HOME/gray_scott_kokkos
-
-                cd $HOME/gray_scott_kokkos/exercises
-            \end{minted}
+            \inputminted[
+                breakafter={/},
+                fontsize=\scriptsize,
+                firstline=8,
+                lastline=24,
+            ]{sh}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.4\linewidth}
             \begin{itemize}
@@ -418,14 +405,11 @@
 \begin{exerciseframe}{From the "sequential" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/serial \
-                    -DCMAKE_BUILD_TYPE=Release
-
-                cmake \
-                    --build build/serial
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=32,
+                lastline=37,
+            ]{sh}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -614,20 +598,11 @@
 \begin{exerciseframe}{Build Kokkos for the Serial backend}
     \begin{columns}
         \begin{column}{0.55\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -S /src/kokkos \
-                    -B build/serial \
-                    -DCMAKE_BUILD_TYPE=Release
-
-                cmake \
-                    --build build/serial \
-                    --parallel 4
-
-                cmake \
-                    --install build/serial \
-                    --prefix $HOME/opt/kokkos/serial
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=45,
+                lastline=56,
+            ]{sh}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.45\linewidth}
             \begin{itemize}
@@ -759,15 +734,11 @@
 \begin{exerciseframe}{From the "hello\_world" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/serial \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=$HOME/opt/kokkos/serial
-
-                cmake \
-                    --build build/serial
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=64,
+                lastline=70,
+            ]{sh}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -980,17 +951,10 @@
 \begin{exerciseframe}{From the "gray\_scott" folder (aka the worktree)}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}{C++}
-                #include <Kokkos_Core.hpp>
-
-                // ...
-
-                using View =
-                    Kokkos::View<double **>;
-
-                View a("A", N, M);
-                a(0, 1) = 1;
-            \end{minted}
+            \inputminted[
+                firstline=78,
+                lastline=86,
+            ]{C++}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -1322,20 +1286,10 @@
 \begin{exerciseframe}{\small From your worktree or the "cpu\_base\_0\_views" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}{C++}
-                Kokkos::parallel_for(
-                    "my_loop",
-                    Kokkos::MDRangePolicy<
-                        Kokkos::Rank<2>
-                    >(
-                        {0, 0},
-                        {Nx, Ny}
-                    ),
-                    KOKKOS_LAMBDA (int i, int j) {
-                        A(i, j) = i + j;
-                    }
-                );
-            \end{minted}
+            \inputminted[
+                firstline=94,
+                lastline=105,
+            ]{C++}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -1524,20 +1478,10 @@
 \begin{exerciseframe}{\small From your worktree or the "cpu\_base\_1\_parallel\_for" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}{C++}
-                double result;
-                Kokkos::parallel_reduce(
-                    "my_reduction",
-                    N,
-                    KOKKOS_LAMBDA (
-                        const int i,
-                        double& local_result
-                    ) {
-                        local_result += A(i);
-                    },
-                    result
-                );
-            \end{minted}
+            \inputminted[
+                firstline=113,
+                lastline=124,
+            ]{C++}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -1606,19 +1550,12 @@
 \begin{exerciseframe}{(Re-)Initialization}
     \begin{columns}
         \begin{column}{0.6\linewidth}
-            \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
-                # pick one
-                IMAGE=kokkos_cpu_interactive
-                IMAGE=kokkos_cpu_interactive_jupyter
-                IMAGE=kokkos_cpu_interactive_vscode
-                IMAGE=kokkos_cpu_learning_platform_code_server
-
-                srun ... --pty /bin/bash
-
-                apptainer run ${IMAGE}_latest.sif
-
-                cd $HOME/gray_scott_kokkos/exercises
-            \end{minted}
+            \inputminted[
+                breakafter={/},
+                fontsize=\scriptsize,
+                firstline=132,
+                lastline=142,
+            ]{sh}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.4\linewidth}
             \begin{itemize}
@@ -1679,22 +1616,11 @@
 \begin{exerciseframe}{Build Kokkos for the OpenMP backend}
     \begin{columns}
         \begin{column}{0.55\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -S /src/kokkos \
-                    -B build/openmp \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ENABLE_OPENMP=ON \
-                    -DKokkos_ARCH_NATIVE=ON
-
-                cmake \
-                    --build build/openmp \
-                    --parallel 4
-
-                cmake \
-                    --install build/openmp \
-                    --prefix $HOME/opt/kokkos/openmp
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=148,
+                lastline=161,
+            ]{sh}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.45\linewidth}
             \begin{itemize}
@@ -1708,15 +1634,11 @@
 \begin{exerciseframe}{From the "hello\_world" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/serial \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=$HOME/opt/kokkos/openmp
-
-                cmake \
-                    --build build/openmp
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=167,
+                lastline=173,
+            ]{sh}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -1730,15 +1652,11 @@
 \begin{exerciseframe}{\small From your worktree or the "cpu\_base" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/openmp \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=$HOME/opt/kokkos/openmp
-
-                cmake \
-                    --build build/openmp
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=179,
+                lastline=185,
+            ]{sh}{kokkos_cpu_commands.md}
         \end{column}
         \begin{column}{0.45\linewidth}
             \begin{itemize}
@@ -2191,17 +2109,11 @@ processor approximately constant
 \begin{exerciseframe}{\small From your worktree or the "cpu\_base" folder}
 \begin{columns}
     \begin{column}{0.5\linewidth}
-        \begin{minted}{C++}
-            #include <Kokkos_SIMD.hpp>
-
-            // ...
-
-            using KE = Kokkos::Experimental;
-            using simd_type = KE::simd<real>;
-
-            View a("A", N, M);
-            simd_type a_simd(&a(0, 0));
-        \end{minted}
+        \inputminted[
+            breakafter={=},
+            firstline=193,
+            lastline=201,
+        ]{C++}{kokkos_cpu_commands.md}
     \end{column}
     \begin{column}{0.5\linewidth}
         \begin{itemize}

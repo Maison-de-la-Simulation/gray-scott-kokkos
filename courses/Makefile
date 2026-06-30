@@ -1,6 +1,6 @@
 all: kokkos_cpu.pdf kokkos_gpu.pdf
 
-%.pdf: %.tex
+%.pdf: %.tex %_commands.md
 	latexmk -pdfxe -shell-escape $<
 
 clean:
