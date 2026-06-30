@@ -135,26 +135,12 @@
 \begin{exerciseframe}{Initialization}
     \begin{columns}
         \begin{column}{0.65\linewidth}
-            \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
-                REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
-
-                # pick one
-                IMAGE=kokkos_gpu_interactive
-                IMAGE=kokkos_gpu_interactive_jupyter
-                IMAGE=kokkos_gpu_interactive_vscode
-                IMAGE=kokkos_gpu_learning_platform_code_server
-
-                apptainer pull $REPO/$IMAGE:latest
-
-                srun ... --pty /bin/bash
-
-                apptainer run --nv ${IMAGE}_latest.sif
-
-                # if you didn't attend last week session
-                cp -r /home/jovyan/Examples $HOME/gray_scott_kokkos
-
-                cd $HOME/gray_scott_kokkos/exercises
-            \end{minted}
+            \inputminted[
+                breakafter={/},
+                fontsize=\scriptsize,
+                firstline=8,
+                lastline=25,
+            ]{sh}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.35\linewidth}
             \begin{itemize}
@@ -353,22 +339,11 @@
 \begin{exerciseframe}{Build Kokkos for a GPU backend}
     \begin{columns}
         \begin{column}{0.475\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -S /src/kokkos \
-                    -B build/cuda \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ENABLE_CUDA=ON \
-                    -DKokkos_ARCH_XXX=ON
-
-                cmake \
-                    --build build/cuda \
-                    --parallel 4
-
-                cmake \
-                    --install build/cuda \
-                    --prefix $HOME/opt/kokkos/cuda
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=31,
+                lastline=44,
+            ]{sh}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.525\linewidth}
             \begin{itemize}
@@ -393,19 +368,14 @@
     \end{columns}
 \end{exerciseframe}
 
-
 \begin{exerciseframe}{From the "hello\_world" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/serial \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=$HOME/opt/kokkos/cuda
-
-                cmake \
-                    --build build/cuda
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=50,
+                lastline=56,
+            ]{sh}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -419,15 +389,11 @@
 \begin{exerciseframe}{\small From last week worktree of the "cpu\_base" folder}
     \begin{columns}
         \begin{column}{0.55\linewidth}
-            \begin{minted}[breakafter={=}]{sh}
-                cmake \
-                    -B build/cuda \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=$HOME/opt/kokkos/cuda
-
-                cmake \
-                    --build build/cuda
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=62,
+                lastline=68,
+            ]{sh}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.45\linewidth}
             \begin{itemize}
@@ -682,13 +648,10 @@
 \begin{exerciseframe}{\small From your worktree of the "cpu\_base" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}{C++}
-                using View =
-                    Kokkos::View<
-                        double **,
-                        Kokkos::SharedSpace
-                    >;
-            \end{minted}
+            \inputminted[
+                firstline=76,
+                lastline=80,
+            ]{C++}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -771,17 +734,10 @@
 \begin{exerciseframe}{\small From your worktree or the "gpu\_base\_0\_shared\_space" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}{C++}
-                Kokkos::parallel_for(
-                    "my_loop",
-                    N,
-                    KOKKOS_LAMBDA (int i) {
-                        // ...
-                    }
-                );
-
-                Kokkos::fence("my_loop fence");
-            \end{minted}
+            \inputminted[
+                firstline=88,
+                lastline=96,
+            ]{C++}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -873,27 +829,11 @@
 \begin{exerciseframe}{\small From your worktree or the "gpu\_base\_1\_fences" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}[fontsize=\scriptsize]{C++}
-                using View =
-                    Kokkos::View<
-                        double**,
-                        Kokkos::LayoutRight
-                    >;
-
-                // ...
-
-                Kokkos::parallel_for(
-                    // ...
-                    Kokkos::MDrangePolicy<
-                        Kokkos::Range<
-                            2,
-                            Kokkos::Iterate::Default,
-                            Kokkos::Iterate::Right
-                        >
-                    >(/* ... */),
-                    // ...
-                );
-            \end{minted}
+            \inputminted[
+                fontsize=\scriptsize,
+                firstline=104,
+                lastline=122,
+            ]{C++}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -1459,24 +1399,12 @@
 \begin{exerciseframe}{Build Kokkos-Tools}
     \begin{columns}
         \begin{column}{0.6\linewidth}
-            \begin{minted}[breakafter={=,/}, fontsize=\scriptsize]{C++}
-                cmake \
-                    -S /src/kokkos-tools \
-                    -B build/cuda \
-                    -DCMAKE_BUILD_TYPE=Release \
-                    -DKokkos_ROOT=$HOME/opt/kokkos/cuda
-
-                cmake \
-                    --build build/cuda \
-                    --parallel 4
-
-                cmake \
-                    --install build/cuda \
-                    --prefix $HOME/opt/kokkos_tools/cuda
-
-                export PATH=$HOME/opt/kokkos_tools/cuda/bin:$PATH
-                export LD_LIBRARY_PATH=$HOME/opt/kokkos_tools/cuda/lib:$LD_LIBRARY_PATH
-            \end{minted}
+            \inputminted[
+                fontsize=\scriptsize,
+                breakafter={=,/},
+                firstline=130,
+                lastline=145,
+            ]{sh}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.4\linewidth}
             \begin{itemize}
@@ -1490,24 +1418,16 @@
 \begin{exerciseframe}{\small From your worktree or the "gpu\_base\_2\_layout\_iterate" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}{C++}
-                Kokkos::Profiling::pushRegion(
-                    "region name"
-                );
+            \inputminted[
+                firstline=151,
+                lastline=157,
+            ]{C++}{kokkos_gpu_commands.md}
 
-                // ...
-
-                Kokkos::Profiling::popRegion();
-            \end{minted}
-
-            \begin{minted}[breakafter={=}]{sh}
-                nsys profile \
-                    -o report \
-                    ./my_program \
-                        --kokkos-tools-libs=libkp_nvtx_connector.so
-
-                nsys-ui report.nsys-rep
-            \end{minted}
+            \inputminted[
+                breakafter={=},
+                firstline=161,
+                lastline=166,
+            ]{sh}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -1623,19 +1543,10 @@
 \begin{exerciseframe}{\small From your worktree or the "gpu\_base\_2\_layout\_iterate" folder}
     \begin{columns}
         \begin{column}{0.5\linewidth}
-            \begin{minted}{C++}
-                auto host_view =
-                    Kokkos::create_mirror_view(
-                        device_view
-                    );
-
-                // ...
-
-                Kokkos::deep_copy(
-                    device_view,
-                    host_view
-                );
-            \end{minted}
+            \inputminted[
+                firstline=174,
+                lastline=184,
+            ]{C++}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.5\linewidth}
             \begin{itemize}
@@ -1759,19 +1670,12 @@
 \begin{exerciseframe}{(Re-)Initialization}
     \begin{columns}
         \begin{column}{0.65\linewidth}
-            \begin{minted}[breakafter={/},fontsize=\scriptsize]{sh}
-                # pick one
-                IMAGE=kokkos_gpu_interactive
-                IMAGE=kokkos_gpu_interactive_jupyter
-                IMAGE=kokkos_gpu_interactive_vscode
-                IMAGE=kokkos_gpu_learning_platform_code_server
-
-                srun ... --pty /bin/bash
-
-                apptainer run --nv ${IMAGE}_latest.sif
-
-                cd $HOME/gray_scott_kokkos/exercises
-            \end{minted}
+            \inputminted[
+                breakafter={/},
+                fontsize=\scriptsize,
+                firstline=192,
+                lastline=202,
+            ]{sh}{kokkos_gpu_commands.md}
         \end{column}
         \begin{column}{0.35\linewidth}
             \begin{itemize}
