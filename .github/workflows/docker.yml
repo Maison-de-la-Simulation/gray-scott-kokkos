@@ -14,7 +14,8 @@ on:
       - 'docker/**'
 
 env:
-  registry: gitlab-registry.in2p3.fr
+  in2p3_gitlab_registry: gitlab-registry.in2p3.fr
+  github_registry: ghcr.io
 
 jobs:
   build:
@@ -43,15 +44,24 @@ jobs:
       - name: Login to IN2P3 Gitlab Container Registry
         uses: docker/login-action@v4
         with:
-          registry: ${{env.registry}}
+          registry: ${{env.in2p3_gitlab_registry}}
           username: ${{secrets.IN2P3_GITLAB_USERNAME}}
           password: ${{secrets.IN2P3_GITLAB_PASSWORD}}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
 
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ${{env.registry}}/thomas.padioleau/gray-scott-kokkos/kokkos_${{matrix.architecture}}_${{matrix.image}}
+          images: |
+            ${{env.in2p3_gitlab_registry}}/thomas.padioleau/gray-scott-kokkos/kokkos_${{matrix.architecture}}_${{matrix.image}}
+            ${{env.github_registry}}/maison-de-la-simulation/gray-scott-kokkos/kokkos_${{matrix.architecture}}_${{matrix.image}}
           tags: |
             type=sha
             type=ref,event=branch
