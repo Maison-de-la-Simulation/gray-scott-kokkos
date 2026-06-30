@@ -851,7 +851,7 @@
                     \item[Outer order] Order of the tiles within the iteration space
                     \item[Inner order] Order of the elements within the tile
                 \end{description}
-                \item This especially maps with
+                \item The idea is to map with
                 \begin{itemize}
                     \item GPU blocks and threads
                     \item CPU cache blocking
@@ -929,6 +929,26 @@
         \end{column}
     \end{columns}
 \end{exerciseframe}
+
+\begin{frame}[fragile]{Tiling with Kokkos (bonus)}
+    \begin{columns}
+        \begin{column}{0.6\linewidth}
+            \begin{minted}{C++}
+                Kokkos::MDRangePolicy</* rank */>(
+                    /* first indices */,
+                    /* last indices */,
+                    {tile_size_0, /* ... */, tile_size_n}
+                );
+            \end{minted}
+        \end{column}
+        \begin{column}{0.4\linewidth}
+            \begin{itemize}
+                \item Tile size is passed as the third argument of \texttt{MDRangePolicy}
+                \item Kokkos has default values depending on the Backend
+            \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
 
 \section{Kokkos tools}
 
