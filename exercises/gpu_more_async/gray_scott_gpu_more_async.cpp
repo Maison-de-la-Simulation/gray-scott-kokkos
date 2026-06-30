@@ -25,13 +25,19 @@ constexpr real diffusion_rate_v{0.05};
 using View = Kokkos::View<real **>;
 
 /**
- * @brief Add a drop at the center of the fields.
+ * @brief Initialize the fields and add a drop at the center.
  * @param u U field.
  * @param v V field.
  */
-void add_drop(const View &u, const View &v) {
+void initialize(const View &u, const View &v) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
+
+    // initialize fields
+    Kokkos::deep_copy(u, 1);
+    Kokkos::deep_copy(v, 0);
+
+    // add a drop at the center of the domain
 
     // find drop location
     // central cell + 1
@@ -158,11 +164,7 @@ int main(int argc, char *argv[]) {
     }
 
     // initialize fields
-    Kokkos::deep_copy(u, 1);
-    Kokkos::deep_copy(v, 0);
-
-    // add a drop at the center of the domain
-    add_drop(u, v);
+    initialize(u, v);
 
     // transfer fields
     Kokkos::deep_copy(u_h, u);
