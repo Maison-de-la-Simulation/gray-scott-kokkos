@@ -32,9 +32,9 @@ void Parameters::parse(int argc, char *argv[]) {
     app.add_option("-m,--columns", this->n_columns, "Number of columns")
         ->capture_default_str();
 
-    app.add_option("-i,--iterations", this->n_iterations,
-                   "Number of iterations")
-        ->capture_default_str();
+    auto iterations = app.add_option("-i,--iterations", this->n_iterations,
+                                     "Number of iterations")
+                          ->capture_default_str();
     app.add_option("-t,--interval", this->images_interval,
                    "Number of iterations between two snapshots")
         ->capture_default_str();
@@ -43,7 +43,8 @@ void Parameters::parse(int argc, char *argv[]) {
     app.add_option("-s,--snapshots", n_snapshots,
                    "Number of snapshots (will set the number of iterations "
                    "accordingly)")
-        ->default_val(this->n_iterations / this->images_interval);
+        ->default_val(this->n_iterations / this->images_interval)
+        ->excludes(iterations);
 
     app.add_flag("-d,--display", this->display_fields,
                  "Display fields on screen at the beginning and at the end "
