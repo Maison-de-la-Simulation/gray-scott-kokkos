@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.28)
 project(
     GrayScottKokkosSequential
     LANGUAGES CXX
-    VERSION 0.1.1
+    VERSION 0.1.2
 )
 
 set(NO_KOKKOS ON)
