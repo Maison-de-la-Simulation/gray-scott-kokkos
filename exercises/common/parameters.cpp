@@ -39,12 +39,13 @@ void Parameters::parse(int argc, char *argv[]) {
                    "Number of iterations between two snapshots")
         ->capture_default_str();
 
-    std::size_t n_snapshots{0};
-    app.add_option("-s,--snapshots", n_snapshots,
-                   "Number of snapshots (will set the number of iterations "
-                   "accordingly)")
-        ->default_val(this->n_iterations / this->images_interval)
-        ->excludes(iterations);
+    std::size_t n_snapshots;
+    auto snapshots =
+        app.add_option("-s,--snapshots", n_snapshots,
+                       "Number of snapshots (will set the number of iterations "
+                       "accordingly)")
+            ->default_val(this->n_iterations / this->images_interval)
+            ->excludes(iterations);
 
     app.add_flag("-d,--display", this->display_fields,
                  "Display fields on screen at the beginning and at the end "
@@ -62,7 +63,7 @@ void Parameters::parse(int argc, char *argv[]) {
         exit(app.exit(e));
     }
 
-    if (n_snapshots != 0) {
+    if (*snapshots) {
         this->n_iterations = n_snapshots * this->images_interval;
     }
 
