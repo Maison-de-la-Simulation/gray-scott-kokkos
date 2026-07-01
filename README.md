@@ -57,9 +57,10 @@ The exercises have a common `CMakeLists.txt` that allows to build all implementa
 Dependencies to build the exercises are:
 
 - CMake 3.28 or more recent;
-- Kokkos 5.1.1 or more recent;
 - HDF5 1.10 with C++ bindings or more recent;
-- CLI11 2.4 or more recent.
+- CLI11 2.4 or more recent;
+- Kokkos 5.1.1 or more recent (as sources to build); and
+- Kokkos Tools dev (`3d33d0`) or more recent (as sources to build).
 
 By default, you have to manage the installation of the dependencies by yourself:
 
