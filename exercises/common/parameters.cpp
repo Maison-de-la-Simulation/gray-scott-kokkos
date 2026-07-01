@@ -14,8 +14,14 @@ void Parameters::describe() const {
     std::cout << "Number of elements: " << n_rows_ext * n_columns_ext
               << std::endl;
     std::cout << "Number of iterations: " << n_iterations << std::endl;
-    std::cout << "Number of images: " << n_iterations / images_interval
-              << std::endl;
+    if (this->write_results) {
+        std::cout << "Write solution: yes" << std::endl;
+        std::cout << "Number of images: " << n_iterations / images_interval
+                  << std::endl;
+        std::cout << "HDF5 file: " << this->file << std::endl;
+    } else {
+        std::cout << "Write solution: no" << std::endl;
+    }
 }
 
 void Parameters::parse(int argc, char *argv[]) {
@@ -35,6 +41,8 @@ void Parameters::parse(int argc, char *argv[]) {
 
     app.add_flag("-N{false},--no-write{false}", this->write_results,
                  "Do not write result file on disk");
+
+    app.add_option("-f,--file", this->file, "HDF5 file for the solution");
 
     try {
         app.parse(argc, argv);

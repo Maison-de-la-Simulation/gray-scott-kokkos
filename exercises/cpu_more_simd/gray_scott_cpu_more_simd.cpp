@@ -269,7 +269,7 @@ int main(int argc, char *argv[]) {
     // create writer
     OutputWriter<real> writer;
     if (parameters.write_results) {
-        writer.prepare("gray_scott.h5",
+        writer.prepare(parameters.file,
                        parameters.n_iterations / parameters.images_interval,
                        parameters.n_rows_ext, parameters.n_columns_ext);
     }
