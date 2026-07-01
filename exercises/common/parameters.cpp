@@ -14,20 +14,37 @@ void Parameters::describe() const {
     std::cout << "Number of elements: " << n_rows_ext * n_columns_ext
               << std::endl;
     std::cout << "Number of iterations: " << n_iterations << std::endl;
-    std::cout << "Number of images: " << n_iterations / images_interval
-              << std::endl;
+    if (this->write_results) {
+        std::cout << "Write solution: yes" << std::endl;
+        std::cout << "Number of snapshots: " << n_iterations / images_interval
+                  << std::endl;
+        std::cout << "HDF5 file: " << this->file << std::endl;
+    } else {
+        std::cout << "Write solution: no" << std::endl;
+    }
 }
 
 void Parameters::parse(int argc, char *argv[]) {
     CLI::App app{"Gray-Scott equation solver implemented with Kokkos"};
 
-    app.add_option("-n,--rows", this->n_rows, "Number of rows");
-    app.add_option("-m,--columns", this->n_columns, "Number of columns");
+    app.add_option("-n,--rows", this->n_rows, "Number of rows")
+        ->capture_default_str();
+    app.add_option("-m,--columns", this->n_columns, "Number of columns")
+        ->capture_default_str();
 
-    app.add_option("-i,--iterations", this->n_iterations,
-                   "Number of iterations");
+    auto iterations = app.add_option("-i,--iterations", this->n_iterations,
+                                     "Number of iterations")
+                          ->capture_default_str();
     app.add_option("-t,--interval", this->images_interval,
-                   "Number of iterations between two snapshots");
+                   "Number of iterations between two snapshots")
+        ->capture_default_str();
+
+    std::size_t n_snapshots{0};
+    app.add_option("-s,--snapshots", n_snapshots,
+                   "Number of snapshots (will set the number of iterations "
+                   "accordingly)")
+        ->default_val(this->n_iterations / this->images_interval)
+        ->excludes(iterations);
 
     app.add_flag("-d,--display", this->display_fields,
                  "Display fields on screen at the beginning and at the end "
@@ -36,10 +53,17 @@ void Parameters::parse(int argc, char *argv[]) {
     app.add_flag("-N{false},--no-write{false}", this->write_results,
                  "Do not write result file on disk");
 
+    app.add_option("-f,--file", this->file, "HDF5 file for the solution")
+        ->capture_default_str();
+
     try {
         app.parse(argc, argv);
     } catch (const CLI::ParseError &e) {
         exit(app.exit(e));
+    }
+
+    if (n_snapshots != 0) {
+        this->n_iterations = n_snapshots * this->images_interval;
     }
 
     this->n_rows_ext = this->n_rows + 2;

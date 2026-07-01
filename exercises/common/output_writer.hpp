@@ -35,23 +35,25 @@ class OutputWriter {
 
     /**
      * @brief Create and prepare the output writer in HDF5 format.
-     * @param filename Name of the file.
+     * @param filepath Path of the file.
      * @param n_images Number of images to store.
      * @param field Field that will be outputted.
      * @see `prepare` method.
      */
-    OutputWriter(const char *filename, const std::size_t n_images,
-                 const std::size_t n_rows_ext, const std::size_t n_columns_ext);
+    OutputWriter(const std::filesystem::path filepath,
+                 const std::size_t n_images, const std::size_t n_rows_ext,
+                 const std::size_t n_columns_ext);
 
     /**
      * @brief Prepare the output writer in HDF5 format.
-     * @param filename Name of the file.
+     * @param filepath Path of the file.
      * @param n_images Number of images to store.
      * @param field Field that will be outputted. Only the shape of the view is
      * used at this step.
      */
-    void prepare(const char *filename, const std::size_t n_images,
-                 const std::size_t n_rows_ext, const std::size_t n_columns_ext);
+    void prepare(const std::filesystem::path filepath,
+                 const std::size_t n_images, const std::size_t n_rows_ext,
+                 const std::size_t n_columns_ext);
 
     /**
      * @brief Write an image.
@@ -64,15 +66,15 @@ class OutputWriter {
 // implementations
 
 template <typename real>
-OutputWriter<real>::OutputWriter(const char *filename,
+OutputWriter<real>::OutputWriter(const std::filesystem::path filepath,
                                  const std::size_t n_images,
                                  const std::size_t n_rows_ext,
                                  const std::size_t n_columns_ext) {
-    this->prepare(filename, n_images, n_rows_ext, n_columns_ext);
+    this->prepare(filepath, n_images, n_rows_ext, n_columns_ext);
 }
 
 template <typename real>
-void OutputWriter<real>::prepare(const char *filename,
+void OutputWriter<real>::prepare(const std::filesystem::path filepath,
                                  const std::size_t n_images,
                                  const std::size_t n_rows_ext,
                                  const std::size_t n_columns_ext) {
@@ -96,12 +98,12 @@ void OutputWriter<real>::prepare(const char *filename,
     fapl.setCache(0, 0, 0, 0.0);  // Optional: Set chunk cache size to 0
 
     // remove file if it already exists
-    if (std::filesystem::exists(filename)) {
-        std::filesystem::remove(filename);
+    if (std::filesystem::exists(filepath)) {
+        std::filesystem::remove(filepath);
     }
 
     // create file in current working directory
-    this->file = H5::H5File(filename, H5F_ACC_TRUNC,
+    this->file = H5::H5File(filepath, H5F_ACC_TRUNC,
                             H5::FileCreatPropList::DEFAULT, fapl);
 
     // create spaces

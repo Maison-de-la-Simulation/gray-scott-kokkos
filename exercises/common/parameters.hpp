@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <iomanip>
 #include <iostream>
 
@@ -24,6 +25,7 @@ struct Parameters {
 
     // ios
     bool write_results = true;
+    std::filesystem::path file{"gray_scott.h5"};
 
     /**
      * @brief Default constructor.
