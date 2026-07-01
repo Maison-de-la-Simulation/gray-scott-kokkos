@@ -99,8 +99,6 @@ void compute(const View &u, const View &v, const View &u_temp,
             u_temp(i, j) = u(i, j) + u_delta * constants::dt;
             v_temp(i, j) = v(i, j) + v_delta * constants::dt;
         });
-
-    Kokkos::fence("wait for compute");
 }
 
 /**
