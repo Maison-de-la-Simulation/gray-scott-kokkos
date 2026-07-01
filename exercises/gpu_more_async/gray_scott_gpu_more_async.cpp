@@ -22,7 +22,7 @@ constexpr real diffusion_rate_v{0.05};
 }  // namespace constants
 
 // views type
-using View = Kokkos::View<real **>;
+using View = Kokkos::View<real **, Kokkos::LayoutRight>;
 
 /**
  * @brief Initialize the fields and add a drop at the center.
