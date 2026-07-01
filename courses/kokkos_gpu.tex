@@ -423,6 +423,7 @@
                     }
                 );
             \end{minted}
+
             \begin{uncoverenv}<3->
                 \begin{block}{Question}
                     Why do we need to use \texttt{KOKKOS\_LAMBDA} inside parallel constructs rather than the standard C++ lambda syntax?
@@ -446,7 +447,7 @@
 \begin{frame}[fragile]{Function annotations}
     \begin{columns}
         \begin{column}{0.47\linewidth}
-            \begin{minted}{C++}
+            \begin{minted}{cuda}
                 __device__
                 void device_function() {}
 
@@ -462,7 +463,7 @@
         \end{column}
         \begin{column}{0.55\linewidth}
             \begin{itemize}
-                \item GPU backends need special annotation to know which code will be run on the host and which code will run on the device
+                \item Some GPU backends (CUDA and HIP) need special annotations to know which code will be run on the host and which code will run on the device
                 \item Lambdas also need to be annotated
                 \item Function annotated with both \texttt{\_\_host\_\_} and \texttt{\_\_device\_\_} will be callable from the host and the device
                 \item \texttt{\_\_host\_\_} is implicit if no annotation is given
@@ -497,7 +498,7 @@
                 void host_device_function() {}
 
                 auto lambda =
-                KOKKOS_LAMBDA () {};
+                    KOKKOS_LAMBDA () {};
             \end{minted}
         \end{column}
         \begin{column}{0.55\linewidth}
@@ -511,8 +512,6 @@
         \end{column}
     \end{columns}
 \end{frame}
-
-
 
 \begin{frame}[fragile]{Annotated functions calls (with Kokkos macros)}
     \begin{center}
@@ -552,6 +551,44 @@
                 \pause
                 \item \texttt{KOKKOS\_FUNCTION} can be used to create free functions called in a lambda
             \end{itemize}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{From CUDA/HIP to Kokkos}
+    \begin{columns}
+        \begin{column}{0.55\linewidth}
+            \begin{minted}{cuda}
+                auto lambda =
+                    __host__ __device__ [] (int i) {
+                        // ...
+                    };
+
+                __global__
+                void device_entrypoint() {
+                    int i =
+                        blockIdx.x * blockDim.x +
+                        threadIdx.x;
+
+                    if (i < N) lambda(i);
+                }
+
+                device_entrypoint<<<N / 128, 128>>>();
+            \end{minted}
+        \end{column}
+        \begin{column}{0.45\linewidth}
+            \begin{minted}{C++}
+                auto lambda =
+                    KOKKOS_LAMBDA (int i) {
+                        // ...
+                    };
+
+                Kokkos::parallel_for(
+                    "kernel",
+                    N,
+                    lambda
+                );
+            \end{minted}
         \end{column}
     \end{columns}
 \end{frame}
@@ -835,10 +872,10 @@
             \begin{itemize}
                 \item \texttt{Rank} to specify the iteration orders
                 \item Possible values
-                \begin{description}[\texttt{Default}]
-                    \item[\texttt{Default}] Depends on the backend
-                    \item[\texttt{Left}] Left order
-                    \item[\texttt{Right}] Right order
+                \begin{description}[\texttt{Iterate::Default}]
+                    \item[\texttt{Iterate::Default}] Depends on the backend
+                    \item[\texttt{Iterate::Left}] Left order
+                    \item[\texttt{Iterate::Right}] Right order
                 \end{description}
                 \item (Again) for best performance, the inner iteration order must match the memory layout of the accessed views
             \end{itemize}
@@ -884,7 +921,7 @@
         \begin{column}{0.4\linewidth}
             \begin{itemize}
                 \item Tile size is passed as the third argument of \texttt{MDRangePolicy}
-                \item Kokkos has default values depending on the Backend
+                \item Kokkos has default values depending on the backend
             \end{itemize}
         \end{column}
     \end{columns}
@@ -925,7 +962,7 @@
                 \begin{itemize}
                     \item \texttt{perf} (CPU)
                     \item VTune (CPU)
-                    \item NSight Systems/Compute (CUDA)
+                    \item Nsight Systems/Compute (CUDA)
                     \item \texttt{rocprofv2} (HIP)
                     \item ...
                 \end{itemize}
@@ -1569,6 +1606,7 @@
                 \item Beware of \structure{arguments order!}
                 \item Views must be similar (same shape, layout, etc.)
                 \item If \texttt{deep\_copy} detects that the destination view is a shallow copy of the source view, it does nothing
+                \item \texttt{deep\_copy(destination, source)} dose an automatic fence
             \end{itemize}
         \end{column}
     \end{columns}
@@ -1593,6 +1631,7 @@
                 \item Remove the \texttt{SharedSpace} memory space parameter of the views
                 \item Add mirrors with Kokkos \texttt{create\_mirror\_view}
                 \item Synchronize views and mirrors with \texttt{deep\_copy}
+                \item You may remove unnecessary fences
                 \item Observe the performance with Nsight Systems
             \end{itemize}
         \end{column}
@@ -1739,7 +1778,7 @@
             \begin{table}{Kokkos asynchronism on GPU}{ll}
                 Function & Behavior \\\hline
                 \texttt{parallel\_for(/* ... */)} & Async. \\
-                \texttt{parallel\_reduce(/* ... */)} & Sync. \\
+                \texttt{parallel\_reduce(/* ... */)} & {\footnotesize Sync.\ (see doc)} \\
                 \texttt{deep\_copy(/* ... */)} & Sync. \\
                 \texttt{deep\_copy(space, /* ... */)} & Async. \\
             \end{table}
@@ -1924,12 +1963,13 @@
         \end{column}
         \begin{column}{0.6\linewidth}
             \begin{minted}[breakafter={:}]{C++}
-                auto instances = Kokkos::Experimental::partition_space(
-                    Kokkos::DefaultExecutionSpace {},
-                    weight_1,
-                    weight_2,
-                    /* ... */
-                );
+                auto instances =
+                    Kokkos::Experimental::partition_space(
+                        Kokkos::DefaultExecutionSpace {},
+                        weight_1, // 1
+                        weight_2, // 1
+                        /* ... */
+                    );
 
                 Kokkos::parallel_for(
                     "my streamed kernel",
@@ -1939,6 +1979,25 @@
                     /* ... */
                 );
             \end{minted}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]{Execution space instances}
+    \begin{columns}
+        \begin{column}{0.5\linewidth}
+            \begin{minted}{C++}
+                Kokkos::DefaultExecutionSpace
+                    space;
+
+                space.fence("wait for stream");
+            \end{minted}
+        \end{column}
+        \begin{column}{0.5\linewidth}
+            \begin{itemize}
+                \item An instance of an execution space is an object
+                \item You can only fence operations queued in it (unlike \mintinline{C++}|Kokkos::fence| that fences all execution spaces)
+            \end{itemize}
         \end{column}
     \end{columns}
 \end{frame}
@@ -2085,12 +2144,8 @@
         \begin{column}{0.4\linewidth}
             \begin{itemize}
                 \item Create the duplicated view
-                \item Create one stream for computation, and one for duplication, with \texttt{partition\_space}
-                \begin{itemize}
-                    \item One stream for \texttt{parallel\_for}
-                    \item One stream for \texttt{deep\_copy}
-                \end{itemize}
-                \item Differentiate the \texttt{deep\_copy} for the duplication and for the synchronization
+                \item Create one stream for duplication, with \texttt{partition\_space}, to use with \texttt{deep\_copy}
+                \item Differentiate the \texttt{deep\_copy} for D-to-D and for D-to-H
                 \item Adjust the fences
                 \pause
                 \item Beware, there is a subtlety on CPU
