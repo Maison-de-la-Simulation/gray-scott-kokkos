@@ -61,14 +61,13 @@ void initialize(const View &u, const View &v) {
 
 /**
  * @brief Compute the Gray-Scott equation for one iteration.
- * @param space Execution space for the computation.
  * @param u U field.
  * @param v V field.
  * @param u_temp U temporary field.
  * @param v_temp V temporary field.
  */
-void compute(Kokkos::DefaultExecutionSpace const &space, const View &u,
-             const View &v, const View &u_temp, const View &v_temp) {
+void compute(const View &u, const View &v, const View &u_temp,
+             const View &v_temp) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
@@ -76,7 +75,7 @@ void compute(Kokkos::DefaultExecutionSpace const &space, const View &u,
         "compute",
         Kokkos::MDRangePolicy<
             Kokkos::Rank<2, Kokkos::Iterate::Default, Kokkos::Iterate::Right>>(
-            space, {1, 1},
+            {1, 1},
             {n_rows_ext - 1, n_columns_ext - 1}),  // do not iterate on the halo
         KOKKOS_LAMBDA(const int i, const int j) {
             // clang-format off
@@ -181,8 +180,8 @@ int main(int argc, char *argv[]) {
     View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
     // create one space for compute, and one for data
-    auto [space_compute, space_data] = Kokkos::Experimental::partition_space(
-        Kokkos::DefaultExecutionSpace{}, 1, 1);
+    auto [space_data] = Kokkos::Experimental::partition_space(
+        Kokkos::DefaultExecutionSpace{}, 1);
 
     // loop on images
     for (int image = 0; image < n_images; image++) {
@@ -194,7 +193,7 @@ int main(int argc, char *argv[]) {
         // then batch compute image n (non-blocking)
         for (std::size_t iteration = 1; iteration <= parameters.images_interval;
              iteration++) {
-            compute(space_compute, u, v, u_temp, v_temp);
+            compute(u, v, u_temp, v_temp);
             std::swap(u, u_temp);
             std::swap(v, v_temp);
         }
