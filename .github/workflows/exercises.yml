@@ -27,7 +27,7 @@ jobs:
             flags: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
     runs-on: ${{ matrix.arch.os }}
     container:
-      image: gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/${{ matrix.backend.image }}:latest
+      image: ghcr.io/maison-de-la-simulation/gray-scott-kokkos/${{ matrix.backend.image }}:latest
       options: --user root
     steps:
       - name: Set up Git repository

@@ -5,7 +5,7 @@
 ### Initialization
 
 ```sh
-REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
+REPO=docker://ghcr.io/maison-de-la-simulation/gray-scott-kokkos
 
 # pick one
 IMAGE=kokkos_gpu_interactive
@@ -111,8 +111,8 @@ using View =
 
 Kokkos::parallel_for(
     // ...
-    Kokkos::MDrangePolicy<
-        Kokkos::Range<
+    Kokkos::MDRangePolicy<
+        Kokkos::Rank<
             2,
             Kokkos::Iterate::Default,
             Kokkos::Iterate::Right

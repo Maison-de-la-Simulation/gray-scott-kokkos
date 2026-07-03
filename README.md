@@ -20,14 +20,17 @@ This repository contains the Kokkos courses and exercises for the Gray-Scott Sch
   - The `gray_scott` folder is your starting point for porting the sequential implementation of the Gray-Scott equation to Kokkos;
   - The `cpu_base_0_views` folder contains the sequential implementation with Kokkos Views (note it cannot be run with a GPU backend);
   - The `cpu_base_1_parallel_for` folder contains the sequential implementation with Kokkos Views and parallel for constructs (note it cannot be run with a GPU backend);
+  - The `cpu_base_2_parallel_reduce` folder contains the sequential implementation with Kokkos Views, parallel for, and parallel reduce constructs (note it cannot be run with a GPU backend, note it is just a symbolic link to `cpu_base`);
   - The `cpu_base` folder contains the Kokkos CPU full implementation (note it cannot be run with a GPU backend);
   - The `cpu_more_simd` folder contains the Kokkos CPU implementation using SIMD (note it cannot be run with a GPU backend);
   - The `gpu_base_0_shared_space` folder contains the Kokkos implementation with Kokkos `SharedSpace` views (note it gives incorrect results when run on GPU);
   - The `gpu_base_1_fences` folder contains the Kokkos implementation with Kokkos `SharedSpace` views and fences (note it gives incorrect results when run on GPU);
   - The `gpu_base_2_layout_iterate` folder contains the Kokkos implementation with Kokkos `SharedSpace` views, fences, and right layout and iteration order;
+  - The `gpu_base_3_memory_management` folder contains the Kokkos implementation with Kokkos fences, right layout and iteration order, and explicit memory management (note it is just a symbolic link to `gpu_base`);
   - The `gpu_base` folder contains the Kokkos GPU full implementation;
   - The `gpu_more_async_0_write` folder contains the Kokkos GPU implementation with asynchronous writing of the results;
-  - The `gpu_more_async` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results;
+  - The `gpu_more_async_1_copy` folder contains the Kokkos GPU implementation with asynchronous data synchronization and writing of the results (note it is just a symbolic link to `gpu_more_async`);
+  - The `gpu_more_async` folder contains the Kokkos GPU implementation with asynchronous optimization;
   - The `scripts` folder contains some tools to run the built implementations:
     - `run_all.sh` runs all known implementations binaries given a build directory (useful for a top-level build only);
     - `check_outcome.sh` run an implementation binary for the 10 × 10 case and check the checksums;
@@ -133,12 +136,12 @@ mv gray_scott{_sequential,}.cpp
 The following Docker images can be used:
 
 - CPU
-  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive:latest`
-  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive_jupyter:latest`
-  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_interactive_vscode:latest`
-  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_cpu_learning_platform_code_server:latest`
+  - `ghcr.io/maison-de-la-simulation/gray-scott-kokkos/kokkos_cpu_interactive:latest`
+  - `ghcr.io/maison-de-la-simulation/gray-scott-kokkos/kokkos_cpu_interactive_jupyter:latest`
+  - `ghcr.io/maison-de-la-simulation/gray-scott-kokkos/kokkos_cpu_interactive_vscode:latest`
+  - `ghcr.io/maison-de-la-simulation/gray-scott-kokkos/kokkos_cpu_learning_platform_code_server:latest`
 - GPU
-  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive:latest`
-  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive_jupyter:latest`
-  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_interactive_vscode:latest`
-  - `gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos/kokkos_gpu_learning_platform_code_server:latest`
+  - `ghcr.io/maison-de-la-simulation/gray-scott-kokkos/kokkos_gpu_interactive:latest`
+  - `ghcr.io/maison-de-la-simulation/gray-scott-kokkos/kokkos_gpu_interactive_jupyter:latest`
+  - `ghcr.io/maison-de-la-simulation/gray-scott-kokkos/kokkos_gpu_interactive_vscode:latest`
+  - `ghcr.io/maison-de-la-simulation/gray-scott-kokkos/kokkos_gpu_learning_platform_code_server:latest`
