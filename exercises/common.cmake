@@ -3,7 +3,6 @@ include_guard()
 option(
     ENABLE_DOUBLE
     "Enable double precision for floating variables, instead of simple precision"
-    ON
 )
 
 # add the common libs from top level or low level
