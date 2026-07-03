@@ -111,8 +111,8 @@ using View =
 
 Kokkos::parallel_for(
     // ...
-    Kokkos::MDrangePolicy<
-        Kokkos::Range<
+    Kokkos::MDRangePolicy<
+        Kokkos::Rank<
             2,
             Kokkos::Iterate::Default,
             Kokkos::Iterate::Right
