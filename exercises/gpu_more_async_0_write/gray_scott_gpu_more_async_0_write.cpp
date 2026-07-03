@@ -28,14 +28,18 @@ using View = Kokkos::View<real **, Kokkos::LayoutRight>;
  * @brief Initialize the fields and add a drop at the center.
  * @param u U field.
  * @param v V field.
+ * @param u_temp U temporary field.
+ * @param v_temp V temporary field.
  */
-void initialize(const View &u, const View &v) {
+void initialize(const View &u, const View &v, const View &u_temp,
+                const View &v_temp) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
-    // initialize fields
+    // initialize u fields
+    // both u and u_temp, as the halos are also swapped
     Kokkos::deep_copy(u, 1);
-    Kokkos::deep_copy(v, 0);
+    Kokkos::deep_copy(u_temp, 1);
 
     // add a drop at the center of the domain
 
@@ -147,6 +151,10 @@ int main(int argc, char *argv[]) {
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);
     View v("v", parameters.n_rows_ext, parameters.n_columns_ext);
 
+    // temporary fields (with halo)
+    View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
+    View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
+
     // mirrors of the fields (with halo)
     auto u_h = Kokkos::create_mirror_view(u);
     // beware that v_h is always allocated
@@ -161,7 +169,7 @@ int main(int argc, char *argv[]) {
     }
 
     // initialize fields
-    initialize(u, v);
+    initialize(u, v, u_temp, v_temp);
 
     // transfer fields
     Kokkos::deep_copy(u_h, u);
@@ -172,10 +180,6 @@ int main(int argc, char *argv[]) {
         helpers::print_field(u_h, 0);
         helpers::print_field(v_h, 0);
     }
-
-    // temporary fields (with halo)
-    View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
-    View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
     // loop on images
     for (int image = 0; image < n_images; image++) {

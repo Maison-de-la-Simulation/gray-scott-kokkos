@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <utility>
 
@@ -26,16 +27,21 @@ constexpr real diffusion_rate_v{0.05};
  * @brief Initialize the fields and add a drop at the center.
  * @param u U field.
  * @param v V field.
+ * @param u_temp U temporary field.
+ * @param v_temp V temporary field.
  * @param n_rows_ext Number of rows + halo.
  * @param n_columns_ext Number of columens + halo.
  */
-void initialize(real *u, real *v, const std::size_t n_rows_ext,
-                const std::size_t n_columns_ext) {
+void initialize(real *u, real *v, real *u_temp, real *v_temp,
+                const std::size_t n_rows_ext, const std::size_t n_columns_ext) {
     // initialize all fields
+    // both u, v, u_temp and v_temp, as the halos are also swapped
     for (std::size_t i = 0; i < n_rows_ext; i++) {
         for (std::size_t j = 0; j < n_columns_ext; j++) {
             u[ACCESS(i, j)] = 1;
             v[ACCESS(i, j)] = 0;
+            u_temp[ACCESS(i, j)] = 1;
+            v_temp[ACCESS(i, j)] = 0;
         }
     }
 
@@ -128,6 +134,10 @@ int main(int argc, char *argv[]) {
     real *u = new real[parameters.n_rows_ext * parameters.n_columns_ext];
     real *v = new real[parameters.n_rows_ext * parameters.n_columns_ext];
 
+    // temporary fields (with halo)
+    real *u_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+    real *v_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
+
     // create writer
     OutputWriter<real> writer;
     if (parameters.write_results) {
@@ -137,7 +147,8 @@ int main(int argc, char *argv[]) {
     }
 
     // initialize fields
-    initialize(u, v, parameters.n_rows_ext, parameters.n_columns_ext);
+    initialize(u, v, u_temp, v_temp, parameters.n_rows_ext,
+               parameters.n_columns_ext);
 
     // print init if requested
     if (parameters.display_fields) {
@@ -151,10 +162,6 @@ int main(int argc, char *argv[]) {
     if (parameters.write_results) {
         writer.write(v);
     }
-
-    // temporary fields (with halo)
-    real *u_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
-    real *v_temp = new real[parameters.n_rows_ext * parameters.n_columns_ext];
 
     // time loop
     for (std::size_t iteration = 1; iteration <= parameters.n_iterations;

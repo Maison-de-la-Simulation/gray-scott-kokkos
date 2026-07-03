@@ -56,8 +56,7 @@ output=$("$program" -n "$size_n" -m "$size_m")
 
 # check checksums
 checksums=$(get_checksums "$output")
-checksums_expected="53.58
-0.60"
+checksums_expected=$(cat "$SCRIPT_DIR/data/checksums.txt")
 if [[ "$checksums" = "$checksums_expected" ]]
 then
     print_success "$case_name" checksums
