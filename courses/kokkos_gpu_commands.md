@@ -5,7 +5,7 @@
 ### Initialization
 
 ```sh
-REPO=docker://gitlab-registry.in2p3.fr/thomas.padioleau/gray-scott-kokkos
+REPO=docker://ghcr.io/maison-de-la-simulation/gray-scott-kokkos
 
 # pick one
 IMAGE=kokkos_gpu_interactive
