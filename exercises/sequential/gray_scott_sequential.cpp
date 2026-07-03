@@ -61,6 +61,20 @@ void initialize(real *u, real *v, real *u_temp, real *v_temp,
             v[ACCESS(i, j)] = 1;
         }
     }
+
+    // set the boundary condition for u fields
+    for (std::size_t i = 0; i < n_rows_ext; i++) {
+            u[ACCESS(i, 0)] = 0;
+            u_temp[ACCESS(i, 0)] = 0;
+            u[ACCESS(i, n_columns_ext - 1)] = 0;
+            u_temp[ACCESS(i, n_columns_ext - 1)] = 0;
+    }
+    for (std::size_t j = 1; j < n_columns_ext - 1; j++) {
+            u[ACCESS(0, j)] = 0;
+            u_temp[ACCESS(0, j)] = 0;
+            u[ACCESS(n_rows_ext - 1, j)] = 0;
+            u_temp[ACCESS(n_rows_ext - 1, j)] = 0;
+    }
 }
 
 /**

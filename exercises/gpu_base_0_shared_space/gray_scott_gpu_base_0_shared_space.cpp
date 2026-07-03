@@ -73,6 +73,24 @@ void initialize(const View &u, const View &v, const View &u_temp,
             u(i, j) = 0;
             v(i, j) = 1;
         });
+
+    // set the boundary condition for u fields
+    Kokkos::parallel_for(
+        "boundary condition vertical", Kokkos::RangePolicy(1, n_rows_ext - 1),
+        KOKKOS_LAMBDA(const int i) {
+            u(i, 0) = 0;
+            u_temp(i, 0) = 0;
+            u(i, n_columns_ext - 1) = 0;
+            u_temp(i, n_columns_ext - 1) = 0;
+        });
+    Kokkos::parallel_for(
+        "boundary condition horizontal", Kokkos::RangePolicy(0, n_columns_ext),
+        KOKKOS_LAMBDA(const int j) {
+            u(0, j) = 0;
+            u_temp(0, j) = 0;
+            u(n_rows_ext - 1, j) = 0;
+            u_temp(n_rows_ext - 1, j) = 0;
+        });
 }
 
 /**
