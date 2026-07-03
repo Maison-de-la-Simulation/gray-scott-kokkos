@@ -202,11 +202,8 @@ int main(int argc, char *argv[]) {
     for (std::size_t iteration = 1; iteration <= parameters.n_iterations;
          iteration++) {
         compute(u, v, u_temp, v_temp);
-        Kokkos::fence();
-        Kokkos::deep_copy(u, u_temp);
-        Kokkos::deep_copy(v, v_temp);
-        // std::swap(u, u_temp);
-        // std::swap(v, v_temp);
+        std::swap(u, u_temp);
+        std::swap(v, v_temp);
 
         // write image every images_interval iterations
         if (iteration % parameters.images_interval == 0 and
