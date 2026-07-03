@@ -28,6 +28,12 @@ target_link_libraries(
         common
 )
 
+target_compile_definitions(
+    gray_scott_gpu_base_0_shared_space
+    PRIVATE
+        $<IF:$<BOOL:${ENABLE_DOUBLE}>,PRECISION=64,PRECISION=32>
+)
+
 add_test(
     NAME gray_scott_gpu_base_0_shared_space
     COMMAND gray_scott_gpu_base_0_shared_space

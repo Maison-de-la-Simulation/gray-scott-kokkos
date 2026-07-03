@@ -23,3 +23,9 @@ target_link_libraries(
         common
         # TODO
 )
+
+target_compile_definitions(
+    gray_scott
+    PRIVATE
+        $<IF:$<BOOL:${ENABLE_DOUBLE}>,PRECISION=64,PRECISION=32>
+)

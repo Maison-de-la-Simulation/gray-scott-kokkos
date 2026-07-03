@@ -28,6 +28,12 @@ target_link_libraries(
         common
 )
 
+target_compile_definitions(
+    gray_scott_gpu_base_1_fences
+    PRIVATE
+        $<IF:$<BOOL:${ENABLE_DOUBLE}>,PRECISION=64,PRECISION=32>
+)
+
 add_test(
     NAME gray_scott_gpu_base_1_fences
     COMMAND gray_scott_gpu_base_1_fences

@@ -28,6 +28,12 @@ target_link_libraries(
         common
 )
 
+target_compile_definitions(
+    gray_scott_cpu_more_simd
+    PRIVATE
+        $<IF:$<BOOL:${ENABLE_DOUBLE}>,PRECISION=64,PRECISION=32>
+)
+
 add_test(
     NAME gray_scott_cpu_more_simd
     COMMAND gray_scott_cpu_more_simd
