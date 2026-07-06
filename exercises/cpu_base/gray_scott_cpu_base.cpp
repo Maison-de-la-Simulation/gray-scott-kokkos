@@ -14,7 +14,13 @@
 #include "parameters.hpp"
 
 // data type
+#if PRECISION == 64
 using real = double;
+#elif PRECISION == 32
+using real = float;
+#else
+#error "unknown precision"
+#endif
 
 /**
  * @brief Constants for the Gray-Scott equation.

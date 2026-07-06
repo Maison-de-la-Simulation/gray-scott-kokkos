@@ -28,6 +28,12 @@ target_link_libraries(
         Kokkos::kokkos
 )
 
+target_compile_definitions(
+    gray_scott_cpu_base_0_views
+    PRIVATE
+        $<IF:$<BOOL:${ENABLE_DOUBLE}>,PRECISION=64,PRECISION=32>
+)
+
 add_test(
     NAME gray_scott_cpu_base_0_views
     COMMAND gray_scott_cpu_base_0_views
