@@ -28,14 +28,18 @@ using View = Kokkos::View<real **, Kokkos::LayoutRight>;
  * @brief Initialize the fields and add a drop at the center.
  * @param u U field.
  * @param v V field.
+ * @param u_temp U temporary field.
+ * @param v_temp V temporary field.
  */
-void initialize(const View &u, const View &v) {
+void initialize(const View &u, const View &v, const View &u_temp,
+                const View &v_temp) {
     const std::size_t n_rows_ext = u.extent(0);
     const std::size_t n_columns_ext = u.extent(1);
 
-    // initialize fields
+    // initialize u fields
+    // both u and u_temp, as the halos are also swapped
     Kokkos::deep_copy(u, 1);
-    Kokkos::deep_copy(v, 0);
+    Kokkos::deep_copy(u_temp, 1);
 
     // add a drop at the center of the domain
 
@@ -56,6 +60,24 @@ void initialize(const View &u, const View &v) {
         KOKKOS_LAMBDA(const int i, const int j) {
             u(i, j) = 0;
             v(i, j) = 1;
+        });
+
+    // set the boundary condition for u fields
+    Kokkos::parallel_for(
+        "boundary condition vertical", Kokkos::RangePolicy(1, n_rows_ext - 1),
+        KOKKOS_LAMBDA(const int i) {
+            u(i, 0) = 0;
+            u_temp(i, 0) = 0;
+            u(i, n_columns_ext - 1) = 0;
+            u_temp(i, n_columns_ext - 1) = 0;
+        });
+    Kokkos::parallel_for(
+        "boundary condition horizontal", Kokkos::RangePolicy(0, n_columns_ext),
+        KOKKOS_LAMBDA(const int j) {
+            u(0, j) = 0;
+            u_temp(0, j) = 0;
+            u(n_rows_ext - 1, j) = 0;
+            u_temp(n_rows_ext - 1, j) = 0;
         });
 }
 
@@ -146,6 +168,10 @@ int main(int argc, char *argv[]) {
     View u("u", parameters.n_rows_ext, parameters.n_columns_ext);
     View v("v", parameters.n_rows_ext, parameters.n_columns_ext);
 
+    // temporary fields (with halo)
+    View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
+    View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
+
     // output fields (with halo)
     View v_out("v_out", parameters.n_rows_ext, parameters.n_columns_ext);
 
@@ -163,7 +189,7 @@ int main(int argc, char *argv[]) {
     }
 
     // initialize fields
-    initialize(u, v);
+    initialize(u, v, u_temp, v_temp);
 
     // transfer fields
     Kokkos::deep_copy(u_h, u);
@@ -174,10 +200,6 @@ int main(int argc, char *argv[]) {
         helpers::print_field(u_h, 0);
         helpers::print_field(v_h, 0);
     }
-
-    // temporary fields (with halo)
-    View u_temp("u_temp", parameters.n_rows_ext, parameters.n_columns_ext);
-    View v_temp("v_temp", parameters.n_rows_ext, parameters.n_columns_ext);
 
     // create one space for compute, and one for data
     auto [space_data] = Kokkos::Experimental::partition_space(
