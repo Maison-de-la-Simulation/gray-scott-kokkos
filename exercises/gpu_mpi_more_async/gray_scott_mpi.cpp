@@ -161,35 +161,17 @@ struct CartesianDecomposition {
 // -----------------------------------------------------------------------------
 
 struct CommBuffers {
-    std::array<Kokkos::View<real*>, n_directions> send;
-    std::array<Kokkos::View<real*>, n_directions> recv;
+        std::array<Kokkos::View<real*>, n_directions> send;
+        std::array<Kokkos::View<real*>, n_directions> recv;
 
-    CommBuffers(std::size_t rows, std::size_t columns) {
-        send[NW] = Kokkos::View<real*>("send_NW", 1);
-        recv[NW] = Kokkos::View<real*>("recv_NW", 1);
-
-        send[N] = Kokkos::View<real*>("send_N", columns);
-        recv[N] = Kokkos::View<real*>("recv_N", columns);
-
-        send[NE] = Kokkos::View<real*>("send_NE", 1);
-        recv[NE] = Kokkos::View<real*>("recv_NE", 1);
-
-        send[W] = Kokkos::View<real*>("send_W", rows);
-        recv[W] = Kokkos::View<real*>("recv_W", rows);
-
-        send[E] = Kokkos::View<real*>("send_E", rows);
-        recv[E] = Kokkos::View<real*>("recv_E", rows);
-
-        send[SW] = Kokkos::View<real*>("send_SW", 1);
-        recv[SW] = Kokkos::View<real*>("recv_SW", 1);
-
-        send[S] = Kokkos::View<real*>("send_S", columns);
-        recv[S] = Kokkos::View<real*>("recv_S", columns);
-
-        send[SE] = Kokkos::View<real*>("send_SE", 1);
-        recv[SE] = Kokkos::View<real*>("recv_SE", 1);
-    }
-};
+        CommBuffers(int rows, int columns) {
+            const int lengths[n_directions] = {1, columns, 1, rows, rows, 1, columns, 1};
+            for (int direction = 0; direction < n_directions; ++direction) {
+                send[direction] = Kokkos::View<real*>("send", lengths[direction]);
+                recv[direction] = Kokkos::View<real*>("recv", lengths[direction]);
+            }
+        }
+    };
 
 
 // -----------------------------------------------------------------------------

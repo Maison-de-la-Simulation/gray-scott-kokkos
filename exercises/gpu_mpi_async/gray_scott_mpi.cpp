@@ -155,55 +155,22 @@ struct CartesianDecomposition {
         const CartesianDecomposition&) = delete;
 };
 
-
 // -----------------------------------------------------------------------------
 // Communication buffers
 // -----------------------------------------------------------------------------
 
 struct CommBuffers {
-    std::array<Kokkos::View<real*>, n_directions> send;
-    std::array<Kokkos::View<real*>, n_directions> recv;
+        std::array<Kokkos::View<real*>, n_directions> send;
+        std::array<Kokkos::View<real*>, n_directions> recv;
 
-    CommBuffers(std::size_t rows, std::size_t columns) {
-        send[NW] = Kokkos::View<real*>("send_NW", 1);
-        recv[NW] = Kokkos::View<real*>("recv_NW", 1);
-
-        send[N] = Kokkos::View<real*>("send_N", columns);
-        recv[N] = Kokkos::View<real*>("recv_N", columns);
-
-        send[NE] = Kokkos::View<real*>("send_NE", 1);
-        recv[NE] = Kokkos::View<real*>("recv_NE", 1);
-
-        send[W] = Kokkos::View<real*>("send_W", rows);
-        recv[W] = Kokkos::View<real*>("recv_W", rows);
-
-        send[E] = Kokkos::View<real*>("send_E", rows);
-        recv[E] = Kokkos::View<real*>("recv_E", rows);
-
-        send[SW] = Kokkos::View<real*>("send_SW", 1);
-        recv[SW] = Kokkos::View<real*>("recv_SW", 1);
-
-        send[S] = Kokkos::View<real*>("send_S", columns);
-        recv[S] = Kokkos::View<real*>("recv_S", columns);
-
-        send[SE] = Kokkos::View<real*>("send_SE", 1);
-        recv[SE] = Kokkos::View<real*>("recv_SE", 1);
-    }
-};
-
-
-// -----------------------------------------------------------------------------
-// MPI datatype
-// -----------------------------------------------------------------------------
-
-static MPI_Datatype mpi_real_type() {
-    if constexpr (std::is_same_v<real, double>) {
-        return MPI_DOUBLE;
-    } else {
-        return MPI_FLOAT;
-    }
-}
-
+        CommBuffers(int rows, int columns) {
+            const int lengths[n_directions] = {1, columns, 1, rows, rows, 1, columns, 1};
+            for (int direction = 0; direction < n_directions; ++direction) {
+                send[direction] = Kokkos::View<real*>("send", lengths[direction]);
+                recv[direction] = Kokkos::View<real*>("recv", lengths[direction]);
+            }
+        }
+    };
 
 // -----------------------------------------------------------------------------
 // Direction helper
@@ -219,87 +186,39 @@ static int opposite(int dir) {
     return opposite_dir[dir];
 }
 
-
-// -----------------------------------------------------------------------------
-// Pack one field into device-resident communication buffers.
-// -----------------------------------------------------------------------------
-
-static void pack(const View& field, CommBuffers& b, const CartesianDecomposition& d) {
-    const std::size_t r = field.extent(0) - 2;
-    const std::size_t c = field.extent(1) - 2;
-
-    const std::size_t n = r * c;
-
-    if(d.neighbors[N] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "pack north halo",
-            Kokkos::RangePolicy<std::size_t>(0, c),
-            KOKKOS_LAMBDA(const std::size_t j) {
-                b.send[N][j] = field(1, j + 1);
-            });
-    }
-
-    if(d.neighbors[S] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "pack south halo",
-            Kokkos::RangePolicy<std::size_t>(0, c),
-            KOKKOS_LAMBDA(const std::size_t j) {
-                b.send[S][j] = field(r, j + 1);
-            });
-    }
-
-    if(d.neighbors[W] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "pack west halo",
-            Kokkos::RangePolicy<std::size_t>(0, r),
-            KOKKOS_LAMBDA(const std::size_t i) {
-                b.send[W][i] = field(i + 1, 1);
-            });
-    }
-
-    if(d.neighbors[E] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "pack east halo",
-            Kokkos::RangePolicy<std::size_t>(0, r),
-            KOKKOS_LAMBDA(const std::size_t i) {
-                b.send[E][i] = field(i + 1, c);
-            });
-    }
-
-    if (d.neighbors[NW] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "pack NW corner",
-            Kokkos::RangePolicy<std::size_t>(0, 1),
-            KOKKOS_LAMBDA(const std::size_t) {
-                b.send[NW][0] = field(1, 1);
-            });
-    }
-    if (d.neighbors[NE] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "pack NE corner",
-            Kokkos::RangePolicy<std::size_t>(0, 1),
-            KOKKOS_LAMBDA(const std::size_t) {
-                b.send[NE][0] = field(1, c);
-            });
-    }
-    if (d.neighbors[SW] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "pack SW corner",
-            Kokkos::RangePolicy<std::size_t>(0, 1),
-            KOKKOS_LAMBDA(const std::size_t) {
-                b.send[SW][0] = field(r, 1);
-            });
-    }
-    if (d.neighbors[SE] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "pack SE corner",
-            Kokkos::RangePolicy<std::size_t>(0, 1),
-            KOKKOS_LAMBDA(const std::size_t) {
-                b.send[SE][0] = field(r, c);
-            });
+static StridedRow pack_subview(int dir, const View& field, int r, int c) {
+    switch (dir) {
+        case N:  return Kokkos::subview(field, 1, Kokkos::make_pair(int(1), c + 1));
+        case S:  return Kokkos::subview(field, r, Kokkos::make_pair(int(1), c + 1));
+        case W:  return Kokkos::subview(field, Kokkos::make_pair(int(1), r + 1), 1);
+        case E:  return Kokkos::subview(field, Kokkos::make_pair(int(1), r + 1), c);
+        case NW: return Kokkos::subview(field, 1, Kokkos::make_pair(int(1), int(2)));
+        case NE: return Kokkos::subview(field, 1, Kokkos::make_pair(c, c + 1));
+        case SW: return Kokkos::subview(field, r, Kokkos::make_pair(int(1), int(2)));
+        case SE: return Kokkos::subview(field, r, Kokkos::make_pair(c, c + 1));
+        default: throw std::logic_error("pack_subview: invalid direction");
     }
 }
 
+static StridedRow halo_subview(int dir, View& field, int r, int c) {
+    switch (dir) {
+        case N:  return Kokkos::subview(field, 0,     Kokkos::make_pair(int(1), c + 1));
+        case S:  return Kokkos::subview(field, r + 1, Kokkos::make_pair(int(1), c + 1));
+        case W:  return Kokkos::subview(field, Kokkos::make_pair(int(1), r + 1), 0);
+        case E:  return Kokkos::subview(field, Kokkos::make_pair(int(1), r + 1), c + 1);
+        case NW: return Kokkos::subview(field, 0,     Kokkos::make_pair(int(0), int(1)));
+        case NE: return Kokkos::subview(field, 0,     Kokkos::make_pair(c + 1, c + 2));
+        case SW: return Kokkos::subview(field, r + 1, Kokkos::make_pair(int(0), int(1)));
+        case SE: return Kokkos::subview(field, r + 1, Kokkos::make_pair(c + 1, c + 2));
+        default: throw std::logic_error("halo_subview: invalid direction");
+    }
+}
+
+
+void pack(int direction, const View& field, CommBuffers& buffers) {
+    Kokkos::deep_copy(buffers.send[direction], pack_subview(
+        direction, field, this->local_rows, this->local_columns));
+}
 
 // -----------------------------------------------------------------------------
 // Unpack one field.
@@ -310,89 +229,9 @@ static void pack(const View& field, CommBuffers& b, const CartesianDecomposition
 // same zero boundary condition as the original serial code.
 // -----------------------------------------------------------------------------
 
-static void unpack(View& field,
-                   const CommBuffers& b,
-                   const CartesianDecomposition& d) {
-    const std::size_t r = field.extent(0) - 2;
-    const std::size_t c = field.extent(1) - 2;
-
-    const std::size_t n = r * c;
-
-    if (d.neighbors[N] != MPI_PROC_NULL)
-    {
-        Kokkos::parallel_for(
-            "zero north halo",
-            Kokkos::RangePolicy<std::size_t>(0, c),
-            KOKKOS_LAMBDA(const std::size_t j) {
-                field(0, j + 1) = b.recv[N][j];
-            });
-    }
-
-    if (d.neighbors[S] != MPI_PROC_NULL)
-    {
-        Kokkos::parallel_for(
-            "zero south halo",
-            Kokkos::RangePolicy<std::size_t>(0, c),
-            KOKKOS_LAMBDA(const std::size_t j) {
-                field(r + 1, j + 1) = b.recv[S][j];
-            });
-    }
-
-    if (d.neighbors[W] != MPI_PROC_NULL)
-    {
-        Kokkos::parallel_for(
-            "zero west halo",
-            Kokkos::RangePolicy<std::size_t>(0, r),
-            KOKKOS_LAMBDA(const std::size_t i) {
-                field(i + 1, 0) = b.recv[W][i];
-            });
-    }
-
-    if (d.neighbors[E] != MPI_PROC_NULL)
-    {
-        Kokkos::parallel_for(
-            "zero east halo",
-            Kokkos::RangePolicy<std::size_t>(0, r),
-            KOKKOS_LAMBDA(const std::size_t i) {
-                field(i + 1, c + 1) = b.recv[E][i];
-            });
-    }
-
-    if (d.neighbors[NW] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "unpack NW corner",
-            Kokkos::RangePolicy<std::size_t>(0, 1),
-            KOKKOS_LAMBDA(const std::size_t) {
-                field(0, 0) = b.recv[NW][0];
-            });
-    }
-
-    if (d.neighbors[NE] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "unpack NE corner",
-            Kokkos::RangePolicy<std::size_t>(0, 1),
-            KOKKOS_LAMBDA(const std::size_t) {
-                field(0, c + 1) = b.recv[NE][0];
-            });
-    }
-
-    if (d.neighbors[SW] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "unpack SW corner",
-            Kokkos::RangePolicy<std::size_t>(0, 1),
-            KOKKOS_LAMBDA(const std::size_t) {
-                field(r + 1, 0) = b.recv[SW][0];
-            });
-    }
-
-    if (d.neighbors[SE] != MPI_PROC_NULL) {
-        Kokkos::parallel_for(
-            "unpack SE corner",
-            Kokkos::RangePolicy<std::size_t>(0, 1),
-            KOKKOS_LAMBDA(const std::size_t) {
-                field(r + 1, c + 1) = b.recv[SE][0];
-            });
-    }
+void unpack(int direction, View& field, const CommBuffers& buffers) {
+    Kokkos::deep_copy(this->halo_subview(
+        direction, field, this->local_rows, this->local_columns), buffers.recv[direction]);
 }
 
 
@@ -441,43 +280,6 @@ static void end_exchange(View& field, const CommBuffers& b,
     MPI_Waitall(h.nreq, h.requests.data(), MPI_STATUSES_IGNORE);
     unpack(field, b, d);
 }
-
-
-// -----------------------------------------------------------------------------
-// Compute: split into interior (halo-independent) and ring (halo-dependent).
-// Both share the same stencil logic.
-// -----------------------------------------------------------------------------
-
-struct GrayScottUpdate {
-    View u, v, u_temp, v_temp;
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const int i, const int j) const {
-        const real u_full =
-            u(i - 1, j - 1) + u(i - 1, j) + u(i - 1, j + 1) +
-            u(i, j - 1) - real(8) * u(i, j) + u(i, j + 1) +
-            u(i + 1, j - 1) + u(i + 1, j) + u(i + 1, j + 1);
-
-        const real v_full =
-            v(i - 1, j - 1) + v(i - 1, j) + v(i - 1, j + 1) +
-            v(i, j - 1) - real(8) * v(i, j) + v(i, j + 1) +
-            v(i + 1, j - 1) + v(i + 1, j) + v(i + 1, j + 1);
-
-        const real uvv = u(i, j) * v(i, j) * v(i, j);
-
-        const real u_delta =
-            constants::diffusion_rate_u * u_full - uvv +
-            constants::feed_rate * (1 - u(i, j));
-
-        const real v_delta =
-            constants::diffusion_rate_v * v_full + uvv -
-            (constants::feed_rate + constants::kill_rate) * v(i, j);
-
-        u_temp(i, j) = u(i, j) + u_delta * constants::dt;
-        v_temp(i, j) = v(i, j) + v_delta * constants::dt;
-    }
-};
-
 
 // -----------------------------------------------------------------------------
 // Initialization
@@ -571,6 +373,41 @@ static void initialize(
 // -----------------------------------------------------------------------------
 // Compute
 // -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Compute: split into interior (halo-independent) and ring (halo-dependent).
+// Both share the same stencil logic.
+// -----------------------------------------------------------------------------
+
+struct GrayScottUpdate {
+    View u, v, u_temp, v_temp;
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const int i, const int j) const {
+        const real u_full =
+            u(i - 1, j - 1) + u(i - 1, j) + u(i - 1, j + 1) +
+            u(i, j - 1) - real(8) * u(i, j) + u(i, j + 1) +
+            u(i + 1, j - 1) + u(i + 1, j) + u(i + 1, j + 1);
+
+        const real v_full =
+            v(i - 1, j - 1) + v(i - 1, j) + v(i - 1, j + 1) +
+            v(i, j - 1) - real(8) * v(i, j) + v(i, j + 1) +
+            v(i + 1, j - 1) + v(i + 1, j) + v(i + 1, j + 1);
+
+        const real uvv = u(i, j) * v(i, j) * v(i, j);
+
+        const real u_delta =
+            constants::diffusion_rate_u * u_full - uvv +
+            constants::feed_rate * (1 - u(i, j));
+
+        const real v_delta =
+            constants::diffusion_rate_v * v_full + uvv -
+            (constants::feed_rate + constants::kill_rate) * v(i, j);
+
+        u_temp(i, j) = u(i, j) + u_delta * constants::dt;
+        v_temp(i, j) = v(i, j) + v_delta * constants::dt;
+    }
+};
 
 // Cells whose 3x3 stencil does NOT touch row/col 0 or nr-1/nc-1 (the halo).
 // i.e. local index range [2, local_rows-1] x [2, local_columns-1].
