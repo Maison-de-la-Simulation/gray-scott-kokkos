@@ -1,22 +1,27 @@
 #include <Kokkos_Core.hpp>
 #include <mpi.h>
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <iostream>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 
 #include "helpers.hpp"
-#include "output_writer.hpp"
 #include "parameters.hpp"
 
-// data type
+// -----------------------------------------------------------------------------
+// Data type
+// -----------------------------------------------------------------------------
+
 #if PRECISION == 64
 using real = double;
+#define MPI_REAL_TYPE MPI_DOUBLE
 #elif PRECISION == 32
 using real = float;
+#define MPI_REAL_TYPE MPI_FLOAT
 #else
 #error "unknown precision"
 #endif
@@ -29,55 +34,41 @@ constexpr real diffusion_rate_u{0.1};
 constexpr real diffusion_rate_v{0.05};
 }  // namespace constants
 
-using View = Kokkos::View<real**, Kokkos::LayoutRight>;
-
-enum Direction {
-    NW = 0,
-    N,
-    NE,
-    W,
-    E,
-    SW,
-    S,
-    SE
-};
-
+enum Direction { NW = 0, N, NE, W, E, SW, S, SE };
 constexpr int n_directions = 8;
+
+// The direction a neighbor sees us in, e.g. our north neighbor sees us to its south.
+static int opposite(int dir) {
+    static constexpr int opposite_dir[n_directions] = {SE, S, SW, E, W, NE, N, NW};
+    return opposite_dir[dir];
+}
+
+using View = Kokkos::View<real**, Kokkos::LayoutRight>;
+using StridedRow = Kokkos::View<real*, Kokkos::LayoutStride>;
+using Range = Kokkos::pair<std::size_t, std::size_t>;
+
+// -----------------------------------------------------------------------------
+// Cartesian decomposition
+// -----------------------------------------------------------------------------
 
 struct CartesianDecomposition {
     MPI_Comm comm = MPI_COMM_NULL;
-
     int rank = MPI_PROC_NULL;
     int size = 0;
-
     int dims[2] = {0, 0};
     int coords[2] = {0, 0};
+    int neighbors[n_directions];
 
-    int neighbors[n_directions] = {
-        MPI_PROC_NULL, MPI_PROC_NULL,
-        MPI_PROC_NULL, MPI_PROC_NULL,
-        MPI_PROC_NULL, MPI_PROC_NULL,
-        MPI_PROC_NULL, MPI_PROC_NULL
-    };
+    std::size_t global_rows = 0, global_columns = 0;
+    std::size_t local_rows = 0, local_columns = 0;
 
-    std::size_t global_rows = 0;
-    std::size_t global_columns = 0;
+    CartesianDecomposition(std::size_t global_rows_, std::size_t global_columns_)
+        : global_rows(global_rows_), global_columns(global_columns_) {
 
-    std::size_t local_rows = 0;
-    std::size_t local_columns = 0;
-
-    explicit CartesianDecomposition(std::size_t global_rows_,
-                                    std::size_t global_columns_)
-        : global_rows(global_rows_),
-          global_columns(global_columns_) {
+        std::fill(std::begin(neighbors), std::end(neighbors), MPI_PROC_NULL);
 
         MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-        int dims_tmp[2] = {0, 0};
-        MPI_Dims_create(size, 2, dims_tmp);
-
-        dims[0] = dims_tmp[0];  // rows / north-south
-        dims[1] = dims_tmp[1];  // columns / west-east
+        MPI_Dims_create(size, 2, dims);
 
         if (global_rows % static_cast<std::size_t>(dims[0]) != 0 ||
             global_columns % static_cast<std::size_t>(dims[1]) != 0) {
@@ -86,47 +77,29 @@ struct CartesianDecomposition {
                 "Cartesian decomposition.");
         }
 
-        local_rows =
-            global_rows / static_cast<std::size_t>(dims[0]);
-
-        local_columns =
-            global_columns / static_cast<std::size_t>(dims[1]);
+        local_rows = global_rows / static_cast<std::size_t>(dims[0]);
+        local_columns = global_columns / static_cast<std::size_t>(dims[1]);
 
         if (local_rows == 0 || local_columns == 0) {
-            throw std::runtime_error(
-                "Local field dimensions must be greater than zero.");
+            throw std::runtime_error("Local field dimensions must be greater than zero.");
         }
 
+        // Non-periodic: ranks at the global edge have MPI_PROC_NULL neighbors.
         const int periods[2] = {0, 0};
-
-        MPI_Cart_create(
-            MPI_COMM_WORLD,
-            2,
-            dims,
-            periods,
-            0,
-            &comm);
-
+        MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &comm);
         if (comm == MPI_COMM_NULL) {
-            throw std::runtime_error(
-                "MPI_Cart_create returned MPI_COMM_NULL.");
+            throw std::runtime_error("MPI_Cart_create returned MPI_COMM_NULL.");
         }
 
         MPI_Comm_rank(comm, &rank);
         MPI_Cart_coords(comm, rank, 2, coords);
 
+        // Rank of the process at offset (dr, dc), or MPI_PROC_NULL if outside the grid.
         auto neighbor = [&](int dr, int dc) {
-            const int c[2] = {
-                coords[0] + dr,
-                coords[1] + dc
-            };
-
-            // Outside the global domain -> physical boundary.
-            if (c[0] < 0 || c[0] >= dims[0] ||
-                c[1] < 0 || c[1] >= dims[1]) {
-                return MPI_PROC_NULL;
+            const int c[2] = {coords[0] + dr, coords[1] + dc};
+            if (c[0] < 0 || c[0] >= dims[0] || c[1] < 0 || c[1] >= dims[1]) {
+                return static_cast<int>(MPI_PROC_NULL);
             }
-
             int r = MPI_PROC_NULL;
             MPI_Cart_rank(comm, c, &r);
             return r;
@@ -135,207 +108,245 @@ struct CartesianDecomposition {
         neighbors[NW] = neighbor(-1, -1);
         neighbors[N]  = neighbor(-1,  0);
         neighbors[NE] = neighbor(-1, +1);
-
         neighbors[W]  = neighbor( 0, -1);
         neighbors[E]  = neighbor( 0, +1);
-
         neighbors[SW] = neighbor(+1, -1);
         neighbors[S]  = neighbor(+1,  0);
         neighbors[SE] = neighbor(+1, +1);
     }
 
     ~CartesianDecomposition() {
-        if (comm != MPI_COMM_NULL) {
-            MPI_Comm_free(&comm);
-        }
+        if (comm != MPI_COMM_NULL) MPI_Comm_free(&comm);
     }
 
     CartesianDecomposition(const CartesianDecomposition&) = delete;
-    CartesianDecomposition& operator=(
-        const CartesianDecomposition&) = delete;
+    CartesianDecomposition& operator=(const CartesianDecomposition&) = delete;
 };
-
 
 // -----------------------------------------------------------------------------
 // Communication buffers
 // -----------------------------------------------------------------------------
 
 struct CommBuffers {
-        std::array<Kokkos::View<real*>, n_directions> send;
-        std::array<Kokkos::View<real*>, n_directions> recv;
+    std::array<Kokkos::View<real*>, n_directions> send;
+    std::array<Kokkos::View<real*>, n_directions> recv;
 
-        CommBuffers(int rows, int columns) {
-            const int lengths[n_directions] = {1, columns, 1, rows, rows, 1, columns, 1};
-            for (int direction = 0; direction < n_directions; ++direction) {
-                send[direction] = Kokkos::View<real*>("send", lengths[direction]);
-                recv[direction] = Kokkos::View<real*>("recv", lengths[direction]);
-            }
+    CommBuffers(std::size_t rows, std::size_t columns) {
+        // Edges (N, S, W, E) carry a full row/column, corners carry one value.
+        const std::size_t lengths[n_directions] = {1, columns, 1, rows, rows, 1, columns, 1};
+        for (int direction = 0; direction < n_directions; ++direction) {
+            send[direction] = Kokkos::View<real*>("send", lengths[direction]);
+            recv[direction] = Kokkos::View<real*>("recv", lengths[direction]);
         }
-    };
-
-
-// -----------------------------------------------------------------------------
-// MPI datatype
-// -----------------------------------------------------------------------------
-
-static MPI_Datatype mpi_real_type() {
-    if constexpr (std::is_same_v<real, double>) {
-        return MPI_DOUBLE;
-    } else {
-        return MPI_FLOAT;
     }
-}
-
-
-// -----------------------------------------------------------------------------
-// Direction helper
-// -----------------------------------------------------------------------------
-
-static int opposite(int dir) {
-    static constexpr int opposite_dir[n_directions] = {
-        SE, S, SW,
-        E, W,
-        NE, N, NW
-    };
-
-    return opposite_dir[dir];
-}
-
+};
 
 // -----------------------------------------------------------------------------
-// Pack/unpack via subviews.
+// Sub-views of the field
 //
-// Every direction is a 1-D slice of the field: contiguous for N/S (fixed
-// row, ranged column, and LayoutRight makes a row contiguous), strided for
-// W/E (fixed column, ranged row), and size-1 for the four corners either
-// way. Holding these in a single LayoutStride view covers all cases, so
-// pack/unpack are one deep_copy each instead of eight bespoke kernels.
+// The field has one layer of halo cells around the interior:
+//   interior rows:    [1, r]      interior columns: [1, c]
+//   halo rows:        0 and r+1   halo columns:     0 and c+1
 // -----------------------------------------------------------------------------
 
-using StridedRow = Kokkos::View<real*, Kokkos::LayoutStride>;
-
-// Slice of the interior edge/corner that is sent out for a given direction.
-static StridedRow pack_subview(int dir, const View& field,
-                                std::size_t r, std::size_t c) {
-    switch (dir) {
-        case N:  return Kokkos::subview(field, 1, Kokkos::make_pair(std::size_t(1), c + 1));
-        case S:  return Kokkos::subview(field, r, Kokkos::make_pair(std::size_t(1), c + 1));
-        case W:  return Kokkos::subview(field, Kokkos::make_pair(std::size_t(1), r + 1), 1);
-        case E:  return Kokkos::subview(field, Kokkos::make_pair(std::size_t(1), r + 1), c);
-        case NW: return Kokkos::subview(field, 1, Kokkos::make_pair(std::size_t(1), std::size_t(2)));
-        case NE: return Kokkos::subview(field, 1, Kokkos::make_pair(c, c + 1));
-        case SW: return Kokkos::subview(field, r, Kokkos::make_pair(std::size_t(1), std::size_t(2)));
-        case SE: return Kokkos::subview(field, r, Kokkos::make_pair(c, c + 1));
-    }
-    throw std::logic_error("pack_subview: invalid direction");
-}
-
-// Slice of the halo ring that a given direction's data is unpacked into.
-static StridedRow halo_subview(int dir, View& field,
-                                std::size_t r, std::size_t c) {
-    switch (dir) {
-        case N:  return Kokkos::subview(field, 0,     Kokkos::make_pair(std::size_t(1), c + 1));
-        case S:  return Kokkos::subview(field, r + 1, Kokkos::make_pair(std::size_t(1), c + 1));
-        case W:  return Kokkos::subview(field, Kokkos::make_pair(std::size_t(1), r + 1), 0);
-        case E:  return Kokkos::subview(field, Kokkos::make_pair(std::size_t(1), r + 1), c + 1);
-        case NW: return Kokkos::subview(field, 0,     Kokkos::make_pair(std::size_t(0), std::size_t(1)));
-        case NE: return Kokkos::subview(field, 0,     Kokkos::make_pair(c + 1, c + 2));
-        case SW: return Kokkos::subview(field, r + 1, Kokkos::make_pair(std::size_t(0), std::size_t(1)));
-        case SE: return Kokkos::subview(field, r + 1, Kokkos::make_pair(c + 1, c + 2));
-    }
-    throw std::logic_error("halo_subview: invalid direction");
-}
-
-static void pack_direction(int dir, const View& field, CommBuffers& b) {
+// Interior cells adjacent to the boundary in `dir` (these get sent).
+static StridedRow pack_subview(int dir, const View& field) {
     const std::size_t r = field.extent(0) - 2;
     const std::size_t c = field.extent(1) - 2;
-    Kokkos::deep_copy(b.send[dir], pack_subview(dir, field, r, c));
+    switch (dir) {
+        case N:  return Kokkos::subview(field, 1, Range(1, c + 1));
+        case S:  return Kokkos::subview(field, r, Range(1, c + 1));
+        case W:  return Kokkos::subview(field, Range(1, r + 1), 1);
+        case E:  return Kokkos::subview(field, Range(1, r + 1), c);
+        case NW: return Kokkos::subview(field, 1, Range(1, 2));
+        case NE: return Kokkos::subview(field, 1, Range(c, c + 1));
+        case SW: return Kokkos::subview(field, r, Range(1, 2));
+        case SE: return Kokkos::subview(field, r, Range(c, c + 1));
+        default: throw std::logic_error("pack_subview: invalid direction");
+    }
 }
 
-static void unpack_direction(int dir, View& field, const CommBuffers& b) {
+// Halo cells in direction `dir` (these get received into).
+static StridedRow halo_subview(int dir, const View& field) {
     const std::size_t r = field.extent(0) - 2;
     const std::size_t c = field.extent(1) - 2;
-    Kokkos::deep_copy(halo_subview(dir, field, r, c), b.recv[dir]);
+    switch (dir) {
+        case N:  return Kokkos::subview(field, 0,     Range(1, c + 1));
+        case S:  return Kokkos::subview(field, r + 1, Range(1, c + 1));
+        case W:  return Kokkos::subview(field, Range(1, r + 1), 0);
+        case E:  return Kokkos::subview(field, Range(1, r + 1), c + 1);
+        case NW: return Kokkos::subview(field, 0,     Range(0, 1));
+        case NE: return Kokkos::subview(field, 0,     Range(c + 1, c + 2));
+        case SW: return Kokkos::subview(field, r + 1, Range(0, 1));
+        case SE: return Kokkos::subview(field, r + 1, Range(c + 1, c + 2));
+        default: throw std::logic_error("halo_subview: invalid direction");
+    }
+}
+
+// Copy the boundary cells of `field` in one direction into the send buffer.
+static void pack(int direction, const View& field, CommBuffers& buffers) {
+    Kokkos::deep_copy(buffers.send[direction], pack_subview(direction, field));
+}
+
+// Copy the receive buffer into the halo of `field` in one direction.
+static void unpack(int direction, const View& field, const CommBuffers& buffers) {
+    Kokkos::deep_copy(halo_subview(direction, field), buffers.recv[direction]);
 }
 
 
 // -----------------------------------------------------------------------------
-// Non-blocking, pipelined halo exchange.
-//
-// Receives are posted up front for every direction. Sends are issued one
-// direction at a time, immediately after that direction is packed, instead
-// of packing everything before sending anything. Unpacking happens as each
-// receive completes (MPI_Waitany), instead of waiting for every receive to
-// land first. Waiting on the sends is deferred to end_sends(), which the
-// caller invokes after doing useful work, since the sent data is no longer
-// needed by this rank once it has been handed to MPI_Isend.
+// Halo exchange
+// -----------------------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+// Non-blocking halo exchange: split into begin/end so compute can overlap.
 // -----------------------------------------------------------------------------
 
 struct ExchangeHandle {
-    std::array<MPI_Request, n_directions> recv_requests{};
-    std::array<int, n_directions> recv_dir{};
-    int n_recv = 0;
-
     std::array<MPI_Request, n_directions> send_requests{};
-    int n_send = 0;
+    std::array<MPI_Request, n_directions> recv_requests{};
+
+    ExchangeHandle() {
+        std::fill(send_requests.begin(), send_requests.end(), MPI_REQUEST_NULL);
+        std::fill(recv_requests.begin(), recv_requests.end(), MPI_REQUEST_NULL);
+    }
 };
 
-static ExchangeHandle begin_exchange(const View& field, const CartesianDecomposition& d,
-                                      CommBuffers& b, int tag_base) {
+static ExchangeHandle begin_exchange(const View& field,
+                                     const CartesianDecomposition& d,
+                                     CommBuffers& b,
+                                     int tag_base) {
     ExchangeHandle h;
 
-    // Post all receives first so incoming messages always have somewhere
-    // to land as soon as they arrive.
     for (int dir = 0; dir < n_directions; ++dir) {
-        if (d.neighbors[dir] == MPI_PROC_NULL) continue;
+        if (d.neighbors[dir] == MPI_PROC_NULL)
+            continue;
 
-        h.recv_dir[h.n_recv] = dir;
-        MPI_Irecv(b.recv[dir].data(),
-                  static_cast<int>(b.recv[dir].size()),
-                  mpi_real_type(),
-                  d.neighbors[dir], tag_base + dir, d.comm,
-                  &h.recv_requests[h.n_recv++]);
+        MPI_Irecv(
+            b.recv[dir].data(),
+            static_cast<int>(b.recv[dir].size()),
+            MPI_REAL_TYPE,
+            d.neighbors[dir],
+            tag_base + dir,
+            d.comm,
+            &h.recv_requests[dir]);
     }
 
-    // Pack and send one direction at a time, so the Isend for a direction
-    // fires as soon as that direction is packed rather than after every
-    // direction has been packed.
     for (int dir = 0; dir < n_directions; ++dir) {
-        if (d.neighbors[dir] == MPI_PROC_NULL) continue;
+        if (d.neighbors[dir] == MPI_PROC_NULL)
+            continue;
 
-        pack_direction(dir, field, b);
+        pack(dir, field, b);
+    }
 
-        // The Isend below reads b.send[dir] directly, so the copy into it
-        // must have actually completed on the device first.
-        Kokkos::fence("pack_direction fence");
+    Kokkos::fence();
 
-        MPI_Isend(b.send[dir].data(),
-                  static_cast<int>(b.send[dir].size()),
-                  mpi_real_type(),
-                  d.neighbors[dir], tag_base + opposite(dir), d.comm,
-                  &h.send_requests[h.n_send++]);
+    for (int dir = 0; dir < n_directions; ++dir) {
+        if (d.neighbors[dir] == MPI_PROC_NULL)
+            continue;
+
+        MPI_Isend(
+            b.send[dir].data(),
+            static_cast<int>(b.send[dir].size()),
+            MPI_REAL_TYPE,
+            d.neighbors[dir],
+            tag_base + opposite(dir),
+            d.comm,
+            &h.send_requests[dir]);
     }
 
     return h;
 }
 
-// Unpacks each direction's halo as soon as its receive completes.
-static void end_recvs(View& field, const CommBuffers& b, ExchangeHandle& h) {
-    for (int done = 0; done < h.n_recv; ++done) {
-        int index = MPI_UNDEFINED;
-        MPI_Waitany(h.n_recv, h.recv_requests.data(), &index, MPI_STATUS_IGNORE);
+static void end_exchange(View& field,
+                         const CommBuffers& b,
+                         ExchangeHandle& h) {
+    int remaining = 0;
 
-        unpack_direction(h.recv_dir[index], field, b);
+    for (int dir = 0; dir < n_directions; ++dir) {
+        if (h.recv_requests[dir] != MPI_REQUEST_NULL)
+            ++remaining;
+    }
+
+    while (remaining > 0) {
+        int dir = MPI_UNDEFINED;
+
+        MPI_Waitany(
+            n_directions,
+            h.recv_requests.data(),
+            &dir,
+            MPI_STATUS_IGNORE);
+
+        unpack(dir, field, b);
+        --remaining;
     }
 }
 
-// Waits for this exchange's sends to complete. Safe to call late (e.g.
-// after this iteration's compute is done), since the sent data isn't
-// touched again until the next iteration's pack overwrites the buffer.
-static void end_sends(ExchangeHandle& h) {
-    MPI_Waitall(h.n_send, h.send_requests.data(), MPI_STATUSES_IGNORE);
+static void wait_sends(ExchangeHandle& h) {
+    MPI_Waitall(n_directions, h.send_requests.data(), MPI_STATUSES_IGNORE);
 }
 
+// -----------------------------------------------------------------------------
+// Initialization
+// -----------------------------------------------------------------------------
+
+static void initialize(const View& u, const View& v,
+                       const View& u_temp, const View& v_temp,
+                       const CartesianDecomposition& d) {
+    using Kokkos::subview;
+
+    // Everything to 0, then interior of u/u_temp to 1.
+    Kokkos::deep_copy(u, 0);
+    Kokkos::deep_copy(v, 0);
+    Kokkos::deep_copy(u_temp, 0);
+    Kokkos::deep_copy(v_temp, 0);
+
+    const std::size_t local_rows    = d.local_rows;
+    const std::size_t local_columns = d.local_columns;
+
+    const Range interior_rows(1, local_rows + 1);
+    const Range interior_cols(1, local_columns + 1);
+
+    Kokkos::deep_copy(subview(u,      interior_rows, interior_cols), 1);
+    Kokkos::deep_copy(subview(u_temp, interior_rows, interior_cols), 1);
+
+    // Global drop box [drop_i0, drop_i1) x [drop_j0, drop_j1).
+    // Adjust `half` if you want a different size.
+    const std::size_t half = 1;
+    const std::size_t ci = d.global_rows / 2;
+    const std::size_t cj = d.global_columns / 2;
+
+    const std::size_t drop_i0 = ci > half ? ci - half : 0;
+    const std::size_t drop_i1 = ci + half;  // exclusive
+    const std::size_t drop_j0 = cj > half ? cj - half : 0;
+    const std::size_t drop_j1 = cj + half;  // exclusive
+
+    // This rank's owned global block [first, last).
+    const std::size_t first_i = static_cast<std::size_t>(d.coords[0]) * local_rows;
+    const std::size_t first_j = static_cast<std::size_t>(d.coords[1]) * local_columns;
+    const std::size_t last_i  = first_i + local_rows;
+    const std::size_t last_j  = first_j + local_columns;
+
+    // Intersection of drop box and local block, in global coordinates.
+    const std::size_t gi0 = std::max(drop_i0, first_i);
+    const std::size_t gi1 = std::min(drop_i1, last_i);
+    const std::size_t gj0 = std::max(drop_j0, first_j);
+    const std::size_t gj1 = std::min(drop_j1, last_j);
+
+    if (gi0 < gi1 && gj0 < gj1) {
+        // Convert to local indices (+1 for the halo).
+        const Range drop_rows(gi0 - first_i + 1, gi1 - first_i + 1);
+        const Range drop_cols(gj0 - first_j + 1, gj1 - first_j + 1);
+
+        Kokkos::deep_copy(subview(u, drop_rows, drop_cols), 0);
+        Kokkos::deep_copy(subview(v, drop_rows, drop_cols), 1);
+    }
+}
+
+
+// -----------------------------------------------------------------------------
+// Compute
+// -----------------------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
 // Compute: split into interior (halo-independent) and ring (halo-dependent).
@@ -372,105 +383,13 @@ struct GrayScottUpdate {
     }
 };
 
-
-// -----------------------------------------------------------------------------
-// Initialization
-// -----------------------------------------------------------------------------
-
-static void initialize(
-    const View& u,
-    const View& v,
-    const View& u_temp,
-    const View& v_temp,
-    const CartesianDecomposition& d) {
-
-    Kokkos::deep_copy(u, 1);
-    Kokkos::deep_copy(v, 0);
-
-    Kokkos::deep_copy(u_temp, 1);
-    Kokkos::deep_copy(v_temp, 0);
-
-    const std::size_t local_rows = d.local_rows;
-    const std::size_t local_columns = d.local_columns;
-
-    // Global center.
-    const std::size_t global_i_center = d.global_rows / 2;
-    const std::size_t global_j_center = d.global_columns / 2;
-    const std::size_t global_i_drop_first = global_i_center - 1;
-    const std::size_t global_i_drop_last = global_i_center + 1;
-    const std::size_t global_j_drop_first = global_j_center - 1;
-    const std::size_t global_j_drop_last = global_j_center + 1;
-
-    const std::size_t first_i =
-        static_cast<std::size_t>(d.coords[0]) * local_rows;
-
-    const std::size_t first_j =
-        static_cast<std::size_t>(d.coords[1]) * local_columns;
-
-    const std::size_t last_i = first_i + local_rows;
-    const std::size_t last_j = first_j + local_columns;
-
-    // Could be solved better with a single kernel, but this is easier.
-    for (std::size_t gi = global_i_drop_first; gi < global_i_drop_last; ++gi) {
-        for (std::size_t gj = global_j_drop_first; gj < global_j_drop_last; ++gj) {
-
-            if (gi >= first_i && gi < last_i &&
-                gj >= first_j && gj < last_j) {
-
-                const std::size_t local_i = gi - first_i + 1;
-                const std::size_t local_j = gj - first_j + 1;
-
-                Kokkos::parallel_for(
-                    "add drop",
-                    Kokkos::RangePolicy<>(0, 1),
-                    KOKKOS_LAMBDA(const int x) {
-                        u(local_i, local_j) = 0;
-                        v(local_i, local_j) = 1;
-                    });
-            }
-        }
-    }
-
-    // Global physical boundary conditions for u and u_temp.
-
-    Kokkos::parallel_for(
-        "initialize vertical boundary",
-        Kokkos::RangePolicy<>(0, local_rows + 2),
-        KOKKOS_LAMBDA(const std::size_t i) {
-
-            u(i, 0) = 0;
-            u_temp(i, 0) = 0;
-
-            u(i, local_columns + 1) = 0;
-            u_temp(i, local_columns + 1) = 0;
-        });
-
-    Kokkos::parallel_for(
-        "initialize horizontal boundary",
-        Kokkos::RangePolicy<>(0, local_columns + 2),
-        KOKKOS_LAMBDA(const std::size_t j) {
-
-            u(0, j) = 0;
-            u_temp(0, j) = 0;
-
-            u(local_rows + 1, j) = 0;
-            u_temp(local_rows + 1, j) = 0;
-        });
-
-    // The v fields were initialized to zero. Their global physical boundary
-    // remains zero because compute() only modifies interior cells.
-}
-
-
-// -----------------------------------------------------------------------------
-// Compute
-// -----------------------------------------------------------------------------
-
 // Cells whose 3x3 stencil does NOT touch row/col 0 or nr-1/nc-1 (the halo).
 // i.e. local index range [2, local_rows-1] x [2, local_columns-1].
 static void compute_interior(const View& u, const View& v,
-                              const View& u_temp, const View& v_temp,
-                              std::size_t local_rows, std::size_t local_columns) {
+                              const View& u_temp, const View& v_temp) {
+    const int local_rows = u.extent(0) - 2;
+    const int local_columns = u.extent(1) - 2;
+
     if (local_rows < 3 || local_columns < 3) return;  // no safe interior
 
     GrayScottUpdate update{u, v, u_temp, v_temp};
@@ -488,12 +407,11 @@ static void compute_interior(const View& u, const View& v,
 // halo has actually arrived. Covers corners exactly once via the top/bottom
 // rows; left/right columns exclude those two rows.
 static void compute_ring(const View& u, const View& v,
-                         const View& u_temp, const View& v_temp,
-                         std::size_t local_rows, std::size_t local_columns) {
+                         const View& u_temp, const View& v_temp) {
     GrayScottUpdate update{u, v, u_temp, v_temp};
 
-    const int nr = static_cast<int>(local_rows);
-    const int nc = static_cast<int>(local_columns);
+    const int nr = u.extent(0) - 2;  // local_rows
+    const int nc = u.extent(1) - 2;  // local_columns
 
     // Top row (i = 1) and bottom row (i = nr), full width incl. corners.
     Kokkos::parallel_for(
@@ -524,42 +442,23 @@ static void compute_ring(const View& u, const View& v,
 
 static real check_local(const View& field) {
     real checksum = 0;
+    const auto nr = static_cast<std::int64_t>(field.extent(0));
+    const auto nc = static_cast<std::int64_t>(field.extent(1));
 
     Kokkos::parallel_reduce(
         "check field",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-            {1, 1},
-            {field.extent(0) - 1,
-             field.extent(1) - 1}),
-        KOKKOS_LAMBDA(
-            const int i,
-            const int j,
-            real& sum) {
-
+        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({1, 1}, {nr - 1, nc - 1}),
+        KOKKOS_LAMBDA(const std::int64_t i, const std::int64_t j, real& sum) {
             sum += field(i, j);
         },
         checksum);
-
     return checksum;
 }
 
-
-static real check_global(
-    const View& field,
-    const CartesianDecomposition& d) {
-
+static real check_global(const View& field, const CartesianDecomposition& d) {
     const real local = check_local(field);
-
     real global = 0;
-
-    MPI_Allreduce(
-        &local,
-        &global,
-        1,
-        mpi_real_type(),
-        MPI_SUM,
-        d.comm);
-
+    MPI_Allreduce(&local, &global, 1, MPI_REAL_TYPE, MPI_SUM, d.comm);
     return global;
 }
 
@@ -569,103 +468,61 @@ static real check_global(
 // -----------------------------------------------------------------------------
 
 int main(int argc, char* argv[]) {
-
     MPI_Init(&argc, &argv);
+
+    int world_rank = 0;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 
     int exit_code = 0;
 
     try {
+        // Kokkos must be finalized before MPI_Finalize; the try scope ensures that.
         Kokkos::ScopeGuard kokkos{argc, argv};
 
         Parameters parameters{argc, argv};
-
         parameters.check();
-        parameters.describe();
-        parameters.show_size<real>(4);
-
-        // Existing Parameters stores the extended global dimensions.
-        // Remove the two global halo cells to obtain the physical global
-        // domain.
-        const std::size_t global_rows =
-            parameters.n_rows_ext - 2;
-
-        const std::size_t global_columns =
-            parameters.n_columns_ext - 2;
-
-        if (global_rows < 1 || global_columns < 1) {
-            throw std::runtime_error(
-                "Global field dimensions must be positive.");
+        if (world_rank == 0) {
+            parameters.describe();
+            parameters.show_size<real>(4);
         }
 
-        CartesianDecomposition decomposition(
-            global_rows,
-            global_columns);
+        const std::size_t global_rows = parameters.n_rows_ext - 2;
+        const std::size_t global_columns = parameters.n_columns_ext - 2;
 
-        // Each rank owns:
-        //
-        //     local_rows x local_columns
-        //
-        // interior cells plus a one-cell halo on every side.
-        View u(
-            "u",
-            decomposition.local_rows + 2,
-            decomposition.local_columns + 2);
+        if (global_rows < 1 || global_columns < 1) {
+            throw std::runtime_error("Global field dimensions must be positive.");
+        }
 
-        View v(
-            "v",
-            decomposition.local_rows + 2,
-            decomposition.local_columns + 2);
+        CartesianDecomposition decomposition(global_rows, global_columns);
 
-        View u_temp(
-            "u_temp",
-            decomposition.local_rows + 2,
-            decomposition.local_columns + 2);
+        const std::size_t ext_rows = decomposition.local_rows + 2;
+        const std::size_t ext_cols = decomposition.local_columns + 2;
 
-        View v_temp(
-            "v_temp",
-            decomposition.local_rows + 2,
-            decomposition.local_columns + 2);
+        View u("u", ext_rows, ext_cols);
+        View v("v", ext_rows, ext_cols);
+        View u_temp("u_temp", ext_rows, ext_cols);
+        View v_temp("v_temp", ext_rows, ext_cols);
 
-        initialize(
-            u,
-            v,
-            u_temp,
-            v_temp,
-            decomposition);
+        initialize(u, v, u_temp, v_temp, decomposition);
 
-        CommBuffers u_buffers(
-            decomposition.local_rows,
-            decomposition.local_columns);
+        CommBuffers u_buffers(decomposition.local_rows, decomposition.local_columns);
+        CommBuffers v_buffers(decomposition.local_rows, decomposition.local_columns);
 
-        CommBuffers v_buffers(
-            decomposition.local_rows,
-            decomposition.local_columns);
-
-
-        for (std::size_t iteration = 1;
-            iteration <= parameters.n_iterations;
-            ++iteration) {
-
-            // Kick off both halo exchanges without blocking.
+        for (std::size_t iteration = 1; iteration <= parameters.n_iterations; ++iteration) {
             ExchangeHandle u_handle = begin_exchange(u, decomposition, u_buffers, 100);
             ExchangeHandle v_handle = begin_exchange(v, decomposition, v_buffers, 200);
 
-            compute_interior(u, v, u_temp, v_temp,
-                            decomposition.local_rows, decomposition.local_columns);
+            compute_interior(u, v, u_temp, v_temp);
 
-            // Unpack each halo direction as soon as it arrives.
-            end_recvs(u, u_buffers, u_handle);
-            end_recvs(v, v_buffers, v_handle);
+            end_exchange(u, u_buffers, u_handle);
+            end_exchange(v, v_buffers, v_handle);
 
-            // Finish the cells that depend on the freshly-received halo.
-            compute_ring(u, v, u_temp, v_temp,
-                        decomposition.local_rows, decomposition.local_columns);
+            Kokkos::fence();  // Make sure the halo has been unpacked before computing the ring.
 
-            // The sends are no longer needed by this rank once handed to
-            // MPI, so waiting for them to finish is deferred until after
-            // compute_ring instead of blocking compute on them.
-            end_sends(u_handle);
-            end_sends(v_handle);
+            compute_ring(u, v, u_temp, v_temp);
+
+            wait_sends(u_handle);
+            wait_sends(v_handle);
 
             std::swap(u, u_temp);
             std::swap(v, v_temp);
@@ -673,45 +530,21 @@ int main(int argc, char* argv[]) {
 
         Kokkos::fence();
 
-        const real u_checksum =
-            check_global(u, decomposition);
-
-        const real v_checksum =
-            check_global(v, decomposition);
+        const real u_checksum = check_global(u, decomposition);
+        const real v_checksum = check_global(v, decomposition);
 
         if (decomposition.rank == 0) {
-            std::cout
-                << "u checksum: "
-                << u_checksum
-                << '\n';
-
-            std::cout
-                << "v checksum: "
-                << v_checksum
-                << '\n';
+            std::cout << "u checksum: " << u_checksum << '\n';
+            std::cout << "v checksum: " << v_checksum << '\n';
         }
 
     } catch (const std::exception& e) {
-
-        int initialized = 0;
-        MPI_Initialized(&initialized);
-
-        if (initialized) {
-            int rank = 0;
-            MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-            std::cerr
-                << "Rank "
-                << rank
-                << ": "
-                << e.what()
-                << '\n';
-        }
-
+        std::cerr << "Rank " << world_rank << ": " << e.what() << '\n';
+        // A single failing rank would leave the others blocked in MPI calls.
+        MPI_Abort(MPI_COMM_WORLD, 1);
         exit_code = 1;
     }
 
     MPI_Finalize();
-
     return exit_code;
 }
