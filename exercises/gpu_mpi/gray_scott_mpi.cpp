@@ -1,6 +1,6 @@
-#include <Kokkos_Core.hpp>
 #include <mpi.h>
 
+#include <Kokkos_Core.hpp>
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -37,9 +37,11 @@ constexpr real diffusion_rate_v{0.05};
 enum Direction { NW = 0, N, NE, W, E, SW, S, SE };
 constexpr int n_directions = 8;
 
-// The direction a neighbor sees us in, e.g. our north neighbor sees us to its south.
+// The direction a neighbor sees us in, e.g. our north neighbor sees us to its
+// south.
 static int opposite(int dir) {
-    static constexpr int opposite_dir[n_directions] = {SE, S, SW, E, W, NE, N, NW};
+    static constexpr int opposite_dir[n_directions] = {SE, S,  SW, E,
+                                                       W,  NE, N,  NW};
     return opposite_dir[dir];
 }
 
@@ -62,9 +64,9 @@ struct CartesianDecomposition {
     std::size_t global_rows = 0, global_columns = 0;
     std::size_t local_rows = 0, local_columns = 0;
 
-    CartesianDecomposition(std::size_t global_rows_, std::size_t global_columns_)
+    CartesianDecomposition(std::size_t global_rows_,
+                           std::size_t global_columns_)
         : global_rows(global_rows_), global_columns(global_columns_) {
-
         std::fill(std::begin(neighbors), std::end(neighbors), MPI_PROC_NULL);
 
         MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -81,7 +83,8 @@ struct CartesianDecomposition {
         local_columns = global_columns / static_cast<std::size_t>(dims[1]);
 
         if (local_rows == 0 || local_columns == 0) {
-            throw std::runtime_error("Local field dimensions must be greater than zero.");
+            throw std::runtime_error(
+                "Local field dimensions must be greater than zero.");
         }
 
         // Non-periodic: ranks at the global edge have MPI_PROC_NULL neighbors.
@@ -94,7 +97,8 @@ struct CartesianDecomposition {
         MPI_Comm_rank(comm, &rank);
         MPI_Cart_coords(comm, rank, 2, coords);
 
-        // Rank of the process at offset (dr, dc), or MPI_PROC_NULL if outside the grid.
+        // Rank of the process at offset (dr, dc), or MPI_PROC_NULL if outside
+        // the grid.
         auto neighbor = [&](int dr, int dc) {
             const int c[2] = {coords[0] + dr, coords[1] + dc};
             if (c[0] < 0 || c[0] >= dims[0] || c[1] < 0 || c[1] >= dims[1]) {
@@ -106,12 +110,12 @@ struct CartesianDecomposition {
         };
 
         neighbors[NW] = neighbor(-1, -1);
-        neighbors[N]  = neighbor(-1,  0);
+        neighbors[N] = neighbor(-1, 0);
         neighbors[NE] = neighbor(-1, +1);
-        neighbors[W]  = neighbor( 0, -1);
-        neighbors[E]  = neighbor( 0, +1);
+        neighbors[W] = neighbor(0, -1);
+        neighbors[E] = neighbor(0, +1);
         neighbors[SW] = neighbor(+1, -1);
-        neighbors[S]  = neighbor(+1,  0);
+        neighbors[S] = neighbor(+1, 0);
         neighbors[SE] = neighbor(+1, +1);
     }
 
@@ -133,7 +137,8 @@ struct CommBuffers {
 
     CommBuffers(std::size_t rows, std::size_t columns) {
         // Edges (N, S, W, E) carry a full row/column, corners carry one value.
-        const std::size_t lengths[n_directions] = {1, columns, 1, rows, rows, 1, columns, 1};
+        const std::size_t lengths[n_directions] = {1,    columns, 1,       rows,
+                                                   rows, 1,       columns, 1};
         for (int direction = 0; direction < n_directions; ++direction) {
             send[direction] = Kokkos::View<real*>("send", lengths[direction]);
             recv[direction] = Kokkos::View<real*>("recv", lengths[direction]);
@@ -154,15 +159,24 @@ static StridedRow pack_subview(int dir, const View& field) {
     const std::size_t r = field.extent(0) - 2;
     const std::size_t c = field.extent(1) - 2;
     switch (dir) {
-        case N:  return Kokkos::subview(field, 1, Range(1, c + 1));
-        case S:  return Kokkos::subview(field, r, Range(1, c + 1));
-        case W:  return Kokkos::subview(field, Range(1, r + 1), 1);
-        case E:  return Kokkos::subview(field, Range(1, r + 1), c);
-        case NW: return Kokkos::subview(field, 1, Range(1, 2));
-        case NE: return Kokkos::subview(field, 1, Range(c, c + 1));
-        case SW: return Kokkos::subview(field, r, Range(1, 2));
-        case SE: return Kokkos::subview(field, r, Range(c, c + 1));
-        default: throw std::logic_error("pack_subview: invalid direction");
+        case N:
+            return Kokkos::subview(field, 1, Range(1, c + 1));
+        case S:
+            return Kokkos::subview(field, r, Range(1, c + 1));
+        case W:
+            return Kokkos::subview(field, Range(1, r + 1), 1);
+        case E:
+            return Kokkos::subview(field, Range(1, r + 1), c);
+        case NW:
+            return Kokkos::subview(field, 1, Range(1, 2));
+        case NE:
+            return Kokkos::subview(field, 1, Range(c, c + 1));
+        case SW:
+            return Kokkos::subview(field, r, Range(1, 2));
+        case SE:
+            return Kokkos::subview(field, r, Range(c, c + 1));
+        default:
+            throw std::logic_error("pack_subview: invalid direction");
     }
 }
 
@@ -171,15 +185,24 @@ static StridedRow halo_subview(int dir, const View& field) {
     const std::size_t r = field.extent(0) - 2;
     const std::size_t c = field.extent(1) - 2;
     switch (dir) {
-        case N:  return Kokkos::subview(field, 0,     Range(1, c + 1));
-        case S:  return Kokkos::subview(field, r + 1, Range(1, c + 1));
-        case W:  return Kokkos::subview(field, Range(1, r + 1), 0);
-        case E:  return Kokkos::subview(field, Range(1, r + 1), c + 1);
-        case NW: return Kokkos::subview(field, 0,     Range(0, 1));
-        case NE: return Kokkos::subview(field, 0,     Range(c + 1, c + 2));
-        case SW: return Kokkos::subview(field, r + 1, Range(0, 1));
-        case SE: return Kokkos::subview(field, r + 1, Range(c + 1, c + 2));
-        default: throw std::logic_error("halo_subview: invalid direction");
+        case N:
+            return Kokkos::subview(field, 0, Range(1, c + 1));
+        case S:
+            return Kokkos::subview(field, r + 1, Range(1, c + 1));
+        case W:
+            return Kokkos::subview(field, Range(1, r + 1), 0);
+        case E:
+            return Kokkos::subview(field, Range(1, r + 1), c + 1);
+        case NW:
+            return Kokkos::subview(field, 0, Range(0, 1));
+        case NE:
+            return Kokkos::subview(field, 0, Range(c + 1, c + 2));
+        case SW:
+            return Kokkos::subview(field, r + 1, Range(0, 1));
+        case SE:
+            return Kokkos::subview(field, r + 1, Range(c + 1, c + 2));
+        default:
+            throw std::logic_error("halo_subview: invalid direction");
     }
 }
 
@@ -189,7 +212,8 @@ static void pack(int direction, const View& field, CommBuffers& buffers) {
 }
 
 // Copy the receive buffer into the halo of `field` in one direction.
-static void unpack(int direction, const View& field, const CommBuffers& buffers) {
+static void unpack(int direction, const View& field,
+                   const CommBuffers& buffers) {
     Kokkos::deep_copy(halo_subview(direction, field), buffers.recv[direction]);
 }
 
@@ -222,8 +246,8 @@ static void exchange(const View& field, const CartesianDecomposition& d,
     for (int dir = 0; dir < n_directions; ++dir) {
         if (d.neighbors[dir] == MPI_PROC_NULL) continue;
         MPI_Isend(b.send[dir].data(), static_cast<int>(b.send[dir].size()),
-                  MPI_REAL_TYPE, d.neighbors[dir], tag_base + opposite(dir), d.comm,
-                  &requests[nreq++]);
+                  MPI_REAL_TYPE, d.neighbors[dir], tag_base + opposite(dir),
+                  d.comm, &requests[nreq++]);
     }
 
     MPI_Waitall(nreq, requests.data(), MPI_STATUSES_IGNORE);
@@ -238,9 +262,8 @@ static void exchange(const View& field, const CartesianDecomposition& d,
 // Initialization
 // -----------------------------------------------------------------------------
 
-static void initialize(const View& u, const View& v,
-                       const View& u_temp, const View& v_temp,
-                       const CartesianDecomposition& d) {
+static void initialize(const View& u, const View& v, const View& u_temp,
+                       const View& v_temp, const CartesianDecomposition& d) {
     using Kokkos::subview;
 
     // Everything to 0, then interior of u/u_temp to 1.
@@ -249,13 +272,13 @@ static void initialize(const View& u, const View& v,
     Kokkos::deep_copy(u_temp, 0);
     Kokkos::deep_copy(v_temp, 0);
 
-    const std::size_t local_rows    = d.local_rows;
+    const std::size_t local_rows = d.local_rows;
     const std::size_t local_columns = d.local_columns;
 
     const Range interior_rows(1, local_rows + 1);
     const Range interior_cols(1, local_columns + 1);
 
-    Kokkos::deep_copy(subview(u,      interior_rows, interior_cols), 1);
+    Kokkos::deep_copy(subview(u, interior_rows, interior_cols), 1);
     Kokkos::deep_copy(subview(u_temp, interior_rows, interior_cols), 1);
 
     // Global drop box [drop_i0, drop_i1) x [drop_j0, drop_j1).
@@ -270,10 +293,12 @@ static void initialize(const View& u, const View& v,
     const std::size_t drop_j1 = cj + half;  // exclusive
 
     // This rank's owned global block [first, last).
-    const std::size_t first_i = static_cast<std::size_t>(d.coords[0]) * local_rows;
-    const std::size_t first_j = static_cast<std::size_t>(d.coords[1]) * local_columns;
-    const std::size_t last_i  = first_i + local_rows;
-    const std::size_t last_j  = first_j + local_columns;
+    const std::size_t first_i =
+        static_cast<std::size_t>(d.coords[0]) * local_rows;
+    const std::size_t first_j =
+        static_cast<std::size_t>(d.coords[1]) * local_columns;
+    const std::size_t last_i = first_i + local_rows;
+    const std::size_t last_j = first_j + local_columns;
 
     // Intersection of drop box and local block, in global coordinates.
     const std::size_t gi0 = std::max(drop_i0, first_i);
@@ -295,8 +320,8 @@ static void initialize(const View& u, const View& v,
 // Compute
 // -----------------------------------------------------------------------------
 
-static void compute(const View& u, const View& v,
-                    const View& u_temp, const View& v_temp) {
+static void compute(const View& u, const View& v, const View& u_temp,
+                    const View& v_temp) {
     const auto nr = static_cast<std::int64_t>(u.extent(0));
     const auto nc = static_cast<std::int64_t>(u.extent(1));
 
@@ -305,22 +330,23 @@ static void compute(const View& u, const View& v,
         "compute",
         Kokkos::MDRangePolicy<Kokkos::Rank<2>>({1, 1}, {nr - 1, nc - 1}),
         KOKKOS_LAMBDA(const std::int64_t i, const std::int64_t j) {
-            const real u_full =
-                u(i - 1, j - 1) + u(i - 1, j) + u(i - 1, j + 1) +
-                u(i, j - 1) - real(8) * u(i, j) + u(i, j + 1) +
-                u(i + 1, j - 1) + u(i + 1, j) + u(i + 1, j + 1);
+            const real u_full = u(i - 1, j - 1) + u(i - 1, j) +
+                                u(i - 1, j + 1) + u(i, j - 1) -
+                                real(8) * u(i, j) + u(i, j + 1) +
+                                u(i + 1, j - 1) + u(i + 1, j) + u(i + 1, j + 1);
 
-            const real v_full =
-                v(i - 1, j - 1) + v(i - 1, j) + v(i - 1, j + 1) +
-                v(i, j - 1) - real(8) * v(i, j) + v(i, j + 1) +
-                v(i + 1, j - 1) + v(i + 1, j) + v(i + 1, j + 1);
+            const real v_full = v(i - 1, j - 1) + v(i - 1, j) +
+                                v(i - 1, j + 1) + v(i, j - 1) -
+                                real(8) * v(i, j) + v(i, j + 1) +
+                                v(i + 1, j - 1) + v(i + 1, j) + v(i + 1, j + 1);
 
             const real uvv = u(i, j) * v(i, j) * v(i, j);
 
             const real u_delta = constants::diffusion_rate_u * u_full - uvv +
                                  constants::feed_rate * (1 - u(i, j));
-            const real v_delta = constants::diffusion_rate_v * v_full + uvv -
-                                 (constants::feed_rate + constants::kill_rate) * v(i, j);
+            const real v_delta =
+                constants::diffusion_rate_v * v_full + uvv -
+                (constants::feed_rate + constants::kill_rate) * v(i, j);
 
             u_temp(i, j) = u(i, j) + u_delta * constants::dt;
             v_temp(i, j) = v(i, j) + v_delta * constants::dt;
@@ -366,7 +392,8 @@ int main(int argc, char* argv[]) {
     int exit_code = 0;
 
     try {
-        // Kokkos must be finalized before MPI_Finalize; the try scope ensures that.
+        // Kokkos must be finalized before MPI_Finalize; the try scope ensures
+        // that.
         Kokkos::ScopeGuard kokkos{argc, argv};
 
         Parameters parameters{argc, argv};
@@ -380,7 +407,8 @@ int main(int argc, char* argv[]) {
         const std::size_t global_columns = parameters.n_columns_ext - 2;
 
         if (global_rows < 1 || global_columns < 1) {
-            throw std::runtime_error("Global field dimensions must be positive.");
+            throw std::runtime_error(
+                "Global field dimensions must be positive.");
         }
 
         CartesianDecomposition decomposition(global_rows, global_columns);
@@ -395,10 +423,13 @@ int main(int argc, char* argv[]) {
 
         initialize(u, v, u_temp, v_temp, decomposition);
 
-        CommBuffers u_buffers(decomposition.local_rows, decomposition.local_columns);
-        CommBuffers v_buffers(decomposition.local_rows, decomposition.local_columns);
+        CommBuffers u_buffers(decomposition.local_rows,
+                              decomposition.local_columns);
+        CommBuffers v_buffers(decomposition.local_rows,
+                              decomposition.local_columns);
 
-        for (std::size_t iteration = 1; iteration <= parameters.n_iterations; ++iteration) {
+        for (std::size_t iteration = 1; iteration <= parameters.n_iterations;
+             ++iteration) {
             exchange(u, decomposition, u_buffers, 100);
             exchange(v, decomposition, v_buffers, 200);
 
